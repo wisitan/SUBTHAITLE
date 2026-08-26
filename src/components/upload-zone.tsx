@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { extractAudioFromMedia, AudioExtractProgress } from '@/lib/audio-extract';
 import { transcribeAudio } from '@/lib/transcribe';
@@ -25,6 +26,7 @@ import {
 } from 'lucide-react';
 
 export function UploadZone() {
+  const router = useRouter();
   const {
     file,
     setFile,
@@ -609,13 +611,11 @@ export function UploadZone() {
             ) : (
               <button
                 type="button"
-                onClick={() => {
-                  alert('Phase 3 สำเร็จแล้ว! พร้อมเข้าสู่ Phase 4 เพื่อพัฒนาหน้าจอ Editor & Video Player');
-                }}
+                onClick={() => router.push('/editor')}
                 className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
               >
                 <SlidersHorizontal className="w-4 h-4" />
-                <span>ไปที่หน้าจอปรับแต่ง Subtitle (Phase 4 Editor)</span>
+                <span>เข้าสู่หน้าแก้ไขซับไตเติล (Open Caption Editor)</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             )}

@@ -187,21 +187,27 @@ export async function transcribeAudio(
     });
   } else if (data.segments && data.segments.length > 0) {
     // Fallback: Segment-based splitting
-    const rawCaps: CaptionItem[] = data.segments.map((seg, idx) => ({
-      id: `seg-${idx}-${Date.now().toString(36)}`,
-      start: Number(seg.start),
-      end: Number(seg.end),
-      text: cleanThaiText(applyDictionaryReplacements(seg.text, store.customDictionary)),
-    }));
+    const rawCaps: CaptionItem[] = data.segments.map((seg, idx) => {
+      const txt = cleanThaiText(applyDictionaryReplacements(seg.text, store.customDictionary));
+      return {
+        id: `seg-${idx}-${Date.now().toString(36)}`,
+        start: Number(seg.start),
+        end: Number(seg.end),
+        text: txt,
+        originalText: txt,
+      };
+    });
     captions = splitLongCaptions(rawCaps);
   } else if (data.text) {
     // Fallback: Raw text
+    const txt = cleanThaiText(applyDictionaryReplacements(data.text, store.customDictionary));
     captions = splitLongCaptions([
       {
         id: `raw-0-${Date.now().toString(36)}`,
         start: 0,
         end: data.duration || 5,
-        text: cleanThaiText(applyDictionaryReplacements(data.text, store.customDictionary)),
+        text: txt,
+        originalText: txt,
       },
     ]);
   }

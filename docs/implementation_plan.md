@@ -74,6 +74,7 @@ Content Creator ชาวไทย (YouTuber, TikToker, IG Reels) ที่ต�
 | F20 | **Donate Banner + Tier Gate** | แสดง banner "เลี้ยงกาแฟ/ข้าวพี่เอ" สำหรับ Free tier + ระบบ License Key ปลดล็อก preset/premium features |
 | F21 | **🆕 Burn Subtitle → MP4** | ใช้ ffmpeg.wasm render วิดีโอ + subtitle บน browser → ดาวน์โหลด MP4 ที่มี subtitle ฝังเรียบร้อย (WYSIWYG 100%, ค่าใช้จ่าย ฿0) |
 | F22 | **🆕 Word Highlight** | Highlight คำที่กำลังพูดแบบ real-time (เปิด/ปิดได้ + เลือกสี) — ใช้ word-level timestamps จาก Groq, preview สด + export ใน FCPXML/MP4 |
+| F23 | **🆕 Admin Dictionary Sync** | ตรวจจับการแก้คำผิดของแอดมิน ➔ แสดงปุ่ม 1-Click บันทึกคู่คำขึ้น Supabase ช่วย AI แม่นยำขึ้น |
 
 ### 1.5 ฟีเจอร์ v2 (Nice-to-Have — ทำทีหลัง)
 
@@ -730,7 +731,7 @@ Thai Caption/                       ← Root (ใน Vibe coding/)
 │                        └─────────────────────────────────────┘   │
 │                                                                  │
 ├──────────────────────────────────────────────────────────────────┤
-│  [Play Selected ▶]  [+ เพิ่ม Row]  [🗑️ ลบ Row]                   │ ← Toolbar
+│  [🔍 ค้นหา] [⏱️ ขยับเวลา] [+ เพิ่ม Row] [✂️ แยก] [🔗 รวม] [🗑️ ลบ] │ ← Toolbar
 └──────────────────────────────────────────────────────────────────┘
 ```
 
@@ -879,23 +880,36 @@ graph TB
 - [ ] เชื่อม pipeline: Groq response → clean → group → split → captions array
 - [ ] ทดสอบกับ demo video
 
+> **💡 เทคนิคการแก้ปัญหาตัดคำและเว้นวรรค (Thai Text Processing):**
+> - **Re-tokenization ด้วย `Intl.Segmenter`:** ใช้ API ของเบราว์เซอร์ (`locales: 'th-TH'`, `granularity: 'word'`) เพื่อจัดกรอบคำภาษาไทยใหม่จากผลลัพธ์ดั้งเดิมของ Whisper ให้ถูกต้องแม่นยำขึ้น
+> - **Pause-based Clause Spacing (เว้นวรรคตามจังหวะหายใจ):** ตรวจจับช่องว่างเวลา (Gap) ระหว่างคำ หากห่างกัน $\ge 0.20$ วินาที (200ms) ระบบจะแทรกช่องว่าง (Space) ให้อัตโนมัติ เพื่อแยก Clause/ประโยคอย่างเป็นธรรมชาติ
+> - **Maiyamok (ๆ) Formatting:** จัดการดึงไม้ยมกมาติดกับคำหน้าเสมอ และบังคับให้เว้นวรรคด้านหลังอย่างถูกต้อง
+> - **Alphanumeric Boundaries:** จัดการรอยต่อระหว่างตัวอักษรไทย อังกฤษ และตัวเลข ให้สะอาดเรียบร้อย
+> - **Dictionary Pipeline Sync:** รันการเช็กคำผิด/ถูกผ่านระบบ Dictionary โดยคงรักษาข้อมูล Timestamp ของคำเริ่มต้นและคำสิ้นสุด (Start/End time) ไว้ได้อย่างสมบูรณ์แบบ
+
 ---
 
 ### Phase 4: Caption Editor + Video Player (⏱️ ~2-3 ชม.)
 
 ```
 สั่ง AI: "สร้างหน้า Editor ตาม wireframe Editor Page ที่กำหนดไว้ใน PRD
-         ซ้าย = Video player 9:16 + subtitle overlay ด้านล่าง
-         ขวา = ตาราง caption แก้ได้ inline
+         ซ้าย = Video player (รองรับ 9:16/16:9/Audio) + subtitle overlay
+         ขวา = ตาราง caption แก้ได้ inline, เพิ่ม/ลบ/แยก/รวมท่อนได้
+         มีระบบ Time Shift +- วินาที และ Find & Replace
          คลิก row → video กระโดดไปเวลานั้น
-         video เล่น → highlight row ปัจจุบัน"
+         video เล่น → highlight row ปัจจุบัน + auto-scroll
+         มี Smart Dictionary Detection: เมื่อ Admin แก้คำผิดจาก AI 
+         แสดงปุ่ม 'บันทึกเข้า Dictionary' เพื่ออัปเดตขึ้น Supabase ทันที"
 ```
 
-- [ ] `app/editor/page.tsx` — 2-column layout
-- [ ] `components/video-player.tsx` — HTML5 video + subtitle overlay (CSS positioned)
-- [ ] `components/caption-table.tsx` — Editable table, highlight active row, click → seek
-- [ ] Sync: `currentTime` ↔ active caption ↔ subtitle overlay
-- [ ] Low confidence flag (สีเหลือง)
+- [ ] `app/editor/page.tsx` — 2-column layout (Responsive Desktop/Tablet)
+- [ ] `components/video-player.tsx` — HTML5 video + Play/Pause (Spacebar), Scrubber, Speed Control
+- [ ] `components/video-player.tsx` — Subtitle overlay พร้อม **Real-time Word Highlight** ตามเสียงพูด
+- [ ] `components/caption-table.tsx` — Editable table, highlight active row, auto-scroll, click → seek
+- [ ] `components/caption-table.tsx` — Toolbar: Add, Split (✂️), Merge (🔗), Delete (🗑️), Time Shift, Find & Replace
+- [ ] Sync: `currentTime` ↔ active caption ↔ subtitle overlay ↔ word highlight
+- [ ] `components/dictionary-suggestion-badge.tsx` — ตรวจจับการแก้คำผิด (Manual Edit Detection) และยิงขึ้น Supabase
+- [ ] Low confidence flag (⚠️ สีเหลือง) สำหรับจุดที่ AI มั่นใจต่ำ
 
 ---
 

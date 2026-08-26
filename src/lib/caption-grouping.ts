@@ -107,12 +107,17 @@ export function groupWordsIntoCaptions(
       // Close current bucket
       const cueText = cleanThaiText(formatCaptionWordsText(currentWords));
       if (cueText) {
+        const isLowConf = currentWords.some(
+          (w) => w.confidence !== undefined && w.confidence < 0.6
+        );
         captions.push({
           id: `cue-${captions.length + 1}-${Date.now().toString(36)}`,
           start: Number(currentStart.toFixed(3)),
           end: Number(prevWord.end.toFixed(3)),
           text: cueText,
+          originalText: cueText,
           words: [...currentWords],
+          lowConfidence: isLowConf,
         });
       }
 
@@ -129,12 +134,17 @@ export function groupWordsIntoCaptions(
     const lastWord = currentWords[currentWords.length - 1];
     const cueText = cleanThaiText(formatCaptionWordsText(currentWords));
     if (cueText) {
+      const isLowConf = currentWords.some(
+        (w) => w.confidence !== undefined && w.confidence < 0.6
+      );
       captions.push({
         id: `cue-${captions.length + 1}-${Date.now().toString(36)}`,
         start: Number(currentStart.toFixed(3)),
         end: Number(lastWord.end.toFixed(3)),
         text: cueText,
+        originalText: cueText,
         words: [...currentWords],
+        lowConfidence: isLowConf,
       });
     }
   }
