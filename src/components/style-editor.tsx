@@ -8,10 +8,11 @@ import {
   Sparkles,
   RotateCcw,
   Check,
+  Sliders,
+  Space,
 } from 'lucide-react';
 import { useAppStore, defaultCaptionStyle } from '@/lib/store';
 import { FontPicker } from './font-picker';
-import { SUBTITLE_PRESETS } from '@/lib/presets';
 
 const COLOR_PALETTE = [
   { name: 'White', hex: '#FFFFFF' },
@@ -22,6 +23,15 @@ const COLOR_PALETTE = [
   { name: 'Rose', hex: '#FB7185' },
   { name: 'Purple', hex: '#C084FC' },
   { name: 'Black', hex: '#000000' },
+];
+
+const BG_COLOR_PALETTE = [
+  { name: 'Black', hex: '#000000' },
+  { name: 'Dark Gray', hex: '#18181B' },
+  { name: 'Navy Slate', hex: '#0F172A' },
+  { name: 'Deep Indigo', hex: '#1E1B4B' },
+  { name: 'Deep Amber', hex: '#451A03' },
+  { name: 'White', hex: '#FFFFFF' },
 ];
 
 const HIGHLIGHT_PALETTE = [
@@ -36,15 +46,7 @@ const HIGHLIGHT_PALETTE = [
 export function StyleEditor() {
   const style = useAppStore((s) => s.style);
   const setStyle = useAppStore((s) => s.setStyle);
-  const activePresetId = useAppStore((s) => s.activePresetId);
   const setActivePresetId = useAppStore((s) => s.setActivePresetId);
-
-  const handleApplyPreset = (presetId: string) => {
-    const preset = SUBTITLE_PRESETS.find((p) => p.id === presetId);
-    if (!preset) return;
-    setStyle(preset.style);
-    setActivePresetId(presetId);
-  };
 
   const handleResetDefault = () => {
     setStyle(defaultCaptionStyle);
@@ -53,79 +55,30 @@ export function StyleEditor() {
 
   return (
     <div className="space-y-6 p-4 sm:p-5 text-zinc-100 overflow-y-auto max-h-[calc(100vh-220px)] scrollbar-thin scrollbar-thumb-zinc-800">
-      {/* 1. 1-Click Preset Themes */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>ธีมสไตล์สำเร็จรูป (1-Click Presets):</span>
-          </h4>
-          <button
-            type="button"
-            onClick={handleResetDefault}
-            className="text-[11px] text-zinc-400 hover:text-orange-400 flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            <RotateCcw className="w-3 h-3" />
-            <span>คืนค่าเริ่มต้น</span>
-          </button>
+      {/* Header with Reset Default Button */}
+      <div className="flex items-center justify-between pb-1 border-b border-zinc-800/80">
+        <div>
+          <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+            <Sliders className="w-4 h-4 text-orange-400" />
+            <span>ปรับแต่งสไตล์ซับไตเติล (Subtitle Styler)</span>
+          </h3>
+          <p className="text-[11px] text-zinc-400 mt-0.5">
+            ปรับแต่งฟอนต์ ขนาด สี ระยะห่าง ตำแหน่ง และเอฟเฟกต์แบบเรียลไทม์
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {SUBTITLE_PRESETS.map((preset) => {
-            const isSelected = activePresetId === preset.id;
-
-            return (
-              <button
-                key={preset.id}
-                type="button"
-                onClick={() => handleApplyPreset(preset.id)}
-                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2 group ${
-                  isSelected
-                    ? 'bg-orange-500/15 border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                    : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs text-white group-hover:text-orange-300 transition-colors">
-                    {preset.name}
-                  </span>
-                  {isSelected && (
-                    <span className="w-4 h-4 rounded-full bg-orange-500 text-zinc-950 flex items-center justify-center shrink-0">
-                      <Check className="w-2.5 h-2.5 stroke-[3]" />
-                    </span>
-                  )}
-                </div>
-
-                <p className="text-[10px] text-zinc-400 leading-snug line-clamp-2">
-                  {preset.description}
-                </p>
-
-                {/* Visual Mini Preview Swatch */}
-                <div className="flex items-center gap-1.5 pt-1">
-                  <span
-                    className="w-4 h-4 rounded-full border border-white/20"
-                    style={{ backgroundColor: preset.previewTextColor }}
-                    title="สีตัวอักษร"
-                  />
-                  <span className="text-[10px] text-zinc-500">➔</span>
-                  <span
-                    className="w-4 h-4 rounded-full border border-white/20"
-                    style={{ backgroundColor: preset.previewHighlightColor }}
-                    title="สีไฮไลท์"
-                  />
-                  <span className="text-[10px] text-zinc-400 font-mono ml-auto">
-                    {preset.style.fontFamily}
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+        <button
+          type="button"
+          onClick={handleResetDefault}
+          className="text-xs text-zinc-400 hover:text-orange-400 bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0"
+          title="รีเซ็ตค่ารูปแบบกลับเป็นค่าเริ่มต้น"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          <span>คืนค่าเริ่มต้น</span>
+        </button>
       </div>
 
-      <hr className="border-zinc-800/80" />
-
-      {/* 2. Font Picker Component */}
+      {/* 1. Font Picker Component */}
       <FontPicker
         selectedFont={style.fontFamily}
         onSelectFont={(fontFamily) => setStyle({ fontFamily })}
@@ -133,7 +86,7 @@ export function StyleEditor() {
 
       <hr className="border-zinc-800/80" />
 
-      {/* 3. Typography (Size, Color, Weight) */}
+      {/* 2. Typography & Color (Size, Weight, Color) */}
       <div className="space-y-4">
         <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
           <Type className="w-4 h-4 text-orange-400" />
@@ -255,6 +208,122 @@ export function StyleEditor() {
 
       <hr className="border-zinc-800/80" />
 
+      {/* 3. Spacing Controls (ระยะห่างตัวอักษร & ระยะห่างบรรทัด) */}
+      <div className="space-y-4">
+        <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
+          <Space className="w-4 h-4 text-orange-400" />
+          <span>ระยะห่างและการจัดวาง (Letter & Line Spacing):</span>
+        </h4>
+
+        {/* Letter Spacing (Tracking) */}
+        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-zinc-300 font-medium">ระยะห่างระหว่างตัวอักษร (Letter Spacing):</span>
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+              {style.letterSpacing ?? 0}px
+            </span>
+          </div>
+
+          <input
+            type="range"
+            min={-2}
+            max={8}
+            step={0.5}
+            value={style.letterSpacing ?? 0}
+            aria-label="ระยะห่างระหว่างตัวอักษร"
+            onChange={(e) => setStyle({ letterSpacing: parseFloat(e.target.value) })}
+            className="w-full accent-orange-500 cursor-pointer"
+          />
+
+          {/* Quick Letter Spacing Presets */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <button
+              type="button"
+              onClick={() => setStyle({ letterSpacing: -1 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              แนบชิด (-1px)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ letterSpacing: 0 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              ปกติ (0px)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ letterSpacing: 1.5 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              กว้าง (1.5px)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ letterSpacing: 3 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              กว้างมาก (3px)
+            </button>
+          </div>
+        </div>
+
+        {/* Line Height (Leading) */}
+        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-zinc-300 font-medium">ระยะห่างระหว่างบรรทัด (Line Spacing / Height):</span>
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+              {style.lineHeight ?? 1.4}x
+            </span>
+          </div>
+
+          <input
+            type="range"
+            min={1.0}
+            max={2.4}
+            step={0.1}
+            value={style.lineHeight ?? 1.4}
+            aria-label="ระยะห่างระหว่างบรรทัด"
+            onChange={(e) => setStyle({ lineHeight: parseFloat(e.target.value) })}
+            className="w-full accent-orange-500 cursor-pointer"
+          />
+
+          {/* Quick Line Height Presets */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <button
+              type="button"
+              onClick={() => setStyle({ lineHeight: 1.2 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              แคบ (1.2)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ lineHeight: 1.4 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              ปกติ (1.4)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ lineHeight: 1.6 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              สบายตา (1.6)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ lineHeight: 1.9 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              โปร่ง (1.9)
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <hr className="border-zinc-800/80" />
+
       {/* 4. Position & Placement (ตำแหน่งแนวตั้งแกน Y & แนวนอนแกน X) */}
       <div className="space-y-4">
         <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
@@ -357,11 +426,11 @@ export function StyleEditor() {
 
       <hr className="border-zinc-800/80" />
 
-      {/* 5. Shadow & Outline (เงาและขอบตัวหนังสือเพื่อความคมชัด) */}
+      {/* 5. Shadow, Outline & Background Box (เงา ขอบ และกล่องพื้นหลัง) */}
       <div className="space-y-4">
         <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
           <Sun className="w-4 h-4 text-orange-400" />
-          <span>เงาและขอบตัวหนังสือ (Shadow & Outline):</span>
+          <span>เงา ขอบ และกล่องพื้นหลัง (Shadow, Outline & Box):</span>
         </h4>
 
         {/* Drop Shadow Section */}
@@ -456,7 +525,7 @@ export function StyleEditor() {
           )}
         </div>
 
-        {/* Background Box Section */}
+        {/* 🆕 Background Box Section (Color + Opacity Control) */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-zinc-200 flex items-center gap-2 cursor-pointer">
@@ -468,7 +537,114 @@ export function StyleEditor() {
               />
               <span>กล่องพื้นหลังโปร่งใส (Background Box)</span>
             </label>
+
+            {style.hasBackground && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/20 text-orange-300 border border-orange-500/30">
+                ทึบ {style.backgroundOpacity ?? 70}%
+              </span>
+            )}
           </div>
+
+          {style.hasBackground && (
+            <div className="space-y-3 pt-2 border-t border-zinc-900 text-xs">
+              {/* Background Color Swatches */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] text-zinc-300 font-medium block">
+                  เลือกสีพื้นหลัง (Box Color):
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {BG_COLOR_PALETTE.map((c) => (
+                    <button
+                      key={c.hex}
+                      type="button"
+                      onClick={() => setStyle({ backgroundColor: c.hex })}
+                      className={`w-6 h-6 rounded-lg border transition-all cursor-pointer flex items-center justify-center ${
+                        (style.backgroundColor || '#000000').toLowerCase() === c.hex.toLowerCase()
+                          ? 'ring-2 ring-orange-500 scale-110 border-white'
+                          : 'border-zinc-700 hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: c.hex }}
+                      title={c.name}
+                    >
+                      {(style.backgroundColor || '#000000').toLowerCase() === c.hex.toLowerCase() && (
+                        <Check
+                          className={`w-3 h-3 ${
+                            c.hex === '#FFFFFF' ? 'text-black' : 'text-white'
+                          }`}
+                        />
+                      )}
+                    </button>
+                  ))}
+
+                  {/* Custom Background Color Picker */}
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    <input
+                      type="color"
+                      value={style.backgroundColor || '#000000'}
+                      onChange={(e) => setStyle({ backgroundColor: e.target.value })}
+                      aria-label="เลือกสีพื้นหลังกล่องซับไตเติล"
+                      className="w-6 h-6 rounded-lg bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
+                    />
+                    <span className="text-[11px] font-mono text-zinc-400 uppercase">
+                      {style.backgroundColor || '#000000'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Background Opacity Slider */}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-zinc-300">ความทึบแสง (Opacity):</span>
+                  <span className="font-mono text-orange-400 font-bold bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
+                    {style.backgroundOpacity ?? 70}%
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={10}
+                  max={100}
+                  step={5}
+                  value={style.backgroundOpacity ?? 70}
+                  aria-label="ความทึบแสงของกล่องพื้นหลัง"
+                  onChange={(e) => setStyle({ backgroundOpacity: parseInt(e.target.value, 10) })}
+                  className="w-full accent-orange-500 cursor-pointer"
+                />
+
+                {/* Quick Opacity Presets */}
+                <div className="flex items-center gap-1.5 pt-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setStyle({ backgroundOpacity: 40 })}
+                    className="flex-1 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 border border-zinc-800 transition-colors cursor-pointer"
+                  >
+                    โปร่ง 40%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStyle({ backgroundOpacity: 65 })}
+                    className="flex-1 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 border border-zinc-800 transition-colors cursor-pointer"
+                  >
+                    โปร่ง 65%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStyle({ backgroundOpacity: 85 })}
+                    className="flex-1 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 border border-zinc-800 transition-colors cursor-pointer"
+                  >
+                    ทึบ 85%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStyle({ backgroundOpacity: 100 })}
+                    className="flex-1 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 border border-zinc-800 transition-colors cursor-pointer"
+                  >
+                    ทึบ 100%
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

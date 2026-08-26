@@ -185,6 +185,16 @@ export function VideoPlayer({ className = '' }: Props) {
     }
   };
 
+  // Helper to convert hex + opacity percentage (0-100) to rgba
+  const hexToRgba = (hex: string, opacityPercent: number) => {
+    const cleanHex = hex.replace('#', '');
+    const r = parseInt(cleanHex.slice(0, 2) || '0', 16);
+    const g = parseInt(cleanHex.slice(2, 4) || '0', 16);
+    const b = parseInt(cleanHex.slice(4, 6) || '0', 16);
+    const a = Math.max(0, Math.min(1, opacityPercent / 100)).toFixed(2);
+    return `rgba(${r}, ${g}, ${b}, ${a})`;
+  };
+
   // Build dynamic text-shadow & outline CSS
   const subtitleOverlayStyle: React.CSSProperties = useMemo(() => {
     const shadows: string[] = [];
@@ -225,16 +235,27 @@ export function VideoPlayer({ className = '' }: Props) {
       }
     }
 
+    const bgColor = style.hasBackground
+      ? hexToRgba(style.backgroundColor || '#000000', style.backgroundOpacity ?? 70)
+      : 'transparent';
+
     return {
       fontFamily: `"${style.fontFamily}", sans-serif`,
       fontSize: `clamp(18px, 3.2vw, ${style.fontSize}px)`,
       color: style.textColor || '#FFFFFF',
-      fontWeight: style.fontWeight === 'bold' || style.fontWeight === '700' ? 700 : 500,
+      fontWeight:
+        style.fontWeight === 'bold' || style.fontWeight === '700'
+          ? 700
+          : style.fontWeight === '800'
+          ? 800
+          : 500,
+      letterSpacing: `${style.letterSpacing ?? 0}px`,
+      lineHeight: style.lineHeight ?? 1.4,
       bottom: `${style.positionY}%`,
       left: `${style.positionX}%`,
       transform: 'translateX(-50%)',
       textShadow: shadows.length > 0 ? shadows.join(', ') : 'none',
-      backgroundColor: style.hasBackground ? style.backgroundColor || 'rgba(0,0,0,0.65)' : 'transparent',
+      backgroundColor: bgColor,
       padding: style.hasBackground ? '8px 18px' : '4px 8px',
       borderRadius: style.hasBackground ? '14px' : '0px',
     };
@@ -394,7 +415,15 @@ export function VideoPlayer({ className = '' }: Props) {
                 style={subtitleOverlayStyle}
                 className="absolute z-20 text-center max-w-[92%] pointer-events-none select-none transition-all duration-75"
               >
-                <p className="leading-snug inline text-center" style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                <p
+                  className="inline text-center"
+                  style={{
+                    wordBreak: 'break-word',
+                    whiteSpace: 'pre-wrap',
+                    letterSpacing: `${style.letterSpacing ?? 0}px`,
+                    lineHeight: style.lineHeight ?? 1.4,
+                  }}
+                >
                   {style.enableWordHighlight && activeCaption.words && activeCaption.words.length > 0 ? (
                     /* Word-level Highlight with 100% natural inline rendering (No Flexbox, No Blur) */
                     activeCaption.words.map((w: CaptionWord, idx: number) => {

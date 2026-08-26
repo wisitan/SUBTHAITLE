@@ -30,6 +30,8 @@ export interface CaptionStyle {
   fontSize: number; // in px or vw
   textColor: string;
   fontWeight: string;
+  letterSpacing?: number; // in px e.g. -2 to 10px (default: 0)
+  lineHeight?: number;    // line-height multiplier e.g. 1.0 to 2.4 (default: 1.4)
   positionY: number; // percentage from bottom e.g. 15%
   positionX: number; // percentage from left e.g. 50%
   hasShadow: boolean;
@@ -41,8 +43,9 @@ export interface CaptionStyle {
   outlineWidth: number;
   enableWordHighlight: boolean;
   highlightColor: string;
-  backgroundColor?: string;
   hasBackground?: boolean;
+  backgroundColor?: string;     // Hex color e.g. "#000000"
+  backgroundOpacity?: number;   // 0 to 100 (percentage)
 }
 
 export interface AppState {
@@ -120,6 +123,8 @@ export const defaultCaptionStyle: CaptionStyle = {
   fontSize: 28,
   textColor: '#FFFFFF',
   fontWeight: '700',
+  letterSpacing: 0,
+  lineHeight: 1.4,
   positionY: 15,
   positionX: 50,
   hasShadow: true,
@@ -132,7 +137,8 @@ export const defaultCaptionStyle: CaptionStyle = {
   enableWordHighlight: true,
   highlightColor: '#FACC15', // Neon Yellow
   hasBackground: false,
-  backgroundColor: 'rgba(0,0,0,0.6)',
+  backgroundColor: '#000000',
+  backgroundOpacity: 70,
 };
 
 export const useAppStore = create<AppState>()(

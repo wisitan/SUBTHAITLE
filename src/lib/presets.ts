@@ -23,6 +23,8 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
       fontSize: 34,
       textColor: '#FFFFFF',
       fontWeight: '800',
+      letterSpacing: 0,
+      lineHeight: 1.4,
       positionY: 18,
       positionX: 50,
       hasShadow: true,
@@ -35,7 +37,8 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
       enableWordHighlight: true,
       highlightColor: '#FACC15', // Neon Yellow
       hasBackground: false,
-      backgroundColor: 'rgba(0,0,0,0.65)',
+      backgroundColor: '#000000',
+      backgroundOpacity: 65,
     },
   },
   {
@@ -50,6 +53,8 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
       fontSize: 32,
       textColor: '#FFFFFF',
       fontWeight: '700',
+      letterSpacing: 0.5,
+      lineHeight: 1.4,
       positionY: 16,
       positionX: 50,
       hasShadow: true,
@@ -62,7 +67,8 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
       enableWordHighlight: true,
       highlightColor: '#FB923C', // Vibrant Orange
       hasBackground: false,
-      backgroundColor: 'rgba(0,0,0,0.7)',
+      backgroundColor: '#000000',
+      backgroundOpacity: 70,
     },
   },
   {
@@ -77,6 +83,8 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
       fontSize: 26,
       textColor: '#FFFFFF',
       fontWeight: '600',
+      letterSpacing: 0,
+      lineHeight: 1.4,
       positionY: 14,
       positionX: 50,
       hasShadow: false,
@@ -89,7 +97,8 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
       enableWordHighlight: true,
       highlightColor: '#38BDF8', // Cyan Sky
       hasBackground: true,
-      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+      backgroundColor: '#000000',
+      backgroundOpacity: 75,
     },
   },
   {
@@ -104,6 +113,8 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
       fontSize: 28,
       textColor: '#FFFFFF',
       fontWeight: '700',
+      letterSpacing: 0,
+      lineHeight: 1.5,
       positionY: 12,
       positionX: 50,
       hasShadow: true,
@@ -116,7 +127,8 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
       enableWordHighlight: true,
       highlightColor: '#4ADE80', // Mint Green
       hasBackground: false,
-      backgroundColor: 'rgba(0,0,0,0.6)',
+      backgroundColor: '#000000',
+      backgroundOpacity: 60,
     },
   },
   {
@@ -131,6 +143,8 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
       fontSize: 34,
       textColor: '#E0F2FE',
       fontWeight: '700',
+      letterSpacing: 1,
+      lineHeight: 1.4,
       positionY: 18,
       positionX: 50,
       hasShadow: true,
@@ -143,7 +157,8 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
       enableWordHighlight: true,
       highlightColor: '#F43F5E', // Neon Rose
       hasBackground: false,
-      backgroundColor: 'rgba(2, 6, 23, 0.8)',
+      backgroundColor: '#020617',
+      backgroundOpacity: 80,
     },
   },
 ];
