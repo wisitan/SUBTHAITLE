@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useAppStore } from '@/lib/store';
 import { extractAudioFromMedia, AudioExtractProgress } from '@/lib/audio-extract';
+import { transcribeAudio } from '@/lib/transcribe';
 import {
   UploadCloud,
   FileVideo,
@@ -13,6 +14,10 @@ import {
   RefreshCw,
   ArrowRight,
   Loader2,
+  Sparkles,
+  SlidersHorizontal,
+  Clock,
+  Type,
 } from 'lucide-react';
 
 export function UploadZone() {
@@ -30,11 +35,15 @@ export function UploadZone() {
     provider,
     tier,
     groqApiKey,
+    captions,
+    setCaptions,
   } = useAppStore();
 
   const [isDragging, setIsDragging] = useState(false);
   const [extractProgress, setExtractProgress] = useState<AudioExtractProgress | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [transcribeMessage, setTranscribeMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Revoke object URL on unmount
@@ -53,6 +62,7 @@ export function UploadZone() {
   const handleFile = useCallback(
     async (selectedFile: File) => {
       setErrorMessage(null);
+      setCaptions([]);
 
       // Validate file format
       const validExtensions = ['.mp4', '.mov', '.webm', '.mkv', '.mp3', '.wav', '.m4a', '.aac', '.ogg'];
@@ -113,7 +123,7 @@ export function UploadZone() {
         setStatus('idle', 0, 'พร้อมถอดเสียง');
       }
     },
-    [isUnlimitedSize, setAudioBlob, setErrorMessage, setFile, setStatus, setVideoUrl, videoUrl]
+    [isUnlimitedSize, setAudioBlob, setCaptions, setErrorMessage, setFile, setStatus, setVideoUrl, videoUrl]
   );
 
   const onDragOver = (e: React.DragEvent) => {
@@ -142,12 +152,45 @@ export function UploadZone() {
     setAudioBlob(null);
     setExtractProgress(null);
     setIsExtracting(false);
+    setIsTranscribing(false);
+    setTranscribeMessage('');
+    setCaptions([]);
     setStatus('idle', 0, '');
     setErrorMessage(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
+
+  const handleStartTranscribe = async () => {
+    if (!audioBlob) {
+      setErrorMessage('ไม่พบไฟล์เสียงสำหรับการถอดข้อความ กรุณาเลือกไฟล์ใหม่อีกครั้ง');
+      return;
+    }
+
+    setErrorMessage(null);
+    setIsTranscribing(true);
+    setStatus('transcribing', 20, 'กำลังเตรียมส่งไฟล์เสียง...');
+
+    try {
+      const results = await transcribeAudio(audioBlob, (msg) => {
+        setTranscribeMessage(msg);
+      });
+
+      setCaptions(results);
+      setStatus('ready', 100, 'ถอดเสียงภาษาไทยสำเร็จ!');
+      setIsTranscribing(false);
+    } catch (err) {
+      console.error('Transcription error:', err);
+      setIsTranscribing(false);
+      setStatus('error', 0, 'การถอดเสียงล้มเหลว');
+      setErrorMessage(
+        err instanceof Error ? err.message : 'เกิดข้อผิดพลาดไม่ทราบสาเหตุในการถอดเสียง'
+      );
+    }
+  };
+
+  const totalWords = captions.reduce((acc, cue) => acc + (cue.words?.length || cue.text.split(' ').length), 0);
 
   return (
     <div className="w-full">
@@ -199,17 +242,17 @@ export function UploadZone() {
             {isUnlimitedSize ? (
               <span className="px-2.5 py-1 text-xs rounded-lg bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 font-medium flex items-center gap-1">
                 <Zap className="w-3 h-3" />
-                BYOK: ไม่จำกัดขนาดไฟล์
+                โหมดไม่จำกัดขนาดไฟล์
               </span>
             ) : (
               <span className="px-2.5 py-1 text-xs rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-400">
-                ขนาดไฟล์สูงสุด 100 MB (BYOK = ไม่จำกัด)
+                ขนาดไฟล์สูงสุด 100 MB
               </span>
             )}
           </div>
         </div>
       ) : (
-        /* File Selected / Extracted Preview Card */
+        /* File Selected / Extracted / Transcribed Preview Card */
         <div className="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-6 backdrop-blur-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 border-b border-zinc-800">
             <div className="flex items-center gap-3.5">
@@ -242,8 +285,9 @@ export function UploadZone() {
             {/* Change file button */}
             <button
               type="button"
+              disabled={isExtracting || isTranscribing}
               onClick={handleReset}
-              className="px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 rounded-xl transition-colors flex items-center gap-1.5 self-end md:self-auto"
+              className="px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 rounded-xl transition-colors flex items-center gap-1.5 self-end md:self-auto disabled:opacity-50 cursor-pointer"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               เปลี่ยนไฟล์
@@ -269,13 +313,28 @@ export function UploadZone() {
                 />
               </div>
               <p className="text-[11px] text-zinc-400 mt-2">
-                💡 ระบบสกัดเฉพาะเสียง MP3 บนเครื่องของคุณทันที ทำให้ไม่ต้องอัปโหลดวิดีโอขนาดใหญ่ ประหยัดเน็ตและค่าใช้จ่าย
+                💡 ระบบสกัดเฉพาะเสียง MP3 บนเครื่องของคุณทันที ทำให้ไม่ต้องอัปโหลดวิดีโอขนาดใหญ่ ประหยัดเน็ต 100%
               </p>
             </div>
           )}
 
+          {/* Transcription In Progress Banner */}
+          {isTranscribing && (
+            <div className="my-5 p-5 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-rose-500/10 border border-orange-500/30 rounded-2xl animate-pulse">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
+                <div>
+                  <h5 className="text-sm font-bold text-white">กำลังถอดเสียงภาษาไทยด้วย AI...</h5>
+                  <p className="text-xs text-orange-300 mt-0.5">
+                    {transcribeMessage || 'กำลังส่งไฟล์เสียงและคำนวณตำแหน่งเวลาของแต่ละคำ...'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Video Preview thumbnail & Duration */}
-          {videoUrl && (
+          {videoUrl && !captions.length && (
             <div className="my-5 flex flex-col sm:flex-row items-center gap-4 p-4 bg-zinc-950 rounded-2xl border border-zinc-800/80">
               <video
                 src={videoUrl}
@@ -300,30 +359,96 @@ export function UploadZone() {
                       ? isBYOK
                         ? 'Groq Whisper Cloud (BYOK Mode)'
                         : 'Groq Whisper Cloud (Free Tier)'
-                      : 'Local Whisper (Offline)'}
+                      : 'Local Whisper (Offline Mac)'}
                   </span>
                 </p>
                 <p className="text-[11px] text-zinc-400">
-                  คลิปจะถูกส่งไปถอดเสียงภาษาไทย พร้อมคำนวณตำแหน่งเวลาทีละคำ (Word-level timestamps)
+                  ระบบจะถอดเสียงภาษาไทยพร้อมระบุเวลาทีละคำ (Word-level timestamps) เพื่อทำซับคาราโอเกะ
                 </p>
               </div>
             </div>
           )}
 
+          {/* Transcription Results Card (When Finished) */}
+          {captions.length > 0 && (
+            <div className="my-5 p-5 bg-zinc-950 rounded-2xl border border-emerald-500/30 space-y-4 animate-in fade-in duration-300">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h5 className="text-sm font-bold text-white">ถอดเสียงภาษาไทยสำเร็จ!</h5>
+                    <span className="text-[11px] text-zinc-400">พร้อมปรับแต่งสไตล์และส่งออก</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-xs text-zinc-300">
+                  <span className="flex items-center gap-1 bg-zinc-900 px-2.5 py-1 rounded-lg border border-zinc-800">
+                    <Clock className="w-3.5 h-3.5 text-orange-400" />
+                    {captions.length} ท่อนซับ
+                  </span>
+                  <span className="flex items-center gap-1 bg-zinc-900 px-2.5 py-1 rounded-lg border border-zinc-800">
+                    <Type className="w-3.5 h-3.5 text-emerald-400" />
+                    ~{totalWords} คำ
+                  </span>
+                </div>
+              </div>
+
+              {/* Subtitle Snippet Preview */}
+              <div className="max-h-36 overflow-y-auto space-y-1.5 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/60 text-xs font-mono">
+                {captions.slice(0, 4).map((cue, idx) => (
+                  <div key={cue.id || idx} className="flex items-start gap-2 text-zinc-300">
+                    <span className="text-orange-400/80 shrink-0 select-none">
+                      [{cue.start.toFixed(1)}s - {cue.end.toFixed(1)}s]
+                    </span>
+                    <span className="line-clamp-1">{cue.text}</span>
+                  </div>
+                ))}
+                {captions.length > 4 && (
+                  <p className="text-[11px] text-zinc-500 italic text-center pt-1">
+                    ...และอีก {captions.length - 4} ท่อนซับ...
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Action Trigger Button */}
-          <div className="mt-5 flex justify-end">
-            <button
-              type="button"
-              disabled={isExtracting}
-              onClick={() => {
-                // Phase 2 hook
-                alert('Phase 1 สำเร็จ! พร้อมส่งเข้าสู่ Phase 2: Groq Transcription API');
-              }}
-              className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
-              <span>เริ่มถอดเสียงภาษาไทย (Start Transcription)</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+          <div className="mt-5 flex justify-end gap-3">
+            {!captions.length ? (
+              <button
+                type="button"
+                disabled={isExtracting || isTranscribing}
+                onClick={handleStartTranscribe}
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isTranscribing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>กำลังถอดเสียง...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    <span>เริ่มถอดเสียงภาษาไทย (Start Transcription)</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  alert('Phase 2 สำเร็จแล้ว! พร้อมเข้าสู่ Phase 3-4 เพื่อพัฒนาหน้าจอ Editor & Video Player');
+                }}
+                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                <span>เปิดหน้าต่างปรับแต่ง Subtitle (Style Editor)</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       )}
