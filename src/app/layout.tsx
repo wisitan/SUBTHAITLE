@@ -9,8 +9,12 @@ const notoSansThai = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "Thai Caption Studio",
-  description: "AI-powered Thai Video Captioning & Styling",
+  title: "sub[THAI]tle — AI Thai Caption Studio",
+  description: "ถอดเสียงภาษาไทยอัตโนมัติ สวยสะกดตา ไฮไลต์ทีละคำ พร้อมส่งออก FCPXML, SRT หรือฝังซับลงวิดีโอ MP4 ได้ทันที",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -20,6 +24,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
+      <head>
+        <link rel="icon" href="/logo.png" />
+      </head>
       <body className={`${notoSansThai.className} antialiased`}>
         {children}
       </body>
