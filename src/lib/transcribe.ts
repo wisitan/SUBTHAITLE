@@ -151,13 +151,21 @@ export async function transcribeAudio(
 
   // 3. Extract and Clean Word-level Timestamps
   const words: CaptionWord[] = (data.words || [])
-    .map((w) => ({
-      word: cleanThaiText(w.word),
-      start: Number(w.start),
-      end: Number(w.end),
-      confidence: w.confidence,
-    }))
-    .filter((w) => w.word.length > 0);
+    .map((w) => {
+      // Preserve Whisper's native leading/trailing spaces while cleaning the text
+      const match = w.word.match(/^(\s*)(.*?)(\s*)$/);
+      const leading = match?.[1] || '';
+      const core = match?.[2] || '';
+      const trailing = match?.[3] || '';
+
+      return {
+        word: leading + cleanThaiText(core) + trailing,
+        start: Number(w.start),
+        end: Number(w.end),
+        confidence: w.confidence,
+      };
+    })
+    .filter((w) => w.word.trim().length > 0);
 
   // Save raw words in store for instant live re-pacing
   store.setRawWords(words);
