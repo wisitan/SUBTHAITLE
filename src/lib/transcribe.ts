@@ -1,5 +1,5 @@
 import { CaptionItem, CaptionWord, useAppStore } from './store';
-import { cleanThaiText, mergeThaiSubwords } from './thai-text';
+import { cleanThaiText, resegmentThaiWords } from './thai-text';
 import { groupWordsIntoCaptions, splitLongCaptions } from './caption-grouping';
 
 export interface TranscribeResponse {
@@ -167,8 +167,8 @@ export async function transcribeAudio(
     })
     .filter((w) => w.word.trim().length > 0);
 
-  // Merge broken Whisper Thai subword tokens into whole linguistic words
-  const words = mergeThaiSubwords(rawWordTokens);
+  // Re-segment broken Whisper Thai subword tokens into proper linguistic words
+  const words = resegmentThaiWords(rawWordTokens);
 
   // Save raw words in store for instant live re-pacing
   store.setRawWords(words);

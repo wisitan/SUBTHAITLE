@@ -1,7 +1,7 @@
 import { CaptionItem, CaptionWord } from './store';
 import {
   cleanThaiText,
-  mergeThaiSubwords,
+  resegmentThaiWords,
   THAI_NON_INITIAL,
   THAI_TRAILING_INCOMPLETE,
 } from './thai-text';
@@ -52,8 +52,8 @@ export function groupWordsIntoCaptions(
     return [];
   }
 
-  // Filter out empty or whitespace-only words and merge broken Thai subword tokens
-  const validWords: CaptionWord[] = mergeThaiSubwords(
+  // Filter out empty or whitespace-only words and re-segment broken Thai subword tokens
+  const validWords: CaptionWord[] = resegmentThaiWords(
     rawWords.filter((w) => w.word && w.word.trim().length > 0)
   );
 

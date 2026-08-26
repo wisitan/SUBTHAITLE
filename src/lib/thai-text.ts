@@ -13,41 +13,124 @@ const HALLUCINATION_PATTERNS = [
 ];
 
 // Regex for Thai characters that can never begin a standalone word or syllable token
-// (including Thai combining vowels \u0E31-\u0E3A, tone marks \u0E48-\u0E4B, karan \u0E4C, paiyannoi \u0E2F, maiyamok \u0E46, dependent vowels \u0E30, \u0E32, \u0E33, \u0E45, diacritics \u0E47, \u0E4D, \u0E4E)
+// Used as fallback safety check in caption grouping
 export const THAI_NON_INITIAL = /^[\s]*[\u0E2F\u0E30-\u0E3A\u0E45\u0E46\u0E47-\u0E4E]/;
 
-// Regex for Thai leading vowels (เ, แ, โ, ใ, ไ: \u0E40-\u0E44) that cannot end a token alone
+// Regex for Thai leading vowels (เ, แ, โ, ใ, ไ) that cannot end a token alone
 export const THAI_TRAILING_INCOMPLETE = /[\u0E40-\u0E44]$/;
 
 /**
- * Merges Whisper subword/character tokens into linguistically complete words.
- * Fixes Whisper splitting within syllables, floating tone marks, and separated vowels.
+ * Re-segments Whisper's BPE subword tokens into linguistically correct Thai words
+ * using the browser's built-in Intl.Segmenter('th', { granularity: 'word' }).
+ *
+ * This is the definitive solution for Thai tokenization — it handles ALL cases where
+ * Whisper splits mid-syllable (e.g. "คื"+"อ" → "คือ", "สา"+"มารถ" → "สามารถ",
+ * "ต้"+"อง" → "ต้อง") by rebuilding from the full concatenated text.
  */
-export function mergeThaiSubwords<T extends { word: string; start: number; end: number }>(
-  rawWords: T[]
-): T[] {
+export function resegmentThaiWords<T extends { word: string; start: number; end: number }>(tokens: T[]): T[] {
+  if (!tokens || tokens.length === 0) return [];
+
+  // Check if Intl.Segmenter is available (should be in all modern browsers and Node 16+)
+  if (typeof Intl === 'undefined' || !('Segmenter' in Intl)) {
+    // Fallback: return tokens as-is with basic combining-character merge
+    return mergeThaiSubwordsFallback(tokens);
+  }
+
+  // Step 1: Build a continuous string with character-level timestamp mapping
+  const charTimestamps: Array<{ start: number; end: number }> = [];
+  let fullText = '';
+
+  for (const token of tokens) {
+    const text = token.word;
+    const hasLeadingSpace = /^\s/.test(text);
+    const trimmed = text.trimStart();
+
+    // Preserve word-boundary spaces from Whisper (important for English words like " Samsung")
+    if (hasLeadingSpace && fullText.length > 0) {
+      fullText += ' ';
+      charTimestamps.push({ start: token.start, end: token.start });
+    }
+
+    const len = trimmed.length;
+    for (let i = 0; i < len; i++) {
+      const cStart = token.start + (token.end - token.start) * (i / Math.max(len, 1));
+      const cEnd = token.start + (token.end - token.start) * ((i + 1) / Math.max(len, 1));
+      charTimestamps.push({ start: cStart, end: cEnd });
+    }
+    fullText += trimmed;
+  }
+
+  // Step 2: Insert artificial space at Latin↔Thai script boundaries
+  // (prevents "Samsungของ" from being treated as one word by Segmenter)
+  let processedText = '';
+  const processedTimestamps: Array<{ start: number; end: number }> = [];
+
+  for (let i = 0; i < fullText.length; i++) {
+    if (i > 0) {
+      const prevCh = fullText[i - 1];
+      const currCh = fullText[i];
+      const prevIsThai = /[\u0E00-\u0E7F]/.test(prevCh);
+      const currIsThai = /[\u0E00-\u0E7F]/.test(currCh);
+      const prevIsLatinOrNum = /[a-zA-Z0-9]/.test(prevCh);
+      const currIsLatinOrNum = /[a-zA-Z0-9]/.test(currCh);
+
+      if ((prevIsThai && currIsLatinOrNum) || (prevIsLatinOrNum && currIsThai)) {
+        processedText += ' ';
+        processedTimestamps.push({ start: charTimestamps[i].start, end: charTimestamps[i].start });
+      }
+    }
+    processedText += fullText[i];
+    processedTimestamps.push(charTimestamps[i]);
+  }
+
+  // Step 3: Use Intl.Segmenter to properly tokenize Thai text
+  const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
+  const segments = Array.from(segmenter.segment(processedText));
+
+  // Step 4: Map each segment back to timestamps
+  const result: T[] = [];
+  const templateToken = tokens[0]; // Use first token as template for extra properties
+
+  for (const seg of segments) {
+    const word = seg.segment;
+    if (!word.trim()) continue; // Skip whitespace segments
+
+    const startIdx = seg.index;
+    const endIdx = Math.min(startIdx + word.length - 1, processedTimestamps.length - 1);
+    if (startIdx >= processedTimestamps.length) continue;
+
+    result.push({
+      ...templateToken,
+      word,
+      start: processedTimestamps[startIdx].start,
+      end: processedTimestamps[endIdx].end,
+    } as T);
+  }
+
+  return result;
+}
+
+/**
+ * Fallback merge for environments without Intl.Segmenter.
+ * Only handles combining characters (tone marks, vowel marks) — not mid-syllable splits.
+ */
+function mergeThaiSubwordsFallback<T extends { word: string; start: number; end: number }>(rawWords: T[]): T[] {
   if (!rawWords || rawWords.length === 0) return [];
   const merged: T[] = [];
 
   for (const w of rawWords) {
     if (!w.word || w.word.trim().length === 0) continue;
-
     const prev = merged.length > 0 ? merged[merged.length - 1] : null;
-
-    // Check if current token starts with non-initial char OR previous token ends with leading vowel
     const isNonInitial = Boolean(prev && THAI_NON_INITIAL.test(w.word));
     const isPrevIncomplete = Boolean(prev && THAI_TRAILING_INCOMPLETE.test(prev.word.trimEnd()));
 
     if (prev && (isNonInitial || isPrevIncomplete)) {
-      // Attach to previous word
       prev.word = prev.word + w.word.trimStart();
       prev.end = Math.max(prev.end, w.end);
       continue;
     }
-
     merged.push({ ...w });
   }
-
   return merged;
 }
 
