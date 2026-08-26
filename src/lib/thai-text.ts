@@ -196,6 +196,64 @@ export function isPunctuationOnly(word: string): boolean {
 }
 
 /**
+ * Intelligently joins segmented words/tokens into natural display text:
+ * - Thai + Thai: joined without space (e.g. "เข้า" + "ไป" + "ดู" -> "เข้าไปดู")
+ * - Latin + Latin: joined WITH space (e.g. "bluetooth" + "setting" -> "bluetooth setting")
+ * - Latin + Thai / Thai + Latin: joined WITH space (e.g. "Samsung" + "ของ" -> "Samsung ของ", "ใช้" + "iPhone" -> "ใช้ iPhone")
+ * - Numbers + Thai / Thai + Numbers: joined WITH space (e.g. "ราคา" + "299" -> "ราคา 299", "299" + "บาท" -> "299 บาท")
+ * - Maiyamok (ๆ) / Paiyannoi (ฯ): attached to previous Thai word, but followed by a space (e.g. "มากๆ และสามารถ")
+ */
+export function formatCaptionWordsText<T extends { word: string } | string>(words: T[]): string {
+  if (!words || words.length === 0) return '';
+
+  let result = '';
+  for (let i = 0; i < words.length; i++) {
+    const rawWord = typeof words[i] === 'string' ? (words[i] as string) : (words[i] as { word: string }).word;
+    const w = rawWord.trim();
+    if (!w) continue;
+
+    if (result.length === 0) {
+      result = w;
+      continue;
+    }
+
+    const prevLastChar = result.slice(-1);
+    const currFirstChar = w.slice(0, 1);
+
+    const prevIsLatin = /[a-zA-Z0-9]/.test(prevLastChar);
+    const currIsLatin = /[a-zA-Z0-9]/.test(currFirstChar);
+    const prevIsThai = /[\u0E00-\u0E7F]/.test(prevLastChar);
+    const currIsThai = /[\u0E00-\u0E7F]/.test(currFirstChar);
+    const prevIsMaiyamok = prevLastChar === 'ๆ' || prevLastChar === 'ฯ';
+
+    // If current token is maiyamok or paiyannoi, attach directly to previous Thai word
+    if (prevIsThai && (currFirstChar === 'ๆ' || currFirstChar === 'ฯ')) {
+      result += w;
+      continue;
+    }
+
+    // Rules for inserting a space:
+    // 1. Latin + Latin (e.g. "bluetooth" + "setting" -> "bluetooth setting")
+    // 2. Latin + Thai (e.g. "Samsung" + "ของ" -> "Samsung ของ")
+    // 3. Thai + Latin (e.g. "ใช้" + "iPhone" -> "ใช้ iPhone", "ราคา" + "299" -> "ราคา 299")
+    // 4. After Maiyamok/Paiyannoi (e.g. "มากๆ" + "และ" -> "มากๆ และ")
+    if (
+      (prevIsLatin && currIsLatin) ||
+      (prevIsLatin && currIsThai) ||
+      (prevIsThai && currIsLatin) ||
+      prevIsMaiyamok
+    ) {
+      result += ' ' + w;
+    } else {
+      // Thai + Thai -> join without space
+      result += w;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Formats Thai numbers with commas if needed or cleans Thai digits
  */
 export function thaiDigitsToArabic(text: string): string {

@@ -1,6 +1,7 @@
 import { CaptionItem, CaptionWord } from './store';
 import {
   cleanThaiText,
+  formatCaptionWordsText,
   resegmentThaiWords,
   THAI_NON_INITIAL,
   THAI_TRAILING_INCOMPLETE,
@@ -81,10 +82,9 @@ export function groupWordsIntoCaptions(
       ? word.start - prevWord.end >= config.pauseSplitThresholdSec
       : false;
 
-    // Calculate current accumulated metrics
+    // Calculate current accumulated metrics using intelligent formatting
     const currentWordCount = currentWords.length;
-    const currentText = currentWords.map((w) => w.word).join('');
-    const potentialText = currentText + word.word;
+    const potentialText = formatCaptionWordsText([...currentWords, word]);
     const currentDuration = currentWords.length > 0 ? word.end - currentStart : 0;
 
     const exceedsWords = currentWordCount >= config.maxWordsPerLine;
@@ -105,7 +105,7 @@ export function groupWordsIntoCaptions(
       (isLongPause || exceedsWords || exceedsChars || exceedsDuration)
     ) {
       // Close current bucket
-      const cueText = cleanThaiText(currentWords.map((w) => w.word).join(''));
+      const cueText = cleanThaiText(formatCaptionWordsText(currentWords));
       if (cueText) {
         captions.push({
           id: `cue-${captions.length + 1}-${Date.now().toString(36)}`,
@@ -127,7 +127,7 @@ export function groupWordsIntoCaptions(
   // Flush remaining words
   if (currentWords.length > 0) {
     const lastWord = currentWords[currentWords.length - 1];
-    const cueText = cleanThaiText(currentWords.map((w) => w.word).join(''));
+    const cueText = cleanThaiText(formatCaptionWordsText(currentWords));
     if (cueText) {
       captions.push({
         id: `cue-${captions.length + 1}-${Date.now().toString(36)}`,
@@ -176,7 +176,7 @@ export function splitLongCaptions(
 
     for (let i = 0; i < tokens.length; i += wordsPerChunk) {
       const chunkWords = tokens.slice(i, i + wordsPerChunk);
-      const chunkText = chunkWords.join(' ');
+      const chunkText = formatCaptionWordsText(chunkWords);
       const chunkStart = cap.start + i * timePerWord;
       const chunkEnd = cap.start + Math.min(i + wordsPerChunk, tokens.length) * timePerWord;
 
