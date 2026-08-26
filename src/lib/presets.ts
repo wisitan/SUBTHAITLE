@@ -1,0 +1,149 @@
+import { CaptionStyle } from './store';
+
+export interface StylePreset {
+  id: string;
+  name: string;
+  description: string;
+  previewBg: string;
+  previewTextColor: string;
+  previewHighlightColor: string;
+  style: CaptionStyle;
+}
+
+export const SUBTITLE_PRESETS: StylePreset[] = [
+  {
+    id: 'tiktok-viral',
+    name: '🔥 TikTok Viral (ฮิตสุด)',
+    description: 'ฟอนต์ Kanit หนาพิเศษ ขอบดำคมกริบ ไฮไลท์เหลืองนีออนสะดุดตา',
+    previewBg: 'bg-zinc-900',
+    previewTextColor: '#FFFFFF',
+    previewHighlightColor: '#FACC15',
+    style: {
+      fontFamily: 'Kanit',
+      fontSize: 34,
+      textColor: '#FFFFFF',
+      fontWeight: '800',
+      positionY: 18,
+      positionX: 50,
+      hasShadow: true,
+      shadowColor: '#000000',
+      shadowBlur: 10,
+      shadowOpacity: 0.9,
+      hasOutline: true,
+      outlineColor: '#000000',
+      outlineWidth: 3,
+      enableWordHighlight: true,
+      highlightColor: '#FACC15', // Neon Yellow
+      hasBackground: false,
+      backgroundColor: 'rgba(0,0,0,0.65)',
+    },
+  },
+  {
+    id: 'orange-creator',
+    name: '🟠 Creator Orange (คุมโทน)',
+    description: 'ฟอนต์ Prompt ตัวหนา ไฮไลท์สีส้มสดใส สไตล์สตูดิโอครีเอเตอร์',
+    previewBg: 'bg-zinc-900',
+    previewTextColor: '#FFFFFF',
+    previewHighlightColor: '#FB923C',
+    style: {
+      fontFamily: 'Prompt',
+      fontSize: 32,
+      textColor: '#FFFFFF',
+      fontWeight: '700',
+      positionY: 16,
+      positionX: 50,
+      hasShadow: true,
+      shadowColor: '#000000',
+      shadowBlur: 8,
+      shadowOpacity: 0.85,
+      hasOutline: true,
+      outlineColor: '#000000',
+      outlineWidth: 3,
+      enableWordHighlight: true,
+      highlightColor: '#FB923C', // Vibrant Orange
+      hasBackground: false,
+      backgroundColor: 'rgba(0,0,0,0.7)',
+    },
+  },
+  {
+    id: 'minimal-cinema',
+    name: '🎬 Minimalist Box (มินิมอลกล่องดำ)',
+    description: 'มีแถบพื้นหลังสีดำโปร่งใส อ่านง่ายบนทุกฉาก ทุกวิดีโอ',
+    previewBg: 'bg-zinc-800',
+    previewTextColor: '#FFFFFF',
+    previewHighlightColor: '#38BDF8',
+    style: {
+      fontFamily: 'Noto Sans Thai',
+      fontSize: 26,
+      textColor: '#FFFFFF',
+      fontWeight: '600',
+      positionY: 14,
+      positionX: 50,
+      hasShadow: false,
+      shadowColor: '#000000',
+      shadowBlur: 4,
+      shadowOpacity: 0.5,
+      hasOutline: false,
+      outlineColor: '#000000',
+      outlineWidth: 0,
+      enableWordHighlight: true,
+      highlightColor: '#38BDF8', // Cyan Sky
+      hasBackground: true,
+      backgroundColor: 'rgba(0, 0, 0, 0.75)',
+    },
+  },
+  {
+    id: 'youtube-clean',
+    name: '📺 YouTube Vlog (คลีนสะอาดตา)',
+    description: 'ฟอนต์ Sarabun คมชัด เงาเบาๆ สไตล์คลิปสอน สัมภาษณ์ และสารคดี',
+    previewBg: 'bg-zinc-900',
+    previewTextColor: '#FFFFFF',
+    previewHighlightColor: '#4ADE80',
+    style: {
+      fontFamily: 'Sarabun',
+      fontSize: 28,
+      textColor: '#FFFFFF',
+      fontWeight: '700',
+      positionY: 12,
+      positionX: 50,
+      hasShadow: true,
+      shadowColor: '#000000',
+      shadowBlur: 6,
+      shadowOpacity: 0.8,
+      hasOutline: true,
+      outlineColor: '#000000',
+      outlineWidth: 2,
+      enableWordHighlight: true,
+      highlightColor: '#4ADE80', // Mint Green
+      hasBackground: false,
+      backgroundColor: 'rgba(0,0,0,0.6)',
+    },
+  },
+  {
+    id: 'cyber-neon',
+    name: '⚡ Cyberpunk Neon (นีออนล้ำๆ)',
+    description: 'ฟอนต์ Chonburi ตัวหนา ไฮไลท์ชมพูนีออนสไตล์เกมมิ่งและ Gadget',
+    previewBg: 'bg-zinc-950',
+    previewTextColor: '#E0F2FE',
+    previewHighlightColor: '#F43F5E',
+    style: {
+      fontFamily: 'Chonburi',
+      fontSize: 34,
+      textColor: '#E0F2FE',
+      fontWeight: '700',
+      positionY: 18,
+      positionX: 50,
+      hasShadow: true,
+      shadowColor: '#0369A1',
+      shadowBlur: 14,
+      shadowOpacity: 0.95,
+      hasOutline: true,
+      outlineColor: '#020617',
+      outlineWidth: 3,
+      enableWordHighlight: true,
+      highlightColor: '#F43F5E', // Neon Rose
+      hasBackground: false,
+      backgroundColor: 'rgba(2, 6, 23, 0.8)',
+    },
+  },
+];

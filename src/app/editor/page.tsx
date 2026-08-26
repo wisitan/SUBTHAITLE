@@ -10,10 +10,13 @@ import {
   Sparkles,
   Film,
   Check,
+  AlignLeft,
+  Palette,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { VideoPlayer } from '@/components/video-player';
 import { CaptionTable } from '@/components/caption-table';
+import { StyleEditor } from '@/components/style-editor';
 import { generateSrt, generateVtt } from '@/lib/srt';
 
 export default function EditorPage() {
@@ -22,6 +25,7 @@ export default function EditorPage() {
   const captions = useAppStore((s) => s.captions);
   const mediaDuration = useAppStore((s) => s.mediaDuration);
 
+  const [activeTab, setActiveTab] = useState<'captions' | 'style'>('captions');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -172,9 +176,54 @@ export default function EditorPage() {
           </div>
         </div>
 
-        {/* Right Column: WYSIWYG Caption Editor List (58% width on desktop) */}
-        <div className="lg:col-span-7 h-full min-h-[500px]">
-          <CaptionTable />
+        {/* Right Column: Studio Tabs (Captions vs Style Editor) (58% width on desktop) */}
+        <div className="lg:col-span-7 h-full min-h-[500px] flex flex-col space-y-3">
+          {/* Segmented Tab Switcher */}
+          <div className="flex items-center p-1.5 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl shadow-lg">
+            <button
+              type="button"
+              onClick={() => setActiveTab('captions')}
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                activeTab === 'captions'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <AlignLeft className="w-4 h-4" />
+              <span>📝 ข้อความซับไตเติล (Captions)</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                  activeTab === 'captions'
+                    ? 'bg-zinc-950/20 text-zinc-950 font-bold'
+                    : 'bg-zinc-800 text-zinc-400'
+                }`}
+              >
+                {captions.length}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('style')}
+              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                activeTab === 'style'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Palette className="w-4 h-4" />
+              <span>🎨 ปรับแต่งสไตล์ (Style & Font)</span>
+            </button>
+          </div>
+
+          {/* Tab Content Panels */}
+          <div className="flex-1 bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl">
+            {activeTab === 'captions' ? (
+              <CaptionTable />
+            ) : (
+              <StyleEditor />
+            )}
+          </div>
         </div>
       </main>
     </div>

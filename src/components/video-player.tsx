@@ -18,6 +18,7 @@ import {
   Square,
   Layers,
 } from 'lucide-react';
+import { loadGoogleFont } from '@/lib/fonts';
 
 interface Props {
   className?: string;
@@ -53,6 +54,13 @@ export function VideoPlayer({ className = '' }: Props) {
     if (!file) return false;
     return file.type.startsWith('audio/') || /\.(mp3|wav|m4a|aac|ogg)$/i.test(file.name);
   }, [file]);
+
+  // Dynamically load Google Font when style.fontFamily changes
+  useEffect(() => {
+    if (style.fontFamily) {
+      loadGoogleFont(style.fontFamily);
+    }
+  }, [style.fontFamily]);
 
   // Format seconds to mm:ss.ms
   const formatTime = (secs: number) => {
@@ -371,37 +379,39 @@ export function VideoPlayer({ className = '' }: Props) {
             {activeCaption && (
               <div
                 style={subtitleOverlayStyle}
-                className="absolute z-20 text-center max-w-[92%] leading-relaxed pointer-events-none select-none transition-all duration-75"
+                className="absolute z-20 text-center max-w-[92%] pointer-events-none select-none transition-all duration-75"
               >
-                {style.enableWordHighlight && activeCaption.words && activeCaption.words.length > 0 ? (
-                  /* Word-level Highlight Rendering */
-                  <div className="inline-flex flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5">
-                    {activeCaption.words.map((w: CaptionWord, idx: number) => {
+                <p className="leading-snug inline text-center" style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                  {style.enableWordHighlight && activeCaption.words && activeCaption.words.length > 0 ? (
+                    /* Word-level Highlight with 100% natural inline rendering (No Flexbox, No Blur) */
+                    activeCaption.words.map((w: CaptionWord, idx: number) => {
                       const isWordActive =
                         w.start <= currentTime && currentTime <= w.end + 0.08;
 
                       return (
                         <span
                           key={idx}
-                          className="transition-all duration-100 inline-block"
+                          className="transition-colors duration-75 inline"
                           style={{
                             color: isWordActive ? style.highlightColor || '#FACC15' : style.textColor || '#FFFFFF',
-                            transform: isWordActive ? 'scale(1.08)' : 'scale(1)',
-                            fontWeight: isWordActive ? 800 : style.fontWeight === 'bold' ? 700 : 500,
-                            textShadow: isWordActive
-                              ? `0 0 16px ${style.highlightColor || '#FACC15'}80, ${subtitleOverlayStyle.textShadow}`
-                              : subtitleOverlayStyle.textShadow,
+                            fontWeight: isWordActive
+                              ? 800
+                              : style.fontWeight === 'bold' || style.fontWeight === '700'
+                              ? 700
+                              : style.fontWeight === '800'
+                              ? 800
+                              : 500,
                           }}
                         >
                           {w.word}
                         </span>
                       );
-                    })}
-                  </div>
-                ) : (
-                  /* Whole Caption Text Rendering */
-                  <span>{activeCaption.text}</span>
-                )}
+                    })
+                  ) : (
+                    /* Whole Caption Text Rendering */
+                    <span>{activeCaption.text}</span>
+                  )}
+                </p>
               </div>
             )}
           </>
