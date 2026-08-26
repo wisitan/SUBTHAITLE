@@ -47,15 +47,11 @@ export function groupWordsIntoCaptions(
     return [];
   }
 
-  // Filter out empty or whitespace-only words, but keep punctuation attached to words
+  // Filter out empty or whitespace-only words
   const validWords: CaptionWord[] = [];
   rawWords.forEach((w) => {
-    const cleaned = cleanThaiText(w.word);
-    if (cleaned.length > 0) {
-      validWords.push({
-        ...w,
-        word: cleaned,
-      });
+    if (w.word.trim().length > 0) {
+      validWords.push(w);
     }
   });
 
@@ -85,8 +81,8 @@ export function groupWordsIntoCaptions(
 
     // Calculate current accumulated metrics
     const currentWordCount = currentWords.length;
-    const currentText = currentWords.map((w) => w.word).join(' ');
-    const potentialText = currentText ? `${currentText} ${word.word}` : word.word;
+    const currentText = currentWords.map((w) => w.word).join('');
+    const potentialText = currentText + word.word;
     const currentDuration = currentWords.length > 0 ? word.end - currentStart : 0;
 
     const exceedsWords = currentWordCount >= config.maxWordsPerLine;
@@ -98,7 +94,7 @@ export function groupWordsIntoCaptions(
     // 2. Limit exceeded (words, chars, or duration) AND we already have at least 1 word
     if (currentWords.length > 0 && (isLongPause || exceedsWords || exceedsChars || exceedsDuration)) {
       // Close current bucket
-      const cueText = cleanThaiText(currentWords.map((w) => w.word).join(' '));
+      const cueText = cleanThaiText(currentWords.map((w) => w.word).join(''));
       if (cueText) {
         captions.push({
           id: `cue-${captions.length + 1}-${Date.now().toString(36)}`,
@@ -120,7 +116,7 @@ export function groupWordsIntoCaptions(
   // Flush remaining words
   if (currentWords.length > 0) {
     const lastWord = currentWords[currentWords.length - 1];
-    const cueText = cleanThaiText(currentWords.map((w) => w.word).join(' '));
+    const cueText = cleanThaiText(currentWords.map((w) => w.word).join(''));
     if (cueText) {
       captions.push({
         id: `cue-${captions.length + 1}-${Date.now().toString(36)}`,
