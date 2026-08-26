@@ -132,7 +132,7 @@ export function ProviderSelector() {
                   Groq Cloud (Whisper v3)
                 </span>
                 <span className="text-[10px] text-orange-400 font-medium">
-                  {tier === 'free' ? 'ฟรี 5 คลิป/วัน' : 'ใช้งานผ่านระบบ'}
+                  {tier === 'free' ? 'ฟรี 5 คลิป/วัน (≤2 นาที, ≤100MB)' : 'ใช้งานผ่านระบบ'}
                 </span>
               </div>
             </div>
@@ -141,7 +141,7 @@ export function ProviderSelector() {
             )}
           </div>
           <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">
-            ถอดเสียงภาษาไทยอัตโนมัติความเร็วสูง ไม่ต้องตั้งค่าใดๆ พร้อมใช้งานทันที
+            ถอดเสียงภาษาไทยอัตโนมัติความเร็วสูง สำหรับคลิปความยาวไม่เกิน 2 นาที และขนาดไฟล์ไม่เกิน 100 MB
           </p>
         </div>
 
@@ -170,7 +170,7 @@ export function ProviderSelector() {
                   API Key ตัวเอง (BYOK)
                 </span>
                 <span className="text-[10px] text-emerald-400 font-medium">
-                  {isPaid ? '⚡ ไม่จำกัดจำนวน & ความยาวคลิป' : '🔒 ปลดล็อกเมื่อร่วมสนับสนุน'}
+                  {isPaid ? '⚡ ไม่จำกัดขนาด, ความยาว & จำนวนคลิป' : '🔒 ปลดล็อกเมื่อร่วมสนับสนุน'}
                 </span>
               </div>
             </div>
@@ -189,8 +189,8 @@ export function ProviderSelector() {
           </div>
           <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">
             {isPaid
-              ? 'ใส่ Groq API Key ส่วนตัว ถอดเสียงไม่จำกัดจำนวนคลิปและไม่จำกัดความยาว ฟรีไม่มีค่าใช้จ่ายเพิ่ม'
-              : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงได้ไม่จำกัดจำนวนคลิปและไม่จำกัดความยาวคลิป พร้อมใส่ API Key ของคุณเอง'}
+              ? 'ใส่ Groq API Key ส่วนตัว ถอดเสียงไม่จำกัดขนาดไฟล์ ไม่จำกัดความยาวคลิป และไม่จำกัดจำนวน ฟรีไม่มีค่าใช้จ่ายเพิ่ม'
+              : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงได้ไม่จำกัดขนาดไฟล์ ไม่จำกัดความยาว และไม่จำกัดจำนวนคลิป พร้อมใส่ API Key ตัวเอง'}
           </p>
         </div>
 
@@ -218,7 +218,7 @@ export function ProviderSelector() {
                   Local Whisper (Mac)
                 </span>
                 <span className="text-[10px] text-indigo-400 font-medium">
-                  {isPaid ? '🔒 Offline 100% ไม่จำกัดคลิป' : '🔒 ปลดล็อกเมื่อร่วมสนับสนุน'}
+                  {isPaid ? '🔒 Offline 100% ไม่จำกัด' : '🔒 ปลดล็อกเมื่อร่วมสนับสนุน'}
                 </span>
               </div>
             </div>
@@ -237,8 +237,8 @@ export function ProviderSelector() {
           </div>
           <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">
             {isPaid
-              ? 'ประมวลผลบนชิป Apple Silicon ออฟไลน์ 100% ไม่จำกัดจำนวนคลิปและความยาว ข้อมูลปลอดภัยไม่หลุดออกนอกเครื่อง'
-              : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงในเครื่อง Mac ออฟไลน์ 100% ไม่จำกัดจำนวนคลิปและความยาว ข้อมูลปลอดภัย'}
+              ? 'ประมวลผลบนชิป Apple Silicon ออฟไลน์ 100% ไม่จำกัดขนาดและความยาวคลิป ข้อมูลปลอดภัยไม่หลุดออกนอกเครื่อง'
+              : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงในเครื่อง Mac ออฟไลน์ 100% ไม่จำกัดขนาดและความยาวคลิป ข้อมูลปลอดภัย'}
           </p>
         </div>
       </div>
