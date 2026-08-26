@@ -178,9 +178,9 @@ export default function EditorPage() {
         </div>
 
         {/* Right Column: Studio Tabs (Captions vs Style vs Presets) (58% width on desktop) */}
-        <div className="lg:col-span-7 h-full min-h-[500px] flex flex-col space-y-3">
+        <div className="lg:col-span-7 flex flex-col space-y-3 h-[calc(100vh-100px)] min-h-[640px] lg:sticky lg:top-20">
           {/* Segmented Tab Switcher */}
-          <div className="flex items-center p-1.5 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl shadow-lg gap-1">
+          <div className="flex items-center p-1.5 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl shadow-lg gap-1 shrink-0">
             {/* Tab 1: Captions */}
             <button
               type="button"
@@ -234,7 +234,7 @@ export default function EditorPage() {
           </div>
 
           {/* Tab Content Panels */}
-          <div className="flex-1 bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl">
+          <div className="flex-1 bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl flex flex-col min-h-0">
             {activeTab === 'captions' ? (
               <CaptionTable />
             ) : activeTab === 'style' ? (

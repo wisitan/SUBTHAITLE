@@ -58,7 +58,7 @@ export function StyleEditor() {
   };
 
   return (
-    <div className="space-y-6 p-4 sm:p-5 text-zinc-100 overflow-y-auto max-h-[calc(100vh-220px)] scrollbar-thin scrollbar-thumb-zinc-800">
+    <div className="flex-1 h-full overflow-y-auto p-4 sm:p-5 text-zinc-100 space-y-6 scrollbar-thin scrollbar-thumb-zinc-800">
       {/* Header with Reset Default Button */}
       <div className="flex items-center justify-between pb-1 border-b border-zinc-800/80">
         <div>

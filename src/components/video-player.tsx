@@ -243,7 +243,7 @@ export function VideoPlayer({ className = '' }: Props) {
 
     return {
       fontFamily: `"${style.fontFamily}", sans-serif`,
-      fontSize: `clamp(18px, 3.2vw, ${style.fontSize}px)`,
+      fontSize: `clamp(16px, 3.2vw, ${style.fontSize}px)`,
       color: style.textColor || '#FFFFFF',
       fontWeight:
         style.fontWeight === 'bold' || style.fontWeight === '700'
@@ -254,6 +254,7 @@ export function VideoPlayer({ className = '' }: Props) {
       letterSpacing: `${style.letterSpacing ?? 0}px`,
       lineHeight: style.lineHeight ?? 1.4,
       textAlign,
+      width: `${maxWidthPct}%`,
       maxWidth: `${maxWidthPct}%`,
       bottom: `${style.positionY}%`,
       left: `${style.positionX}%`,
@@ -262,6 +263,7 @@ export function VideoPlayer({ className = '' }: Props) {
       backgroundColor: bgColor,
       padding: style.hasBackground ? '8px 18px' : '4px 8px',
       borderRadius: style.hasBackground ? '14px' : '0px',
+      boxSizing: 'border-box' as const,
     };
   }, [style]);
 
@@ -407,7 +409,7 @@ export function VideoPlayer({ className = '' }: Props) {
                 className="absolute z-20 pointer-events-none select-none transition-all duration-75"
               >
                 <p
-                  className="inline-block w-full"
+                  className="w-full inline-block m-0 p-0"
                   style={{
                     textAlign: style.textAlign || 'center',
                     wordBreak: 'break-word',
