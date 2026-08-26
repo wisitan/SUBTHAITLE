@@ -19,6 +19,15 @@ export const THAI_NON_INITIAL = /^[\s]*[\u0E2F\u0E30-\u0E3A\u0E45\u0E46\u0E47-\u
 // Regex for Thai leading vowels (เ, แ, โ, ใ, ไ) that cannot end a token alone
 export const THAI_TRAILING_INCOMPLETE = /[\u0E40-\u0E44]$/;
 
+let thaiSegmenter: Intl.Segmenter | null = null;
+
+function getThaiSegmenter() {
+  if (!thaiSegmenter && typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+    thaiSegmenter = new Intl.Segmenter('th', { granularity: 'word' });
+  }
+  return thaiSegmenter;
+}
+
 /**
  * Re-segments Whisper's BPE subword tokens into linguistically correct Thai words
  * using the browser's built-in Intl.Segmenter('th', { granularity: 'word' }).
@@ -31,13 +40,14 @@ export function resegmentThaiWords<T extends { word: string; start: number; end:
   if (!tokens || tokens.length === 0) return [];
 
   // Check if Intl.Segmenter is available (should be in all modern browsers and Node 16+)
-  if (typeof Intl === 'undefined' || !('Segmenter' in Intl)) {
+  const segmenter = getThaiSegmenter();
+  if (!segmenter) {
     // Fallback: return tokens as-is with basic combining-character merge
     return mergeThaiSubwordsFallback(tokens);
   }
 
   // Step 1: Build a continuous string with character-level timestamp mapping
-  const charTimestamps: Array<{ start: number; end: number }> = [];
+  const charTimestamps: Array<{ start: number; end: number; originalToken: T }> = [];
   let fullText = '';
 
   for (const token of tokens) {
@@ -48,14 +58,14 @@ export function resegmentThaiWords<T extends { word: string; start: number; end:
     // Preserve word-boundary spaces from Whisper (important for English words like " Samsung")
     if (hasLeadingSpace && fullText.length > 0) {
       fullText += ' ';
-      charTimestamps.push({ start: token.start, end: token.start });
+      charTimestamps.push({ start: token.start, end: token.start, originalToken: token });
     }
 
     const len = trimmed.length;
     for (let i = 0; i < len; i++) {
       const cStart = token.start + (token.end - token.start) * (i / Math.max(len, 1));
       const cEnd = token.start + (token.end - token.start) * ((i + 1) / Math.max(len, 1));
-      charTimestamps.push({ start: cStart, end: cEnd });
+      charTimestamps.push({ start: cStart, end: cEnd, originalToken: token });
     }
     fullText += trimmed;
   }
@@ -63,7 +73,7 @@ export function resegmentThaiWords<T extends { word: string; start: number; end:
   // Step 2: Insert artificial space at Latin↔Thai script boundaries
   // (prevents "Samsungของ" from being treated as one word by Segmenter)
   let processedText = '';
-  const processedTimestamps: Array<{ start: number; end: number }> = [];
+  const processedTimestamps: Array<{ start: number; end: number; originalToken: T }> = [];
 
   for (let i = 0; i < fullText.length; i++) {
     if (i > 0) {
@@ -76,7 +86,11 @@ export function resegmentThaiWords<T extends { word: string; start: number; end:
 
       if ((prevIsThai && currIsLatinOrNum) || (prevIsLatinOrNum && currIsThai)) {
         processedText += ' ';
-        processedTimestamps.push({ start: charTimestamps[i].start, end: charTimestamps[i].start });
+        processedTimestamps.push({ 
+          start: charTimestamps[i].start, 
+          end: charTimestamps[i].start, 
+          originalToken: charTimestamps[i].originalToken 
+        });
       }
     }
     processedText += fullText[i];
@@ -84,12 +98,10 @@ export function resegmentThaiWords<T extends { word: string; start: number; end:
   }
 
   // Step 3: Use Intl.Segmenter to properly tokenize Thai text
-  const segmenter = new Intl.Segmenter('th', { granularity: 'word' });
   const segments = Array.from(segmenter.segment(processedText));
 
   // Step 4: Map each segment back to timestamps
   const result: T[] = [];
-  const templateToken = tokens[0]; // Use first token as template for extra properties
 
   for (const seg of segments) {
     const word = seg.segment;
@@ -99,12 +111,15 @@ export function resegmentThaiWords<T extends { word: string; start: number; end:
     const endIdx = Math.min(startIdx + word.length - 1, processedTimestamps.length - 1);
     if (startIdx >= processedTimestamps.length) continue;
 
+    // Retrieve original metadata (confidence, speaker, etc.) from the token that covers the start of this segment
+    const baseToken = processedTimestamps[startIdx].originalToken;
+
     result.push({
-      ...templateToken,
+      ...baseToken,
       word,
       start: processedTimestamps[startIdx].start,
       end: processedTimestamps[endIdx].end,
-    } as T);
+    });
   }
 
   return result;
