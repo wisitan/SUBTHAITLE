@@ -1,13 +1,21 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/header';
+import { Footer } from '@/components/footer';
 import { ProviderSelector } from '@/components/provider-selector';
 import { UploadZone } from '@/components/upload-zone';
 import { Heart, ArrowRight, MessageSquareQuote } from 'lucide-react';
+import { useAppStore } from '@/lib/store';
 
 export default function Home() {
+  const loadDictionary = useAppStore((state) => state.loadDictionary);
+
+  useEffect(() => {
+    loadDictionary();
+  }, [loadDictionary]);
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col selection:bg-orange-500/30 selection:text-orange-200">
       {/* Navigation Header */}
@@ -78,10 +86,8 @@ export default function Home() {
         </section>
       </main>
 
-      {/* Minimal Footer */}
-      <footer className="w-full border-t border-zinc-900 py-6 text-center text-xs text-zinc-500 bg-zinc-950">
-        <p>SUBTHAITLE • AI Thai Caption Studio for Content Creators</p>
-      </footer>
+      {/* Minimal Footer with Admin Trigger */}
+      <Footer />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { CaptionItem, CaptionWord, useAppStore } from './store';
 import { cleanThaiText, resegmentThaiWords } from './thai-text';
 import { groupWordsIntoCaptions, splitLongCaptions } from './caption-grouping';
+import { applyDictionaryToWords, applyDictionaryReplacements } from './default-dictionary';
 
 export interface TranscribeResponse {
   success: boolean;
@@ -168,7 +169,10 @@ export async function transcribeAudio(
     .filter((w) => w.word.trim().length > 0);
 
   // Re-segment broken Whisper Thai subword tokens into proper linguistic words
-  const words = resegmentThaiWords(rawWordTokens);
+  const segmentedWords = resegmentThaiWords(rawWordTokens);
+
+  // Apply Dictionary corrections (Core + Supabase custom dictionary)
+  const words = applyDictionaryToWords(segmentedWords, store.customDictionary);
 
   // Save raw words in store for instant live re-pacing
   store.setRawWords(words);
@@ -187,7 +191,7 @@ export async function transcribeAudio(
       id: `seg-${idx}-${Date.now().toString(36)}`,
       start: Number(seg.start),
       end: Number(seg.end),
-      text: cleanThaiText(seg.text),
+      text: cleanThaiText(applyDictionaryReplacements(seg.text, store.customDictionary)),
     }));
     captions = splitLongCaptions(rawCaps);
   } else if (data.text) {
@@ -197,7 +201,7 @@ export async function transcribeAudio(
         id: `raw-0-${Date.now().toString(36)}`,
         start: 0,
         end: data.duration || 5,
-        text: cleanThaiText(data.text),
+        text: cleanThaiText(applyDictionaryReplacements(data.text, store.customDictionary)),
       },
     ]);
   }

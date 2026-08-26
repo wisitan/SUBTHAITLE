@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { Header } from '@/components/header';
+import { Footer } from '@/components/footer';
 import { useAppStore } from '@/lib/store';
 import {
   Heart,
@@ -301,6 +302,8 @@ export default function DonatePage() {
           </p>
         </section>
       </main>
+
+      <Footer />
     </div>
   );
 }

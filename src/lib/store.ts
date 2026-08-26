@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import { PacingMode, groupWordsIntoCaptions } from './caption-grouping';
+import { DictionaryEntry, DEFAULT_THAI_DICTIONARY } from './default-dictionary';
+import { fetchCustomDictionaryFromCloud } from './supabase';
 
 export type TranscriptionProvider = 'groq' | 'elevenlabs' | 'local';
 export type UserTier = 'free' | 'coffee' | 'meal';
@@ -61,6 +63,10 @@ export interface AppState {
   groqApiKey: string;
   dailyUsageCount: number;
   maxDailyFreeQuota: number;
+  isAdmin: boolean;
+  
+  // Dictionary & Vocab
+  customDictionary: DictionaryEntry[];
   
   // Captions & Pacing
   rawWords: CaptionWord[];
@@ -82,6 +88,9 @@ export interface AppState {
   setProvider: (provider: TranscriptionProvider) => void;
   setTier: (tier: UserTier) => void;
   setGroqApiKey: (key: string) => void;
+  setIsAdmin: (isAdmin: boolean) => void;
+  setCustomDictionary: (entries: DictionaryEntry[]) => void;
+  loadDictionary: () => Promise<void>;
   incrementDailyUsage: () => void;
   setRawWords: (words: CaptionWord[]) => void;
   setPacingMode: (mode: PacingMode, customWords?: number) => void;
@@ -134,6 +143,9 @@ export const useAppStore = create<AppState>()(
       groqApiKey: '',
       dailyUsageCount: 0,
       maxDailyFreeQuota: 5,
+      isAdmin: false,
+      
+      customDictionary: DEFAULT_THAI_DICTIONARY,
       
       rawWords: [],
       pacingMode: 'medium',
@@ -157,6 +169,19 @@ export const useAppStore = create<AppState>()(
       setProvider: (provider) => set({ provider }),
       setTier: (tier) => set({ tier }),
       setGroqApiKey: (groqApiKey) => set({ groqApiKey }),
+      setIsAdmin: (isAdmin) => set({ isAdmin }),
+      setCustomDictionary: (customDictionary) => set({ customDictionary }),
+      
+      loadDictionary: async () => {
+        try {
+          const res = await fetchCustomDictionaryFromCloud();
+          if (res.data && res.data.length > 0) {
+            set({ customDictionary: res.data });
+          }
+        } catch (err) {
+          console.warn('Could not load custom dictionary from Supabase, using defaults:', err);
+        }
+      },
       
       incrementDailyUsage: () =>
         set((state) => ({ dailyUsageCount: state.dailyUsageCount + 1 })),
@@ -241,6 +266,7 @@ export const useAppStore = create<AppState>()(
         tier: state.tier,
         groqApiKey: state.groqApiKey,
         dailyUsageCount: state.dailyUsageCount,
+        isAdmin: state.isAdmin,
         style: state.style,
         activePresetId: state.activePresetId,
       }),
