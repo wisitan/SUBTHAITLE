@@ -195,72 +195,114 @@ export function isPunctuationOnly(word: string): boolean {
   return clean.length === 0;
 }
 
+export interface CaptionWordLike {
+  word: string;
+  start?: number;
+  end?: number;
+}
+
 /**
  * Intelligently joins segmented words/tokens into natural display text:
- * - Thai + Thai: joined without space (e.g. "เข้า" + "ไป" + "ดู" -> "เข้าไปดู")
+ * - Thai + Thai within continuous speech (< pauseThresholdSec): joined without space (e.g. "เข้า" + "ไป" + "ดู" -> "เข้าไปดู")
+ * - Pause detection (gap >= pauseThresholdSec, default 200ms): joined WITH space between clauses/sentences
  * - Latin + Latin: joined WITH space (e.g. "bluetooth" + "setting" -> "bluetooth setting", "setting," + "please" -> "setting, please")
  * - Latin + Thai / Thai + Latin: joined WITH space (e.g. "Samsung" + "ของ" -> "Samsung ของ", "Apple" + "(แอปเปิล)" -> "Apple (แอปเปิล)")
  * - Numbers + Thai / Thai + Numbers: joined WITH space (e.g. "ราคา" + "299" -> "ราคา 299", "299" + "บาท" -> "299 บาท")
  * - Maiyamok (ๆ) / Paiyannoi (ฯ): attached to previous Thai word, but followed by a space (e.g. "มากๆ และสามารถ")
  */
-export function formatCaptionWordsText<T extends { word: string } | string>(words: T[]): string {
+export function formatCaptionWordsText<T extends CaptionWordLike | string>(
+  words: T[],
+  options?: { pauseThresholdSec?: number }
+): string {
   if (!words || words.length === 0) return '';
 
+  const pauseThresholdSec = options?.pauseThresholdSec ?? 0.20;
   let result = '';
-  let prevWord = '';
+  let prevWordText = '';
+  let prevItem: T | null = null;
 
   for (let i = 0; i < words.length; i++) {
-    const rawWord = typeof words[i] === 'string' ? (words[i] as string) : (words[i] as { word: string }).word;
+    const currentItem = words[i];
+    const rawWord = typeof currentItem === 'string' ? currentItem : currentItem.word;
     const w = rawWord.trim();
     if (!w) continue;
 
     if (result.length === 0) {
       result = w;
-      prevWord = w;
+      prevWordText = w;
+      prevItem = currentItem;
       continue;
     }
 
     // Strip leading/trailing punctuation to accurately detect script language
-    const cleanPrev = prevWord.replace(/^[^a-zA-Z0-9\u0E00-\u0E7F]+|[^a-zA-Z0-9\u0E00-\u0E7F]+$/g, '');
+    const cleanPrev = prevWordText.replace(/^[^a-zA-Z0-9\u0E00-\u0E7F]+|[^a-zA-Z0-9\u0E00-\u0E7F]+$/g, '');
     const cleanCurr = w.replace(/^[^a-zA-Z0-9\u0E00-\u0E7F]+|[^a-zA-Z0-9\u0E00-\u0E7F]+$/g, '');
 
-    const prevHasLatin = /[a-zA-Z0-9]/.test(cleanPrev);
-    const currHasLatin = /[a-zA-Z0-9]/.test(cleanCurr);
+    const prevHasLatin = /[a-zA-Z]/.test(cleanPrev);
+    const currHasLatin = /[a-zA-Z]/.test(cleanCurr);
+    const prevHasNum = /[0-9]/.test(cleanPrev);
+    const currHasNum = /[0-9]/.test(cleanCurr);
     const prevHasThai = /[\u0E00-\u0E7F]/.test(cleanPrev);
     const currHasThai = /[\u0E00-\u0E7F]/.test(cleanCurr);
-    const prevIsMaiyamok = cleanPrev.endsWith('ๆ') || cleanPrev.endsWith('ฯ') || prevWord.endsWith('ๆ') || prevWord.endsWith('ฯ');
+
+    const prevIsMaiyamok = cleanPrev.endsWith('ๆ') || cleanPrev.endsWith('ฯ') || prevWordText.endsWith('ๆ') || prevWordText.endsWith('ฯ');
     const currIsMaiyamok = w.startsWith('ๆ') || w.startsWith('ฯ');
 
     // If current token is maiyamok or paiyannoi, attach directly to previous Thai word
     if (prevHasThai && currIsMaiyamok) {
       result += w;
-      prevWord = w;
+      prevWordText = w;
+      prevItem = currentItem;
       continue;
     }
 
-    // Check if previous word ended with trailing punctuation that naturally requires a space
-    const prevEndsWithPunctuation = /[,;:]$/.test(prevWord);
-
-    // Rules for inserting a space:
-    // 1. Latin + Latin (e.g. "bluetooth" + "setting" -> "bluetooth setting")
-    // 2. Latin + Thai / Thai + Latin (e.g. "Samsung" + "ของ" -> "Samsung ของ", "Apple" + "(แอปเปิล)" -> "Apple (แอปเปิล)")
-    // 3. Numbers + Thai / Thai + Numbers (e.g. "ราคา" + "299" -> "ราคา 299")
-    // 4. After Maiyamok/Paiyannoi (e.g. "มากๆ" + "และ" -> "มากๆ และ")
-    // 5. After punctuation marks like commas or colons
+    // Check pause gap between previous word and current word
+    let isPauseGap = false;
     if (
+      prevItem &&
+      typeof prevItem === 'object' &&
+      typeof currentItem === 'object' &&
+      typeof (prevItem as CaptionWordLike).end === 'number' &&
+      typeof (currentItem as CaptionWordLike).start === 'number'
+    ) {
+      const gap = (currentItem as CaptionWordLike).start! - (prevItem as CaptionWordLike).end!;
+      if (gap >= pauseThresholdSec) {
+        isPauseGap = true;
+      }
+    }
+
+    // Check if previous word ended with trailing punctuation that naturally requires a space
+    const prevEndsWithPunctuation = /[,;:!?]$/.test(prevWordText);
+
+    // Script change or boundary conditions:
+    const isScriptChange =
       (prevHasLatin && currHasLatin) ||
       (prevHasLatin && currHasThai) ||
       (prevHasThai && currHasLatin) ||
+      (prevHasNum && currHasThai) ||
+      (prevHasThai && currHasNum) ||
+      (prevHasLatin && currHasNum) ||
+      (prevHasNum && currHasLatin);
+
+    // Rules for inserting a space:
+    // 1. Language script switch or alphanumeric boundaries (e.g. "bluetooth setting", "Samsung ของ", "ราคา 299")
+    // 2. Natural speech pauses between clauses / sentences (gap >= 200ms)
+    // 3. After Maiyamok/Paiyannoi (e.g. "มากๆ" + "และ" -> "มากๆ และ", "ต้นๆ" + "ตอนแรก" -> "ต้นๆ ตอนแรก")
+    // 4. After punctuation marks (e.g. ",", ":", ";", "!", "?")
+    if (
+      isScriptChange ||
+      isPauseGap ||
       prevIsMaiyamok ||
       prevEndsWithPunctuation
     ) {
       result += ' ' + w;
     } else {
-      // Thai + Thai -> join without space (e.g. "เข้า" + "ไป" + "ดู" -> "เข้าไปดู")
+      // Thai + Thai continuous flow without pause -> join directly (e.g. "เข้า" + "ไป" + "ดู" -> "เข้าไปดู")
       result += w;
     }
 
-    prevWord = w;
+    prevWordText = w;
+    prevItem = currentItem;
   }
 
   return result;
