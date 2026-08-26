@@ -20,6 +20,8 @@ import {
   Infinity as InfinityIcon,
   Ban,
   Gift,
+  Tv,
+  Film,
 } from 'lucide-react';
 
 export default function DonatePage() {
@@ -168,6 +170,12 @@ export default function DonatePage() {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <Tv className="w-2.5 h-2.5" />
+                  </div>
+                  <span>Export วิดีโอ MP4 คมชัดสูงสุด <strong>1080p Full HD</strong></span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
                     <Palette className="w-2.5 h-2.5" />
                   </div>
                   <span>ของแถม: Preset ซับไตเติลสำเร็จรูป <strong>3 แบบ</strong></span>
@@ -244,6 +252,14 @@ export default function DonatePage() {
                     <Check className="w-2.5 h-2.5" />
                   </div>
                   <span><strong>ได้รับทุกสิทธิประโยชน์ในระดับ 99฿</strong></span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <div className="w-4 h-4 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <Film className="w-2.5 h-2.5 text-rose-400" />
+                  </div>
+                  <span>
+                    ปลดล็อก <strong className="text-rose-300 font-bold">4K Ultra HD Export</strong> (เรนเดอร์วิดีโอคมชัดระดับสูงสุดสำหรับงานโปรดักชั่น)
+                  </span>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <div className="w-4 h-4 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center shrink-0 mt-0.5">
