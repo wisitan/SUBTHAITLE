@@ -1,5 +1,5 @@
 import { CaptionItem, CaptionWord, useAppStore } from './store';
-import { cleanThaiText } from './thai-text';
+import { cleanThaiText, mergeThaiSubwords } from './thai-text';
 import { groupWordsIntoCaptions, splitLongCaptions } from './caption-grouping';
 
 export interface TranscribeResponse {
@@ -150,7 +150,7 @@ export async function transcribeAudio(
   }
 
   // 3. Extract and Clean Word-level Timestamps
-  const words: CaptionWord[] = (data.words || [])
+  const rawWordTokens: CaptionWord[] = (data.words || [])
     .map((w) => {
       // Preserve Whisper's native leading/trailing spaces while cleaning the text
       const match = w.word.match(/^(\s*)(.*?)(\s*)$/);
@@ -166,6 +166,9 @@ export async function transcribeAudio(
       };
     })
     .filter((w) => w.word.trim().length > 0);
+
+  // Merge broken Whisper Thai subword tokens into whole linguistic words
+  const words = mergeThaiSubwords(rawWordTokens);
 
   // Save raw words in store for instant live re-pacing
   store.setRawWords(words);

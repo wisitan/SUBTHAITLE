@@ -1,5 +1,10 @@
 import { CaptionItem, CaptionWord } from './store';
-import { cleanThaiText } from './thai-text';
+import {
+  cleanThaiText,
+  mergeThaiSubwords,
+  THAI_NON_INITIAL,
+  THAI_TRAILING_INCOMPLETE,
+} from './thai-text';
 
 export type PacingMode = 'short' | 'medium' | 'long' | 'custom';
 
@@ -47,13 +52,10 @@ export function groupWordsIntoCaptions(
     return [];
   }
 
-  // Filter out empty or whitespace-only words
-  const validWords: CaptionWord[] = [];
-  rawWords.forEach((w) => {
-    if (w.word.trim().length > 0) {
-      validWords.push(w);
-    }
-  });
+  // Filter out empty or whitespace-only words and merge broken Thai subword tokens
+  const validWords: CaptionWord[] = mergeThaiSubwords(
+    rawWords.filter((w) => w.word && w.word.trim().length > 0)
+  );
 
   if (validWords.length === 0) return [];
 
@@ -89,10 +91,19 @@ export function groupWordsIntoCaptions(
     const exceedsChars = potentialText.length > config.maxCharsPerLine;
     const exceedsDuration = currentDuration > config.maxDurationSec;
 
+    // Linguistic Safety: Never split if the new cue would start with a non-initial Thai character (tone mark, vowel),
+    // or if the previous word ended with a leading Thai vowel (เ, แ, โ, ใ, ไ).
+    const cannotSplitHere = THAI_NON_INITIAL.test(word.word) ||
+      (prevWord && THAI_TRAILING_INCOMPLETE.test(prevWord.word.trimEnd()));
+
     // Split cue if:
-    // 1. Long pause detected, OR
-    // 2. Limit exceeded (words, chars, or duration) AND we already have at least 1 word
-    if (currentWords.length > 0 && (isLongPause || exceedsWords || exceedsChars || exceedsDuration)) {
+    // 1. We are at a safe split point (!cannotSplitHere), AND
+    // 2. Long pause detected, OR limit exceeded (words, chars, or duration) AND we already have at least 1 word
+    if (
+      currentWords.length > 0 &&
+      !cannotSplitHere &&
+      (isLongPause || exceedsWords || exceedsChars || exceedsDuration)
+    ) {
       // Close current bucket
       const cueText = cleanThaiText(currentWords.map((w) => w.word).join(''));
       if (cueText) {
