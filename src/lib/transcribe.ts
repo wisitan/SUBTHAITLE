@@ -1,4 +1,6 @@
 import { CaptionItem, CaptionWord, useAppStore } from './store';
+import { cleanThaiText } from './thai-text';
+import { groupWordsIntoCaptions, splitLongCaptions } from './caption-grouping';
 
 export interface TranscribeResponse {
   success: boolean;
@@ -144,102 +146,49 @@ export async function transcribeAudio(
   }
 
   if (onProgress) {
-    onProgress('ประมวลผลตำแหน่งเวลาของคำพูดเสร็จสิ้น...');
+    onProgress('จัดกลุ่มคำและคำนวณจังหวะซับไตเติล (Smart Pacing)...');
   }
 
-  // 3. Robust Mapping: Transform Segments and Words into CaptionItems (Zero Dropped Words)
-  const captions: CaptionItem[] = [];
-  const words: CaptionWord[] = (data.words || []).map((w) => ({
-    word: w.word,
-    start: Number(w.start),
-    end: Number(w.end),
-    confidence: w.confidence,
-  }));
+  // 3. Extract and Clean Word-level Timestamps
+  const words: CaptionWord[] = (data.words || [])
+    .map((w) => ({
+      word: cleanThaiText(w.word),
+      start: Number(w.start),
+      end: Number(w.end),
+      confidence: w.confidence,
+    }))
+    .filter((w) => w.word.length > 0);
 
-  if (data.segments && data.segments.length > 0) {
-    // Group words into segments based on word midpoint overlap
-    const segmentWordBuckets: CaptionWord[][] = data.segments.map(() => []);
+  // Save raw words in store for instant live re-pacing
+  store.setRawWords(words);
 
-    words.forEach((word) => {
-      const wordMid = (word.start + word.end) / 2;
-      let assignedIndex = -1;
-      let minDistance = Infinity;
+  let captions: CaptionItem[] = [];
 
-      data.segments!.forEach((seg, idx) => {
-        const segStart = Number(seg.start);
-        const segEnd = Number(seg.end);
-
-        // Check if word midpoint is inside segment
-        if (wordMid >= segStart && wordMid <= segEnd) {
-          assignedIndex = idx;
-        } else {
-          // Calculate distance to segment center for fallback closest match
-          const segCenter = (segStart + segEnd) / 2;
-          const dist = Math.abs(wordMid - segCenter);
-          if (dist < minDistance) {
-            minDistance = dist;
-            if (assignedIndex === -1) {
-              // fallback closest index
-            }
-          }
-        }
-      });
-
-      // If exactly in range, push to bucket; otherwise assign to nearest segment
-      if (assignedIndex !== -1) {
-        segmentWordBuckets[assignedIndex].push(word);
-      } else if (data.segments!.length > 0) {
-        // Find segment with minimal boundary distance
-        let closestIdx = 0;
-        let smallestDist = Infinity;
-        data.segments!.forEach((seg, idx) => {
-          const dist = Math.min(
-            Math.abs(word.start - Number(seg.start)),
-            Math.abs(word.end - Number(seg.end))
-          );
-          if (dist < smallestDist) {
-            smallestDist = dist;
-            closestIdx = idx;
-          }
-        });
-        segmentWordBuckets[closestIdx].push(word);
-      }
+  if (words.length > 0) {
+    // Primary Engine: Group words according to user's pacing preference
+    captions = groupWordsIntoCaptions(words, {
+      mode: store.pacingMode,
+      maxWordsPerLine: store.customMaxWords,
     });
-
-    data.segments.forEach((seg, idx) => {
-      const segStart = Number(seg.start);
-      const segEnd = Number(seg.end);
-      const segWords = segmentWordBuckets[idx];
-
-      captions.push({
-        id: `cue_${idx}_${Date.now()}`,
-        start: segStart,
-        end: segEnd,
-        text: seg.text.trim(),
-        words: segWords.length > 0 ? segWords : undefined,
-      });
-    });
-  } else if (words.length > 0) {
-    // Fallback: If no segments returned, create simple 6-word chunks
-    const chunkSize = 6;
-    for (let i = 0; i < words.length; i += chunkSize) {
-      const chunk = words.slice(i, i + chunkSize);
-      captions.push({
-        id: `cue_${i}_${Date.now()}`,
-        start: chunk[0].start,
-        end: chunk[chunk.length - 1].end,
-        text: chunk.map((w) => w.word).join(' '),
-        words: chunk,
-      });
-    }
+  } else if (data.segments && data.segments.length > 0) {
+    // Fallback: Segment-based splitting
+    const rawCaps: CaptionItem[] = data.segments.map((seg, idx) => ({
+      id: `seg-${idx}-${Date.now().toString(36)}`,
+      start: Number(seg.start),
+      end: Number(seg.end),
+      text: cleanThaiText(seg.text),
+    }));
+    captions = splitLongCaptions(rawCaps);
   } else if (data.text) {
-    // Fallback if only raw text
-    captions.push({
-      id: `cue_0_${Date.now()}`,
-      start: 0,
-      end: data.duration || 5,
-      text: data.text.trim(),
-    });
+    // Fallback: Raw text
+    captions = splitLongCaptions([
+      {
+        id: `raw-0-${Date.now().toString(36)}`,
+        start: 0,
+        end: data.duration || 5,
+        text: cleanThaiText(data.text),
+      },
+    ]);
   }
 
   return captions;

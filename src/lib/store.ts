@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+import { PacingMode, groupWordsIntoCaptions } from './caption-grouping';
+
 export type TranscriptionProvider = 'groq' | 'elevenlabs' | 'local';
 export type UserTier = 'free' | 'coffee' | 'meal';
 
@@ -60,7 +62,10 @@ export interface AppState {
   dailyUsageCount: number;
   maxDailyFreeQuota: number;
   
-  // Captions & Styling
+  // Captions & Pacing
+  rawWords: CaptionWord[];
+  pacingMode: PacingMode;
+  customMaxWords: number;
   captions: CaptionItem[];
   activeCaptionIndex: number | null;
   currentTime: number;
@@ -78,6 +83,9 @@ export interface AppState {
   setTier: (tier: UserTier) => void;
   setGroqApiKey: (key: string) => void;
   incrementDailyUsage: () => void;
+  setRawWords: (words: CaptionWord[]) => void;
+  setPacingMode: (mode: PacingMode, customWords?: number) => void;
+  regroupCaptions: (mode?: PacingMode, customWords?: number) => void;
   setCaptions: (captions: CaptionItem[]) => void;
   updateCaptionText: (id: string, text: string) => void;
   updateCaptionTiming: (id: string, start: number, end: number) => void;
@@ -127,6 +135,9 @@ export const useAppStore = create<AppState>()(
       dailyUsageCount: 0,
       maxDailyFreeQuota: 5,
       
+      rawWords: [],
+      pacingMode: 'medium',
+      customMaxWords: 8,
       captions: [],
       activeCaptionIndex: null,
       currentTime: 0,
@@ -150,6 +161,39 @@ export const useAppStore = create<AppState>()(
       incrementDailyUsage: () =>
         set((state) => ({ dailyUsageCount: state.dailyUsageCount + 1 })),
         
+      setRawWords: (rawWords) => set({ rawWords }),
+      
+      setPacingMode: (pacingMode, customMaxWords) => {
+        set((state) => {
+          const nextCustomWords = customMaxWords ?? state.customMaxWords;
+          const newCaptions = groupWordsIntoCaptions(state.rawWords, {
+            mode: pacingMode,
+            ...(pacingMode === 'custom' ? { maxWordsPerLine: nextCustomWords } : {}),
+          });
+          return {
+            pacingMode,
+            customMaxWords: nextCustomWords,
+            captions: newCaptions.length > 0 ? newCaptions : state.captions,
+          };
+        });
+      },
+      
+      regroupCaptions: (overrideMode, overrideCustomWords) => {
+        set((state) => {
+          const mode = overrideMode || state.pacingMode;
+          const words = overrideCustomWords || state.customMaxWords;
+          const newCaptions = groupWordsIntoCaptions(state.rawWords, {
+            mode,
+            ...(mode === 'custom' ? { maxWordsPerLine: words } : {}),
+          });
+          return {
+            pacingMode: mode,
+            customMaxWords: words,
+            captions: newCaptions.length > 0 ? newCaptions : state.captions,
+          };
+        });
+      },
+      
       setCaptions: (captions) => set({ captions }),
       
       updateCaptionText: (id, text) =>
@@ -184,6 +228,7 @@ export const useAppStore = create<AppState>()(
           progress: 0,
           statusMessage: '',
           errorMessage: null,
+          rawWords: [],
           captions: [],
           activeCaptionIndex: null,
           currentTime: 0,

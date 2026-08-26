@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { useAppStore } from '@/lib/store';
 import { extractAudioFromMedia, AudioExtractProgress } from '@/lib/audio-extract';
 import { transcribeAudio } from '@/lib/transcribe';
+import { generateSrt, generateVtt } from '@/lib/srt';
 import {
   UploadCloud,
   FileVideo,
@@ -16,8 +17,11 @@ import {
   Loader2,
   Sparkles,
   SlidersHorizontal,
-  Clock,
-  Type,
+  Download,
+  Flame,
+  Film,
+  AlignLeft,
+  Settings2,
 } from 'lucide-react';
 
 export function UploadZone() {
@@ -35,6 +39,9 @@ export function UploadZone() {
     provider,
     tier,
     groqApiKey,
+    pacingMode,
+    customMaxWords,
+    setPacingMode,
     captions,
     setCaptions,
   } = useAppStore();
@@ -191,6 +198,30 @@ export function UploadZone() {
   };
 
   const totalWords = captions.reduce((acc, cue) => acc + (cue.words?.length || cue.text.split(' ').length), 0);
+
+  const handleDownloadSrt = () => {
+    if (!captions.length) return;
+    const srtData = generateSrt(captions);
+    const blob = new Blob([srtData], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${file?.name.replace(/\.[^/.]+$/, '') || 'subthaitle'}.srt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadVtt = () => {
+    if (!captions.length) return;
+    const vttData = generateVtt(captions);
+    const blob = new Blob([vttData], { type: 'text/vtt;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${file?.name.replace(/\.[^/.]+$/, '') || 'subthaitle'}.vtt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="w-full">
@@ -369,47 +400,186 @@ export function UploadZone() {
             </div>
           )}
 
-          {/* Transcription Results Card (When Finished) */}
+          {/* Transcription Results & Pacing Card (Phase 3) */}
           {captions.length > 0 && (
-            <div className="my-5 p-5 bg-zinc-950 rounded-2xl border border-emerald-500/30 space-y-4 animate-in fade-in duration-300">
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+            <div className="my-5 p-5 bg-zinc-950 rounded-2xl border border-emerald-500/30 space-y-5 animate-in fade-in duration-300">
+              {/* Header with Stats & Quick Export */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
                     <CheckCircle2 className="w-4 h-4" />
                   </div>
                   <div>
-                    <h5 className="text-sm font-bold text-white">ถอดเสียงภาษาไทยสำเร็จ!</h5>
-                    <span className="text-[11px] text-zinc-400">พร้อมปรับแต่งสไตล์และส่งออก</span>
+                    <h5 className="text-sm font-bold text-white flex items-center gap-2">
+                      ถอดเสียงภาษาไทยสำเร็จ!
+                      <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-950 border border-emerald-700 text-emerald-400 font-normal">
+                        Whisper Large v3
+                      </span>
+                    </h5>
+                    <span className="text-[11px] text-zinc-400">
+                      มีทั้งหมด {captions.length} ท่อนซับ (~{totalWords} คำ)
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs text-zinc-300">
-                  <span className="flex items-center gap-1 bg-zinc-900 px-2.5 py-1 rounded-lg border border-zinc-800">
-                    <Clock className="w-3.5 h-3.5 text-orange-400" />
-                    {captions.length} ท่อนซับ
+                {/* Quick SRT / VTT Download Buttons */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleDownloadSrt}
+                    className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-orange-300 hover:border-orange-500/40"
+                    title="ดาวน์โหลดไฟล์ .SRT สำหรับใช้งานทั่วไป"
+                  >
+                    <Download className="w-3.5 h-3.5 text-orange-400" />
+                    ดาวน์โหลด .SRT
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDownloadVtt}
+                    className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-emerald-300 hover:border-emerald-500/40"
+                    title="ดาวน์โหลดไฟล์ WebVTT (.VTT)"
+                  >
+                    <Download className="w-3.5 h-3.5 text-emerald-400" />
+                    ดาวน์โหลด .VTT
+                  </button>
+                </div>
+              </div>
+
+              {/* 🎛️ Caption Pacing / Length Selector (Killer Feature) */}
+              <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <SlidersHorizontal className="w-4 h-4 text-orange-400" />
+                    <span className="text-xs font-bold text-zinc-200">
+                      ✂️ ปรับจังหวะความยาวท่อนซับ (Caption Pacing):
+                    </span>
+                  </div>
+                  <span className="text-[11px] text-zinc-400">
+                    คลิกเลือกโหมดเพื่อจัดกลุ่มคำใหม่แบบ Realtime
                   </span>
-                  <span className="flex items-center gap-1 bg-zinc-900 px-2.5 py-1 rounded-lg border border-zinc-800">
-                    <Type className="w-3.5 h-3.5 text-emerald-400" />
-                    ~{totalWords} คำ
-                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Option 1: Short / Shorts */}
+                  <button
+                    type="button"
+                    onClick={() => setPacingMode('short')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                      pacingMode === 'short'
+                        ? 'bg-orange-500/15 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
+                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900/60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs flex items-center gap-1.5 text-orange-300">
+                        <Flame className="w-3.5 h-3.5 text-orange-400" />
+                        สั้นกระชับ (3-5 คำ)
+                      </span>
+                      {pacingMode === 'short' && (
+                        <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-zinc-400 leading-snug">
+                      เหมาะกับ TikTok, Reels, Shorts คนดูอ่านตามทันที
+                    </p>
+                  </button>
+
+                  {/* Option 2: Medium / Standard */}
+                  <button
+                    type="button"
+                    onClick={() => setPacingMode('medium')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                      pacingMode === 'medium'
+                        ? 'bg-orange-500/15 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
+                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900/60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs flex items-center gap-1.5 text-orange-300">
+                        <AlignLeft className="w-3.5 h-3.5 text-amber-400" />
+                        มาตรฐาน (6-9 คำ)
+                      </span>
+                      {pacingMode === 'medium' && (
+                        <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-zinc-400 leading-snug">
+                      เหมาะกับคลิป Vlog ทั่วไป อ่านสบาย ไม่สั้นไม่ยาวไป
+                    </p>
+                  </button>
+
+                  {/* Option 3: Long / Cinema */}
+                  <button
+                    type="button"
+                    onClick={() => setPacingMode('long')}
+                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                      pacingMode === 'long'
+                        ? 'bg-orange-500/15 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
+                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900/60'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-xs flex items-center gap-1.5 text-orange-300">
+                        <Film className="w-3.5 h-3.5 text-emerald-400" />
+                        ประโยคยาว (10-15 คำ)
+                      </span>
+                      {pacingMode === 'long' && (
+                        <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                      )}
+                    </div>
+                    <p className="text-[11px] text-zinc-400 leading-snug">
+                      เหมาะกับ YouTube แนวนอน, สัมภาษณ์ หรือสารคดี
+                    </p>
+                  </button>
+                </div>
+
+                {/* Custom Word Slider Toggle */}
+                <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-t border-zinc-800/80">
+                  <div className="flex items-center gap-2 text-zinc-400">
+                    <Settings2 className="w-3.5 h-3.5 text-zinc-400" />
+                    <span>หรือปรับกำหนดจำนวนคำต่อท่อนเอง:</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min={3}
+                      max={18}
+                      value={customMaxWords}
+                      aria-label="กำหนดจำนวนคำต่อท่อน"
+                      onChange={(e) => {
+                        const words = parseInt(e.target.value, 10);
+                        setPacingMode('custom', words);
+                      }}
+                      className="w-36 accent-orange-500 cursor-pointer"
+                    />
+                    <span className="px-2 py-0.5 rounded bg-zinc-800 text-orange-400 font-mono font-bold min-w-[3rem] text-center">
+                      {customMaxWords} คำ
+                    </span>
+                  </div>
                 </div>
               </div>
 
               {/* Subtitle Snippet Preview */}
-              <div className="max-h-36 overflow-y-auto space-y-1.5 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800/60 text-xs font-mono">
-                {captions.slice(0, 4).map((cue, idx) => (
-                  <div key={cue.id || idx} className="flex items-start gap-2 text-zinc-300">
-                    <span className="text-orange-400/80 shrink-0 select-none">
-                      [{cue.start.toFixed(1)}s - {cue.end.toFixed(1)}s]
-                    </span>
-                    <span className="line-clamp-1">{cue.text}</span>
-                  </div>
-                ))}
-                {captions.length > 4 && (
-                  <p className="text-[11px] text-zinc-500 italic text-center pt-1">
-                    ...และอีก {captions.length - 4} ท่อนซับ...
-                  </p>
-                )}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-zinc-400">
+                  <span>ตัวอย่างท่อนซับที่จัดกลุ่มแล้ว ({captions.length} ท่อน):</span>
+                  <span className="text-[11px] font-mono text-zinc-500">
+                    คำนวณเวลาตรงตามเสียง 100%
+                  </span>
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-2 p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 text-xs font-mono">
+                  {captions.map((cue, idx) => (
+                    <div
+                      key={cue.id || idx}
+                      className="flex items-start gap-2.5 text-zinc-300 hover:bg-zinc-800/40 p-1.5 rounded-lg transition-colors"
+                    >
+                      <span className="text-orange-400/90 font-bold shrink-0 select-none text-[11px]">
+                        [{cue.start.toFixed(2)}s ➔ {cue.end.toFixed(2)}s]
+                      </span>
+                      <span className="text-zinc-200 font-sans font-medium">{cue.text}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -440,12 +610,12 @@ export function UploadZone() {
               <button
                 type="button"
                 onClick={() => {
-                  alert('Phase 2 สำเร็จแล้ว! พร้อมเข้าสู่ Phase 3-4 เพื่อพัฒนาหน้าจอ Editor & Video Player');
+                  alert('Phase 3 สำเร็จแล้ว! พร้อมเข้าสู่ Phase 4 เพื่อพัฒนาหน้าจอ Editor & Video Player');
                 }}
                 className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
               >
                 <SlidersHorizontal className="w-4 h-4" />
-                <span>เปิดหน้าต่างปรับแต่ง Subtitle (Style Editor)</span>
+                <span>ไปที่หน้าจอปรับแต่ง Subtitle (Phase 4 Editor)</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             )}
