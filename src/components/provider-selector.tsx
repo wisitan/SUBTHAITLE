@@ -1,68 +1,63 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { useAppStore, TranscriptionProvider } from '@/lib/store';
-import { Cloud, Key, Cpu, CheckCircle2, ShieldCheck } from 'lucide-react';
+import {
+  Cloud,
+  Key,
+  Cpu,
+  CheckCircle2,
+  Lock,
+  Heart,
+  ShieldCheck,
+} from 'lucide-react';
 
 export function ProviderSelector() {
-  const { provider, setProvider, tier, setTier, groqApiKey, setGroqApiKey } = useAppStore();
-  const [showKeyInput, setShowKeyInput] = useState(false);
+  const { provider, setProvider, tier, groqApiKey, setGroqApiKey } = useAppStore();
+  const [showKeyInput, setShowKeyInput] = useState(Boolean(groqApiKey));
+
+  const isPaid = tier === 'coffee' || tier === 'meal';
 
   const handleSelect = (selected: TranscriptionProvider) => {
-    setProvider(selected);
     if (selected === 'groq' && !showKeyInput) {
-      // Default cloud free
+      setProvider('groq');
+    } else if (selected === 'local') {
+      if (!isPaid) return; // Locked on free tier
+      setProvider('local');
+      setShowKeyInput(false);
     }
   };
 
   return (
-    <div className="w-full bg-zinc-900/60 border border-zinc-800/80 rounded-2xl p-5 backdrop-blur-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+    <div className="w-full bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-5 sm:p-6 backdrop-blur-sm shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
           <h3 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
             <Cpu className="w-4 h-4 text-orange-400" />
-            ตัวเลือกเครื่องมือถอดเสียง (AI Engine)
+            <span>เครื่องมือถอดเสียง (AI Engine)</span>
           </h3>
           <p className="text-xs text-zinc-400 mt-0.5">
-            เลือกใช้งานระบบ Cloud มาตรฐาน หรือใส่ API Key เพื่อใช้งานไม่จำกัด
+            ประมวลผลเสียงภาษาไทยความเร็วสูง แม่นยำระดับคำ (Word-level timestamps)
           </p>
         </div>
 
-        {/* Tier switcher (for preview / activation) */}
-        <div className="flex items-center gap-1.5 p-1 bg-zinc-950 rounded-xl border border-zinc-800 self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setTier('free')}
-            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
-              tier === 'free'
-                ? 'bg-zinc-800 text-white shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            Free
-          </button>
-          <button
-            type="button"
-            onClick={() => setTier('coffee')}
-            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
-              tier === 'coffee'
-                ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            ☕ 69฿
-          </button>
-          <button
-            type="button"
-            onClick={() => setTier('meal')}
-            className={`px-2.5 py-1 text-xs rounded-lg font-medium transition-all ${
-              tier === 'meal'
-                ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            🍚 299฿
-          </button>
+        {/* Tier Status Indicator with Donate link */}
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          {isPaid ? (
+            <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>{tier === 'coffee' ? 'สถานะ: เลี้ยงกาแฟ ☕ (99฿)' : 'สถานะ: เลี้ยงข้าว 🍚 (299฿)'}</span>
+            </div>
+          ) : (
+            <Link
+              href="/donate"
+              className="px-3 py-1 rounded-full bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs transition-colors flex items-center gap-1.5"
+            >
+              <Heart className="w-3 h-3 text-rose-400" />
+              <span>Free Tier (คลิกเพื่อดูสิทธิพิเศษ)</span>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -71,22 +66,22 @@ export function ProviderSelector() {
         {/* 1. Groq Cloud (Free / Default) */}
         <div
           onClick={() => {
-            handleSelect('groq');
+            setProvider('groq');
             setShowKeyInput(false);
           }}
-          className={`cursor-pointer p-3.5 rounded-xl border transition-all flex flex-col justify-between ${
+          className={`cursor-pointer p-4 rounded-2xl border transition-all flex flex-col justify-between ${
             provider === 'groq' && !showKeyInput
-              ? 'border-orange-500/60 bg-orange-500/10 ring-1 ring-orange-500/30'
+              ? 'border-orange-500/80 bg-orange-500/10 ring-1 ring-orange-500/30'
               : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/60'
           }`}
         >
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400">
                 <Cloud className="w-4 h-4" />
               </div>
               <div>
-                <span className="font-semibold text-xs text-zinc-100 block">
+                <span className="font-bold text-xs text-zinc-100 block">
                   Groq Cloud (Whisper v3)
                 </span>
                 <span className="text-[10px] text-orange-400 font-medium">
@@ -98,84 +93,111 @@ export function ProviderSelector() {
               <CheckCircle2 className="w-4 h-4 text-orange-400" />
             )}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-2.5 leading-relaxed">
-            ถอดเสียงความเร็วสูง แม่นยำระดับคำ (Word-level timestamps) สูงสุด 2 นาที/คลิป
+          <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">
+            ถอดเสียงภาษาไทยอัตโนมัติความเร็วสูง ไม่ต้องตั้งค่าใดๆ พร้อมใช้งานทันที
           </p>
         </div>
 
         {/* 2. BYOK (Groq API Key) */}
         <div
           onClick={() => {
-            handleSelect('groq');
+            if (!isPaid) return; // Locked on Free tier
+            setProvider('groq');
             setShowKeyInput(true);
           }}
-          className={`cursor-pointer p-3.5 rounded-xl border transition-all flex flex-col justify-between ${
-            provider === 'groq' && showKeyInput
-              ? 'border-emerald-500/60 bg-emerald-500/10 ring-1 ring-emerald-500/30'
-              : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/60'
+          className={`relative p-4 rounded-2xl border transition-all flex flex-col justify-between ${
+            !isPaid
+              ? 'border-zinc-800/60 bg-zinc-950/20 opacity-75 cursor-not-allowed'
+              : provider === 'groq' && showKeyInput
+              ? 'border-emerald-500/80 bg-emerald-500/10 ring-1 ring-emerald-500/30 cursor-pointer'
+              : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/60 cursor-pointer'
           }`}
         >
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
                 <Key className="w-4 h-4" />
               </div>
               <div>
-                <span className="font-semibold text-xs text-zinc-100 block">
-                  ใช้ API Key ตัวเอง (BYOK)
+                <span className="font-bold text-xs text-zinc-100 block">
+                  API Key ตัวเอง (BYOK)
                 </span>
                 <span className="text-[10px] text-emerald-400 font-medium">
-                  ⚡ ไม่จำกัดความยาว/ขนาด
+                  {isPaid ? '⚡ ไม่จำกัดขนาด & เวลา' : '🔒 ปลดล็อกเมื่อสนับสนุน'}
                 </span>
               </div>
             </div>
-            {provider === 'groq' && showKeyInput && (
+
+            {!isPaid ? (
+              <Link
+                href="/donate"
+                className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/20 transition-colors"
+              >
+                <Lock className="w-2.5 h-2.5" />
+                <span>99฿</span>
+              </Link>
+            ) : provider === 'groq' && showKeyInput ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            )}
+            ) : null}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-2.5 leading-relaxed">
-            ใส่ Groq API Key ของตัวเอง ปลดล็อกถอดเสียงยาวกี่ชั่วโมงก็ได้ ฟรีไม่มีค่าบริการเพิ่ม
+          <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">
+            {isPaid
+              ? 'ใส่ Groq Key ส่วนตัว ถอดเสียงไม่จำกัดขนาดคลิปและความยาว ฟรีไม่มีบวกเพิ่ม'
+              : 'ปลดล็อกการใส่ API Key ส่วนตัวเพื่อถอดเสียงได้ไม่จำกัด เมื่อร่วมสนับสนุน 99฿'}
           </p>
         </div>
 
         {/* 3. Local Whisper Mode */}
         <div
           onClick={() => {
+            if (!isPaid) return;
             handleSelect('local');
-            setShowKeyInput(false);
           }}
-          className={`cursor-pointer p-3.5 rounded-xl border transition-all flex flex-col justify-between ${
-            provider === 'local'
-              ? 'border-indigo-500/60 bg-indigo-500/10 ring-1 ring-indigo-500/30'
-              : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/60'
+          className={`relative p-4 rounded-2xl border transition-all flex flex-col justify-between ${
+            !isPaid
+              ? 'border-zinc-800/60 bg-zinc-950/20 opacity-75 cursor-not-allowed'
+              : provider === 'local'
+              ? 'border-indigo-500/80 bg-indigo-500/10 ring-1 ring-indigo-500/30 cursor-pointer'
+              : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/60 cursor-pointer'
           }`}
         >
           <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
                 <Cpu className="w-4 h-4" />
               </div>
               <div>
-                <span className="font-semibold text-xs text-zinc-100 block">
-                  Local Whisper (Mac M-Series)
+                <span className="font-bold text-xs text-zinc-100 block">
+                  Local Whisper (Mac)
                 </span>
                 <span className="text-[10px] text-indigo-400 font-medium">
-                  🔒 Offline 100% ปลอดภัย
+                  {isPaid ? '🔒 Offline 100%' : '🔒 ปลดล็อกเมื่อสนับสนุน'}
                 </span>
               </div>
             </div>
-            {provider === 'local' && (
+
+            {!isPaid ? (
+              <Link
+                href="/donate"
+                className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/20 transition-colors"
+              >
+                <Lock className="w-2.5 h-2.5" />
+                <span>99฿</span>
+              </Link>
+            ) : provider === 'local' ? (
               <CheckCircle2 className="w-4 h-4 text-indigo-400" />
-            )}
+            ) : null}
           </div>
-          <p className="text-[11px] text-zinc-400 mt-2.5 leading-relaxed">
-            ประมวลผลบนเครื่องผ่าน Python MLX Whisper ข้อมูลไม่หลุดออกนอกเครื่อง
+          <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">
+            {isPaid
+              ? 'ประมวลผลบนชิป Apple Silicon ข้อมูลปลอดภัย ไม่ส่งออกนอกเครื่อง'
+              : 'ปลดล็อกโหมดรันในเครื่อง Mac สำหรับงานที่ต้องการความเป็นส่วนตัว 100%'}
           </p>
         </div>
       </div>
 
-      {/* BYOK Input Form */}
-      {showKeyInput && (
+      {/* BYOK Input Form (Only for Paid / Unlocked users) */}
+      {isPaid && showKeyInput && (
         <div className="mt-4 pt-4 border-t border-zinc-800/80 animate-in fade-in slide-in-from-top-1 duration-200">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <div className="relative flex-1">
