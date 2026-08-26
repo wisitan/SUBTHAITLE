@@ -238,6 +238,9 @@ export function VideoPlayer({ className = '' }: Props) {
       ? hexToRgba(style.backgroundColor || '#000000', style.backgroundOpacity ?? 70)
       : 'transparent';
 
+    const maxWidthPct = style.maxWidth ?? 92;
+    const textAlign = style.textAlign || 'center';
+
     return {
       fontFamily: `"${style.fontFamily}", sans-serif`,
       fontSize: `clamp(18px, 3.2vw, ${style.fontSize}px)`,
@@ -250,6 +253,8 @@ export function VideoPlayer({ className = '' }: Props) {
           : 500,
       letterSpacing: `${style.letterSpacing ?? 0}px`,
       lineHeight: style.lineHeight ?? 1.4,
+      textAlign,
+      maxWidth: `${maxWidthPct}%`,
       bottom: `${style.positionY}%`,
       left: `${style.positionX}%`,
       transform: 'translateX(-50%)',
@@ -399,11 +404,12 @@ export function VideoPlayer({ className = '' }: Props) {
             {activeCaption && (
               <div
                 style={subtitleOverlayStyle}
-                className="absolute z-20 text-center max-w-[92%] pointer-events-none select-none transition-all duration-75"
+                className="absolute z-20 pointer-events-none select-none transition-all duration-75"
               >
                 <p
-                  className="inline text-center"
+                  className="inline-block w-full"
                   style={{
+                    textAlign: style.textAlign || 'center',
                     wordBreak: 'break-word',
                     whiteSpace: 'pre-wrap',
                     letterSpacing: `${style.letterSpacing ?? 0}px`,

@@ -10,6 +10,10 @@ import {
   Check,
   Sliders,
   Space,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Maximize2,
 } from 'lucide-react';
 import { useAppStore, defaultCaptionStyle } from '@/lib/store';
 import { FontPicker } from './font-picker';
@@ -324,12 +328,117 @@ export function StyleEditor() {
 
       <hr className="border-zinc-800/80" />
 
-      {/* 4. Position & Placement (ตำแหน่งแนวตั้งแกน Y & แนวนอนแกน X) */}
+      {/* 4. Position, Alignment & Width (ตำแหน่ง จัดแนว และความกว้างขอบข้าง) */}
       <div className="space-y-4">
         <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
           <MoveVertical className="w-4 h-4 text-orange-400" />
-          <span>ตำแหน่งซับไตเติลบนหน้าจอ (Position & Alignment):</span>
+          <span>ตำแหน่ง จัดแนว และระยะขอบข้าง (Placement, Alignment & Width):</span>
         </h4>
+
+        {/* Text Alignment (Left / Center / Right) */}
+        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 flex items-center justify-between gap-3 text-xs">
+          <span className="text-zinc-300 font-medium">การจัดแนวข้อความ (Text Alignment):</span>
+          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+            <button
+              type="button"
+              onClick={() => setStyle({ textAlign: 'left' })}
+              className={`px-3 py-1 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                style.textAlign === 'left'
+                  ? 'bg-orange-500 text-zinc-950 font-bold'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+              title="จัดข้อความชิดซ้าย"
+            >
+              <AlignLeft className="w-3.5 h-3.5" />
+              <span>ชิดซ้าย</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ textAlign: 'center' })}
+              className={`px-3 py-1 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                !style.textAlign || style.textAlign === 'center'
+                  ? 'bg-orange-500 text-zinc-950 font-bold'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+              title="จัดข้อความกึ่งกลาง"
+            >
+              <AlignCenter className="w-3.5 h-3.5" />
+              <span>กึ่งกลาง</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ textAlign: 'right' })}
+              className={`px-3 py-1 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                style.textAlign === 'right'
+                  ? 'bg-orange-500 text-zinc-950 font-bold'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+              title="จัดข้อความชิดขวา"
+            >
+              <AlignRight className="w-3.5 h-3.5" />
+              <span>ชิดขวา</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Subtitle Max Width & Side Margins / Indent */}
+        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-zinc-300 font-medium flex items-center gap-1.5">
+              <Maximize2 className="w-3.5 h-3.5 text-orange-400" />
+              <span>ความกว้างสูงสุด / ระยะขอบข้าง (Width & Side Margins):</span>
+            </span>
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+              {style.maxWidth ?? 92}%
+            </span>
+          </div>
+
+          <input
+            type="range"
+            min={60}
+            max={98}
+            step={1}
+            value={style.maxWidth ?? 92}
+            aria-label="ความกว้างสูงสุดของแถบซับไตเติล"
+            onChange={(e) => setStyle({ maxWidth: parseInt(e.target.value, 10) })}
+            className="w-full accent-orange-500 cursor-pointer"
+          />
+
+          {/* Quick Width Presets */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <button
+              type="button"
+              onClick={() => setStyle({ maxWidth: 70 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              แคบ (70%)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ maxWidth: 85 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              มาตรฐาน (85%)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ maxWidth: 92 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              กว้าง (92%)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ maxWidth: 98 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              เต็มจอ (98%)
+            </button>
+          </div>
+          <p className="text-[10px] text-zinc-400 pt-0.5">
+            💡 เพิ่มความกว้างเพื่อให้ข้อความขยายออกด้านข้างได้เต็มจอ และลดการตัดขึ้นบรรทัดใหม่
+          </p>
+        </div>
 
         {/* Position Y (Up-Down) */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">

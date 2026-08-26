@@ -34,6 +34,8 @@ export interface CaptionStyle {
   lineHeight?: number;    // line-height multiplier e.g. 1.0 to 2.4 (default: 1.4)
   positionY: number; // percentage from bottom e.g. 15%
   positionX: number; // percentage from left e.g. 50%
+  textAlign?: 'left' | 'center' | 'right'; // text alignment (default: 'center')
+  maxWidth?: number; // max-width percentage of video container e.g. 60 to 98% (default: 90%)
   hasShadow: boolean;
   shadowColor: string;
   shadowBlur: number;
@@ -127,6 +129,8 @@ export const defaultCaptionStyle: CaptionStyle = {
   lineHeight: 1.4,
   positionY: 15,
   positionX: 50,
+  textAlign: 'center',
+  maxWidth: 90,
   hasShadow: true,
   shadowColor: '#000000',
   shadowBlur: 8,
