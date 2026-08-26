@@ -198,8 +198,8 @@ export function isPunctuationOnly(word: string): boolean {
 /**
  * Intelligently joins segmented words/tokens into natural display text:
  * - Thai + Thai: joined without space (e.g. "เข้า" + "ไป" + "ดู" -> "เข้าไปดู")
- * - Latin + Latin: joined WITH space (e.g. "bluetooth" + "setting" -> "bluetooth setting")
- * - Latin + Thai / Thai + Latin: joined WITH space (e.g. "Samsung" + "ของ" -> "Samsung ของ", "ใช้" + "iPhone" -> "ใช้ iPhone")
+ * - Latin + Latin: joined WITH space (e.g. "bluetooth" + "setting" -> "bluetooth setting", "setting," + "please" -> "setting, please")
+ * - Latin + Thai / Thai + Latin: joined WITH space (e.g. "Samsung" + "ของ" -> "Samsung ของ", "Apple" + "(แอปเปิล)" -> "Apple (แอปเปิล)")
  * - Numbers + Thai / Thai + Numbers: joined WITH space (e.g. "ราคา" + "299" -> "ราคา 299", "299" + "บาท" -> "299 บาท")
  * - Maiyamok (ๆ) / Paiyannoi (ฯ): attached to previous Thai word, but followed by a space (e.g. "มากๆ และสามารถ")
  */
@@ -207,6 +207,8 @@ export function formatCaptionWordsText<T extends { word: string } | string>(word
   if (!words || words.length === 0) return '';
 
   let result = '';
+  let prevWord = '';
+
   for (let i = 0; i < words.length; i++) {
     const rawWord = typeof words[i] === 'string' ? (words[i] as string) : (words[i] as { word: string }).word;
     const w = rawWord.trim();
@@ -214,40 +216,51 @@ export function formatCaptionWordsText<T extends { word: string } | string>(word
 
     if (result.length === 0) {
       result = w;
+      prevWord = w;
       continue;
     }
 
-    const prevLastChar = result.slice(-1);
-    const currFirstChar = w.slice(0, 1);
+    // Strip leading/trailing punctuation to accurately detect script language
+    const cleanPrev = prevWord.replace(/^[^a-zA-Z0-9\u0E00-\u0E7F]+|[^a-zA-Z0-9\u0E00-\u0E7F]+$/g, '');
+    const cleanCurr = w.replace(/^[^a-zA-Z0-9\u0E00-\u0E7F]+|[^a-zA-Z0-9\u0E00-\u0E7F]+$/g, '');
 
-    const prevIsLatin = /[a-zA-Z0-9]/.test(prevLastChar);
-    const currIsLatin = /[a-zA-Z0-9]/.test(currFirstChar);
-    const prevIsThai = /[\u0E00-\u0E7F]/.test(prevLastChar);
-    const currIsThai = /[\u0E00-\u0E7F]/.test(currFirstChar);
-    const prevIsMaiyamok = prevLastChar === 'ๆ' || prevLastChar === 'ฯ';
+    const prevHasLatin = /[a-zA-Z0-9]/.test(cleanPrev);
+    const currHasLatin = /[a-zA-Z0-9]/.test(cleanCurr);
+    const prevHasThai = /[\u0E00-\u0E7F]/.test(cleanPrev);
+    const currHasThai = /[\u0E00-\u0E7F]/.test(cleanCurr);
+    const prevIsMaiyamok = cleanPrev.endsWith('ๆ') || cleanPrev.endsWith('ฯ') || prevWord.endsWith('ๆ') || prevWord.endsWith('ฯ');
+    const currIsMaiyamok = w.startsWith('ๆ') || w.startsWith('ฯ');
 
     // If current token is maiyamok or paiyannoi, attach directly to previous Thai word
-    if (prevIsThai && (currFirstChar === 'ๆ' || currFirstChar === 'ฯ')) {
+    if (prevHasThai && currIsMaiyamok) {
       result += w;
+      prevWord = w;
       continue;
     }
+
+    // Check if previous word ended with trailing punctuation that naturally requires a space
+    const prevEndsWithPunctuation = /[,;:]$/.test(prevWord);
 
     // Rules for inserting a space:
     // 1. Latin + Latin (e.g. "bluetooth" + "setting" -> "bluetooth setting")
-    // 2. Latin + Thai (e.g. "Samsung" + "ของ" -> "Samsung ของ")
-    // 3. Thai + Latin (e.g. "ใช้" + "iPhone" -> "ใช้ iPhone", "ราคา" + "299" -> "ราคา 299")
+    // 2. Latin + Thai / Thai + Latin (e.g. "Samsung" + "ของ" -> "Samsung ของ", "Apple" + "(แอปเปิล)" -> "Apple (แอปเปิล)")
+    // 3. Numbers + Thai / Thai + Numbers (e.g. "ราคา" + "299" -> "ราคา 299")
     // 4. After Maiyamok/Paiyannoi (e.g. "มากๆ" + "และ" -> "มากๆ และ")
+    // 5. After punctuation marks like commas or colons
     if (
-      (prevIsLatin && currIsLatin) ||
-      (prevIsLatin && currIsThai) ||
-      (prevIsThai && currIsLatin) ||
-      prevIsMaiyamok
+      (prevHasLatin && currHasLatin) ||
+      (prevHasLatin && currHasThai) ||
+      (prevHasThai && currHasLatin) ||
+      prevIsMaiyamok ||
+      prevEndsWithPunctuation
     ) {
       result += ' ' + w;
     } else {
-      // Thai + Thai -> join without space
+      // Thai + Thai -> join without space (e.g. "เข้า" + "ไป" + "ดู" -> "เข้าไปดู")
       result += w;
     }
+
+    prevWord = w;
   }
 
   return result;
