@@ -78,6 +78,7 @@ export interface AppState {
   currentTime: number;
   style: CaptionStyle;
   activePresetId: string;
+  customPresets: Array<{ id: string; name: string; style: CaptionStyle; createdAt: string }>;
   
   // Actions
   setFile: (file: File | null) => void;
@@ -109,6 +110,8 @@ export interface AppState {
   setCurrentTime: (time: number) => void;
   setStyle: (stylePartial: Partial<CaptionStyle>) => void;
   setActivePresetId: (id: string) => void;
+  saveCustomPreset: (name: string) => void;
+  deleteCustomPreset: (id: string) => void;
   reset: () => void;
 }
 
@@ -161,7 +164,8 @@ export const useAppStore = create<AppState>()(
       activeCaptionIndex: null,
       currentTime: 0,
       style: defaultCaptionStyle,
-      activePresetId: 'default-thai-glow',
+      activePresetId: 'tiktok-viral',
+      customPresets: [],
       
       setFile: (file) => set({ file }),
       setVideoUrl: (videoUrl) => set({ videoUrl }),
@@ -424,6 +428,25 @@ export const useAppStore = create<AppState>()(
         })),
         
       setActivePresetId: (activePresetId) => set({ activePresetId }),
+
+      saveCustomPreset: (name) =>
+        set((state) => {
+          const newPreset = {
+            id: `custom-${Date.now().toString(36)}`,
+            name: name.trim() || `สไตล์ของฉัน ${state.customPresets.length + 1}`,
+            style: { ...state.style },
+            createdAt: new Date().toISOString(),
+          };
+          return {
+            customPresets: [newPreset, ...state.customPresets],
+            activePresetId: newPreset.id,
+          };
+        }),
+
+      deleteCustomPreset: (id) =>
+        set((state) => ({
+          customPresets: state.customPresets.filter((p) => p.id !== id),
+        })),
       
       reset: () =>
         set({
@@ -451,6 +474,7 @@ export const useAppStore = create<AppState>()(
         isAdmin: state.isAdmin,
         style: state.style,
         activePresetId: state.activePresetId,
+        customPresets: state.customPresets,
       }),
     }
   )

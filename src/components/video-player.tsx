@@ -200,16 +200,29 @@ export function VideoPlayer({ className = '' }: Props) {
       shadows.push(`0 4px ${style.shadowBlur || 8}px rgba(${r},${g},${b},${opacity})`);
     }
 
-    // Outline using CSS stroke or layered text-shadow
+    // Outline using multi-angle radial text-shadow (prevents diagonal gaps and broken strokes)
     if (style.hasOutline && style.outlineWidth > 0) {
       const oColor = style.outlineColor || '#000000';
       const w = style.outlineWidth;
-      shadows.push(
-        `-${w}px -${w}px 0 ${oColor}`,
-        `${w}px -${w}px 0 ${oColor}`,
-        `-${w}px ${w}px 0 ${oColor}`,
-        `${w}px ${w}px 0 ${oColor}`
-      );
+      
+      // Generate 16 radial points in a full 360-degree circle for butter-smooth continuous outline
+      for (let angle = 0; angle < 360; angle += 22.5) {
+        const rad = (angle * Math.PI) / 180;
+        const x = Number((Math.cos(rad) * w).toFixed(2));
+        const y = Number((Math.sin(rad) * w).toFixed(2));
+        shadows.push(`${x}px ${y}px 0 ${oColor}`);
+      }
+      
+      // If stroke width is thick (>= 3px), add inner fill ring at half radius to ensure 100% solid opacity
+      if (w >= 3) {
+        const halfW = w / 2;
+        for (let angle = 0; angle < 360; angle += 45) {
+          const rad = (angle * Math.PI) / 180;
+          const x = Number((Math.cos(rad) * halfW).toFixed(2));
+          const y = Number((Math.sin(rad) * halfW).toFixed(2));
+          shadows.push(`${x}px ${y}px 0 ${oColor}`);
+        }
+      }
     }
 
     return {

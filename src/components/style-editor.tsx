@@ -255,16 +255,17 @@ export function StyleEditor() {
 
       <hr className="border-zinc-800/80" />
 
-      {/* 4. Position & Placement (ตำแหน่งในแนวตั้งแกน Y) */}
-      <div className="space-y-3">
+      {/* 4. Position & Placement (ตำแหน่งแนวตั้งแกน Y & แนวนอนแกน X) */}
+      <div className="space-y-4">
         <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
           <MoveVertical className="w-4 h-4 text-orange-400" />
-          <span>ตำแหน่งซับไตเติลบนหน้าจอ (Position Y):</span>
+          <span>ตำแหน่งซับไตเติลบนหน้าจอ (Position & Alignment):</span>
         </h4>
 
+        {/* Position Y (Up-Down) */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
           <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-300 font-medium">ระยะห่างจากขอบล่าง (Bottom Offset):</span>
+            <span className="text-zinc-300 font-medium">ตำแหน่งแนวตั้ง (ขึ้น - ลง จากขอบล่าง):</span>
             <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
               {style.positionY}%
             </span>
@@ -286,23 +287,69 @@ export function StyleEditor() {
             <button
               type="button"
               onClick={() => setStyle({ positionY: 10 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
             >
               ล่างสุด (10%)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionY: 18 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
             >
               TikTok ฮิต (18%)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionY: 50 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
             >
               กึ่งกลาง (50%)
+            </button>
+          </div>
+        </div>
+
+        {/* Position X (Left-Right) */}
+        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-zinc-300 font-medium">ตำแหน่งแนวนอน (ซ้าย - ขวา):</span>
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+              {style.positionX}%
+            </span>
+          </div>
+
+          <input
+            type="range"
+            min={10}
+            max={90}
+            step={1}
+            value={style.positionX}
+            aria-label="ตำแหน่งแนวนอน ซ้าย-ขวา"
+            onChange={(e) => setStyle({ positionX: parseInt(e.target.value, 10) })}
+            className="w-full accent-orange-500 cursor-pointer"
+          />
+
+          {/* Quick Horizontal Presets */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <button
+              type="button"
+              onClick={() => setStyle({ positionX: 20 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              ชิดซ้าย (20%)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ positionX: 50 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              ตรงกลาง (50%)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ positionX: 80 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              ชิดขวา (80%)
             </button>
           </div>
         </div>

@@ -17,6 +17,7 @@ import { useAppStore } from '@/lib/store';
 import { VideoPlayer } from '@/components/video-player';
 import { CaptionTable } from '@/components/caption-table';
 import { StyleEditor } from '@/components/style-editor';
+import { PresetManager } from '@/components/preset-manager';
 import { generateSrt, generateVtt } from '@/lib/srt';
 
 export default function EditorPage() {
@@ -25,7 +26,7 @@ export default function EditorPage() {
   const captions = useAppStore((s) => s.captions);
   const mediaDuration = useAppStore((s) => s.mediaDuration);
 
-  const [activeTab, setActiveTab] = useState<'captions' | 'style'>('captions');
+  const [activeTab, setActiveTab] = useState<'captions' | 'style' | 'presets'>('captions');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -176,23 +177,24 @@ export default function EditorPage() {
           </div>
         </div>
 
-        {/* Right Column: Studio Tabs (Captions vs Style Editor) (58% width on desktop) */}
+        {/* Right Column: Studio Tabs (Captions vs Style vs Presets) (58% width on desktop) */}
         <div className="lg:col-span-7 h-full min-h-[500px] flex flex-col space-y-3">
           {/* Segmented Tab Switcher */}
-          <div className="flex items-center p-1.5 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl shadow-lg">
+          <div className="flex items-center p-1.5 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl shadow-lg gap-1">
+            {/* Tab 1: Captions */}
             <button
               type="button"
               onClick={() => setActiveTab('captions')}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                 activeTab === 'captions'
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <AlignLeft className="w-4 h-4" />
-              <span>📝 ข้อความซับไตเติล (Captions)</span>
+              <AlignLeft className="w-3.5 h-3.5" />
+              <span>📝 ข้อความซับ</span>
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono ${
                   activeTab === 'captions'
                     ? 'bg-zinc-950/20 text-zinc-950 font-bold'
                     : 'bg-zinc-800 text-zinc-400'
@@ -202,17 +204,32 @@ export default function EditorPage() {
               </span>
             </button>
 
+            {/* Tab 2: Style */}
             <button
               type="button"
               onClick={() => setActiveTab('style')}
-              className={`flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                 activeTab === 'style'
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <Palette className="w-4 h-4" />
-              <span>🎨 ปรับแต่งสไตล์ (Style & Font)</span>
+              <Palette className="w-3.5 h-3.5" />
+              <span>🎨 ปรับแต่งฟอนต์</span>
+            </button>
+
+            {/* Tab 3: Presets */}
+            <button
+              type="button"
+              onClick={() => setActiveTab('presets')}
+              className={`flex-1 py-2 px-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeTab === 'presets'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>⚡ ธีมสำเร็จรูป</span>
             </button>
           </div>
 
@@ -220,8 +237,10 @@ export default function EditorPage() {
           <div className="flex-1 bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl">
             {activeTab === 'captions' ? (
               <CaptionTable />
-            ) : (
+            ) : activeTab === 'style' ? (
               <StyleEditor />
+            ) : (
+              <PresetManager />
             )}
           </div>
         </div>
