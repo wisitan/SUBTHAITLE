@@ -11,10 +11,11 @@ import {
   Lock,
   Heart,
   ShieldCheck,
+  FlaskConical,
 } from 'lucide-react';
 
 export function ProviderSelector() {
-  const { provider, setProvider, tier, groqApiKey, setGroqApiKey } = useAppStore();
+  const { provider, setProvider, tier, setTier, groqApiKey, setGroqApiKey } = useAppStore();
   const [showKeyInput, setShowKeyInput] = useState(Boolean(groqApiKey));
 
   const isPaid = tier === 'coffee' || tier === 'meal';
@@ -42,20 +43,66 @@ export function ProviderSelector() {
           </p>
         </div>
 
-        {/* Tier Status Indicator with Donate link */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        {/* Tier Status & Quick Dev Testing Bar */}
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* Quick Tier Switcher for Testing */}
+          <div className="flex items-center gap-1 bg-zinc-950 px-2 py-1 rounded-xl border border-zinc-800 text-[11px]">
+            <FlaskConical className="w-3 h-3 text-amber-400 mr-0.5" />
+            <span className="text-zinc-500 hidden sm:inline mr-1">โหมดทดสอบ:</span>
+            <button
+              type="button"
+              onClick={() => setTier('free')}
+              className={`px-1.5 py-0.5 rounded-md font-semibold transition-all cursor-pointer ${
+                tier === 'free'
+                  ? 'bg-zinc-800 text-white'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+              title="ทดสอบ Free Tier"
+            >
+              Free
+            </button>
+            <button
+              type="button"
+              onClick={() => setTier('coffee')}
+              className={`px-1.5 py-0.5 rounded-md font-semibold transition-all cursor-pointer ${
+                tier === 'coffee'
+                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/30'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+              title="ทดสอบ Tier เลี้ยงกาแฟ (99฿)"
+            >
+              ☕ 99฿
+            </button>
+            <button
+              type="button"
+              onClick={() => setTier('meal')}
+              className={`px-1.5 py-0.5 rounded-md font-semibold transition-all cursor-pointer ${
+                tier === 'meal'
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+              title="ทดสอบ Tier เลี้ยงข้าว (299฿)"
+            >
+              🍚 299฿
+            </button>
+          </div>
+
+          {/* Current Status Badge */}
           {isPaid ? (
-            <div className="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-1.5">
+            <Link
+              href="/donate"
+              className="px-2.5 py-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{tier === 'coffee' ? 'สถานะ: เลี้ยงกาแฟ ☕ (99฿)' : 'สถานะ: เลี้ยงข้าว 🍚 (299฿)'}</span>
-            </div>
+              <span>{tier === 'coffee' ? 'สถานะ: เลี้ยงกาแฟ ☕' : 'สถานะ: เลี้ยงข้าว 🍚'}</span>
+            </Link>
           ) : (
             <Link
               href="/donate"
-              className="px-3 py-1 rounded-full bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs transition-colors flex items-center gap-1.5"
+              className="px-2.5 py-1 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-zinc-200 text-xs transition-colors flex items-center gap-1.5"
             >
               <Heart className="w-3 h-3 text-rose-400" />
-              <span>Free Tier (คลิกเพื่อดูสิทธิพิเศษ)</span>
+              <span>ดูสิทธิพิเศษการสนับสนุน</span>
             </Link>
           )}
         </div>
@@ -107,7 +154,7 @@ export function ProviderSelector() {
           }}
           className={`relative p-4 rounded-2xl border transition-all flex flex-col justify-between ${
             !isPaid
-              ? 'border-zinc-800/60 bg-zinc-950/20 opacity-75 cursor-not-allowed'
+              ? 'border-zinc-800/60 bg-zinc-950/20 opacity-75'
               : provider === 'groq' && showKeyInput
               ? 'border-emerald-500/80 bg-emerald-500/10 ring-1 ring-emerald-500/30 cursor-pointer'
               : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/60 cursor-pointer'
@@ -123,7 +170,7 @@ export function ProviderSelector() {
                   API Key ตัวเอง (BYOK)
                 </span>
                 <span className="text-[10px] text-emerald-400 font-medium">
-                  {isPaid ? '⚡ ไม่จำกัดขนาด & เวลา' : '🔒 ปลดล็อกเมื่อสนับสนุน'}
+                  {isPaid ? '⚡ ไม่จำกัดจำนวน & ความยาวคลิป' : '🔒 ปลดล็อกเมื่อร่วมสนับสนุน'}
                 </span>
               </div>
             </div>
@@ -131,10 +178,10 @@ export function ProviderSelector() {
             {!isPaid ? (
               <Link
                 href="/donate"
-                className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/20 transition-colors"
+                className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/20 hover:text-white transition-all whitespace-nowrap"
               >
-                <Lock className="w-2.5 h-2.5" />
-                <span>99฿</span>
+                <Lock className="w-3 h-3 text-rose-400" />
+                <span>ดูวิธีปลดล็อก</span>
               </Link>
             ) : provider === 'groq' && showKeyInput ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -142,8 +189,8 @@ export function ProviderSelector() {
           </div>
           <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">
             {isPaid
-              ? 'ใส่ Groq Key ส่วนตัว ถอดเสียงไม่จำกัดขนาดคลิปและความยาว ฟรีไม่มีบวกเพิ่ม'
-              : 'ปลดล็อกการใส่ API Key ส่วนตัวเพื่อถอดเสียงได้ไม่จำกัด เมื่อร่วมสนับสนุน 99฿'}
+              ? 'ใส่ Groq API Key ส่วนตัว ถอดเสียงไม่จำกัดจำนวนคลิปและไม่จำกัดความยาว ฟรีไม่มีค่าใช้จ่ายเพิ่ม'
+              : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงได้ไม่จำกัดจำนวนคลิปและไม่จำกัดความยาวคลิป พร้อมใส่ API Key ของคุณเอง'}
           </p>
         </div>
 
@@ -155,7 +202,7 @@ export function ProviderSelector() {
           }}
           className={`relative p-4 rounded-2xl border transition-all flex flex-col justify-between ${
             !isPaid
-              ? 'border-zinc-800/60 bg-zinc-950/20 opacity-75 cursor-not-allowed'
+              ? 'border-zinc-800/60 bg-zinc-950/20 opacity-75'
               : provider === 'local'
               ? 'border-indigo-500/80 bg-indigo-500/10 ring-1 ring-indigo-500/30 cursor-pointer'
               : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/60 cursor-pointer'
@@ -171,7 +218,7 @@ export function ProviderSelector() {
                   Local Whisper (Mac)
                 </span>
                 <span className="text-[10px] text-indigo-400 font-medium">
-                  {isPaid ? '🔒 Offline 100%' : '🔒 ปลดล็อกเมื่อสนับสนุน'}
+                  {isPaid ? '🔒 Offline 100% ไม่จำกัดคลิป' : '🔒 ปลดล็อกเมื่อร่วมสนับสนุน'}
                 </span>
               </div>
             </div>
@@ -179,10 +226,10 @@ export function ProviderSelector() {
             {!isPaid ? (
               <Link
                 href="/donate"
-                className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/20 transition-colors"
+                className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/20 hover:text-white transition-all whitespace-nowrap"
               >
-                <Lock className="w-2.5 h-2.5" />
-                <span>99฿</span>
+                <Lock className="w-3 h-3 text-rose-400" />
+                <span>ดูวิธีปลดล็อก</span>
               </Link>
             ) : provider === 'local' ? (
               <CheckCircle2 className="w-4 h-4 text-indigo-400" />
@@ -190,8 +237,8 @@ export function ProviderSelector() {
           </div>
           <p className="text-[11px] text-zinc-400 mt-3 leading-relaxed">
             {isPaid
-              ? 'ประมวลผลบนชิป Apple Silicon ข้อมูลปลอดภัย ไม่ส่งออกนอกเครื่อง'
-              : 'ปลดล็อกโหมดรันในเครื่อง Mac สำหรับงานที่ต้องการความเป็นส่วนตัว 100%'}
+              ? 'ประมวลผลบนชิป Apple Silicon ออฟไลน์ 100% ไม่จำกัดจำนวนคลิปและความยาว ข้อมูลปลอดภัยไม่หลุดออกนอกเครื่อง'
+              : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงในเครื่อง Mac ออฟไลน์ 100% ไม่จำกัดจำนวนคลิปและความยาว ข้อมูลปลอดภัย'}
           </p>
         </div>
       </div>
