@@ -28,6 +28,7 @@ export function CaptionTable({ onPlayCue }: Props) {
   const captions = useAppStore((s) => s.captions);
   const activeIndex = useAppStore((s) => s.activeCaptionIndex);
   const pacingMode = useAppStore((s) => s.pacingMode);
+  const customMaxWords = useAppStore((s) => s.customMaxWords);
   const setPacingMode = useAppStore((s) => s.setPacingMode);
   const setCurrentTime = useAppStore((s) => s.setCurrentTime);
   const updateCaptionText = useAppStore((s) => s.updateCaptionText);
@@ -178,15 +179,15 @@ export function CaptionTable({ onPlayCue }: Props) {
           </div>
         </div>
 
-        {/* 🎛️ Prominent Pacing Mode Selector (3 Big Cards) */}
-        <div className="p-3 rounded-2xl bg-zinc-950/70 border border-zinc-800/90 space-y-2.5">
+        {/* 🎛️ Prominent Pacing Mode Selector (3 Big Cards + Manual Slider) */}
+        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/90 space-y-3">
           <div className="flex items-center justify-between text-xs">
             <span className="font-bold text-zinc-200 flex items-center gap-1.5">
               <SlidersHorizontal className="w-3.5 h-3.5 text-orange-400" />
               ✂️ ปรับจังหวะความยาวท่อนซับ (Caption Pacing):
             </span>
             <span className="text-[10px] text-zinc-400 hidden sm:inline">
-              คลิกเพื่อจัดกลุ่มคำใหม่แบบ Realtime
+              คลิกหรือลากเพื่อจัดกลุ่มคำใหม่แบบ Realtime
             </span>
           </div>
 
@@ -262,6 +263,57 @@ export function CaptionTable({ onPlayCue }: Props) {
                 เหมาะกับ YouTube แนวนอน, สัมภาษณ์
               </p>
             </button>
+          </div>
+
+          {/* 🎚️ Manual Custom Words per Cue Slider Bar */}
+          <div className="pt-2 border-t border-zinc-900/90 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-300 font-medium flex items-center gap-1.5">
+                <span>ความยาวคำกำหนดเอง (Manual Words Slider):</span>
+                {pacingMode === 'custom' && (
+                  <span className="px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 text-[10px] font-bold">
+                    Custom Mode
+                  </span>
+                )}
+              </span>
+              <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+                {pacingMode === 'short'
+                  ? '~4 คำ/ท่อน'
+                  : pacingMode === 'medium'
+                  ? '~8 คำ/ท่อน'
+                  : pacingMode === 'long'
+                  ? '~13 คำ/ท่อน'
+                  : `${customMaxWords} คำ/ท่อน`}
+              </span>
+            </div>
+
+            <input
+              type="range"
+              min={2}
+              max={20}
+              step={1}
+              value={
+                pacingMode === 'short'
+                  ? 4
+                  : pacingMode === 'medium'
+                  ? 8
+                  : pacingMode === 'long'
+                  ? 13
+                  : customMaxWords
+              }
+              aria-label="ปรับความยาวคำต่อท่อนซับไตเติล"
+              onChange={(e) => {
+                const words = parseInt(e.target.value, 10);
+                setPacingMode('custom', words);
+              }}
+              className="w-full accent-orange-500 cursor-pointer"
+            />
+
+            <div className="flex justify-between text-[10px] text-zinc-500">
+              <span>สั้นมาก (2 คำ)</span>
+              <span>ปานกลาง (8-10 คำ)</span>
+              <span>ยาวมาก (20 คำ)</span>
+            </div>
           </div>
         </div>
 

@@ -16,7 +16,6 @@ import {
   Smartphone,
   Tv,
   Square,
-  Layers,
 } from 'lucide-react';
 import { loadGoogleFont } from '@/lib/fonts';
 
@@ -47,7 +46,7 @@ export function VideoPlayer({ className = '' }: Props) {
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9' | '1:1' | 'auto'>('auto');
+  const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9' | '1:1'>('9:16');
   const [hoverTime, setHoverTime] = useState<number | null>(null);
 
   const isAudioFile = useMemo(() => {
@@ -271,7 +270,7 @@ export function VideoPlayer({ className = '' }: Props) {
       case '1:1':
         return 'aspect-square max-w-[420px] mx-auto';
       default:
-        return 'aspect-auto w-full';
+        return 'aspect-[9/16] max-w-[340px] mx-auto';
     }
   }, [aspectRatio]);
 
@@ -284,19 +283,6 @@ export function VideoPlayer({ className = '' }: Props) {
       <div className="absolute top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-none">
         {/* Aspect Ratio Selector */}
         <div className="flex items-center gap-1 bg-zinc-950/80 backdrop-blur-md border border-zinc-800/80 p-1 rounded-xl pointer-events-auto shadow-lg">
-          <button
-            type="button"
-            onClick={() => setAspectRatio('auto')}
-            className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
-              aspectRatio === 'auto'
-                ? 'bg-orange-500 text-zinc-950'
-                : 'text-zinc-400 hover:text-white'
-            }`}
-            title="สัดส่วนวิดีโอตามไฟล์จริง (Auto)"
-          >
-            <Layers className="w-3 h-3 inline mr-1" />
-            Auto
-          </button>
           <button
             type="button"
             onClick={() => setAspectRatio('9:16')}
@@ -331,7 +317,7 @@ export function VideoPlayer({ className = '' }: Props) {
                 ? 'bg-orange-500 text-zinc-950'
                 : 'text-zinc-400 hover:text-white'
             }`}
-            title="จัตุรัส 1:1 (Instagram Feed)"
+            title="จัตุรัส 1:1 (Square)"
           >
             <Square className="w-3 h-3 inline mr-1" />
             1:1
