@@ -81,7 +81,7 @@ Content Creator ชาวไทย (YouTuber, TikToker, IG Reels) ที่ต�
 | # | ฟีเจอร์ | หมายเหตุ |
 |---|---------|---------|
 | F9 | Waveform Timeline (wavesurfer.js) | เห็นคลื่นเสียง + ลาก subtitle block |
-| F12 | Login / Auth (Supabase) | บันทึก project, history, cloud sync presets |
+| F12 | Google OAuth Login (Supabase) | บันทึก project, history, **Cloud Sync** (Custom Fonts/Presets/Dictionary สำหรับ Tier 299฿) และระบบ Upgrade Tier จ่ายส่วนต่าง |
 | F13 | Dashboard — Project List | เปิดดู/แก้ไข project เก่า |
 | F14 | Import .srt | โหลด .srt เข้ามาแก้ไขได้ |
 | F15 | Batch processing | ถอดเสียงหลายไฟล์พร้อมกัน |
@@ -219,6 +219,18 @@ graph LR
     D --> E["เก็บใน localStorage"]
     E --> F["ปลดล็อก tier + ปิด banner"]
 ```
+
+### 2.8 Google OAuth & Pro-rated Upgrade Strategy (Post-MVP)
+
+ในระยะถัดไป (v2) ระบบจะรองรับ **Google OAuth Login** ผ่าน Supabase เพื่อแก้ปัญหา localStorage หายและเพิ่มความสามารถใหม่:
+
+1. **Cloud Sync (สำหรับ Tier 299฿ เท่านั้น):**
+   - ผู้ใช้สามารถล็อกอินเพื่อ Sync **Custom Fonts**, **Custom Presets** และ **Dictionary** (คู่คำผิดที่แก้บ่อย) ขึ้น Cloud ได้ 
+   - เปลี่ยนเครื่องใช้งาน ก็ดึงข้อมูลเดิมกลับมาได้ทันที
+2. **Pro-rated Upgrade (จ่ายเฉพาะส่วนต่าง):**
+   - ผู้ใช้ที่เคยสนับสนุน **Tier 99฿ (เลี้ยงกาแฟ)** สามารถล็อกอินเข้าระบบ
+   - หากต้องการอัปเกรดเป็น **Tier 299฿ (เลี้ยงข้าว)** ระบบจะคำนวณราคาให้ใหม่ โดยหักลบกับ 99฿ เดิม
+   - ผู้ใช้จ่ายเพียงแค่ **200฿** สำหรับการอัปเกรดเพื่อเข้าถึง Cloud Sync และจำนวน Preset ที่มากขึ้น
 
 ---
 
