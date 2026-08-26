@@ -98,7 +98,7 @@ export function StyleEditor() {
         </h4>
 
         {/* Font Size Slider */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-2">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
           <div className="flex items-center justify-between text-xs">
             <span className="text-zinc-300 font-medium">ขนาดตัวอักษร (Font Size):</span>
             <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
@@ -107,8 +107,8 @@ export function StyleEditor() {
           </div>
           <input
             type="range"
-            min={18}
-            max={64}
+            min={10}
+            max={48}
             step={1}
             value={style.fontSize}
             aria-label="ขนาดตัวอักษร"
@@ -116,9 +116,41 @@ export function StyleEditor() {
             className="w-full accent-orange-500 cursor-pointer"
           />
           <div className="flex justify-between text-[10px] text-zinc-500">
-            <span>เล็ก (18px)</span>
-            <span>ปานกลาง (32px)</span>
-            <span>ใหญ่มาก (64px)</span>
+            <span>ซับหนังมินิมอล (10px)</span>
+            <span>มาตรฐาน (24px)</span>
+            <span>ตัวใหญ่ Creator (48px)</span>
+          </div>
+
+          {/* Quick Font Size Presets */}
+          <div className="flex items-center gap-1.5 pt-1">
+            <button
+              type="button"
+              onClick={() => setStyle({ fontSize: 13 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              ซับหนัง (13px)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ fontSize: 20 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              มาตรฐาน (20px)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ fontSize: 28 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              อ่านสบาย (28px)
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ fontSize: 36 })}
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+            >
+              ตัวใหญ่ (36px)
+            </button>
           </div>
         </div>
 

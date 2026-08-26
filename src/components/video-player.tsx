@@ -243,7 +243,7 @@ export function VideoPlayer({ className = '' }: Props) {
 
     return {
       fontFamily: `"${style.fontFamily}", sans-serif`,
-      fontSize: `clamp(16px, 3.2vw, ${style.fontSize}px)`,
+      fontSize: `${style.fontSize}px`,
       color: style.textColor || '#FFFFFF',
       fontWeight:
         style.fontWeight === 'bold' || style.fontWeight === '700'

@@ -84,7 +84,7 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
     previewHighlightColor: '#38BDF8',
     style: {
       fontFamily: 'Noto Sans Thai',
-      fontSize: 26,
+      fontSize: 16,
       textColor: '#FFFFFF',
       fontWeight: '600',
       letterSpacing: 0,
@@ -116,7 +116,7 @@ export const SUBTITLE_PRESETS: StylePreset[] = [
     previewHighlightColor: '#4ADE80',
     style: {
       fontFamily: 'Sarabun',
-      fontSize: 28,
+      fontSize: 22,
       textColor: '#FFFFFF',
       fontWeight: '700',
       letterSpacing: 0,
