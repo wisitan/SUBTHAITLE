@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
-  Download,
   FileVideo,
   FileAudio,
   Sparkles,
@@ -18,7 +17,7 @@ import { VideoPlayer } from '@/components/video-player';
 import { CaptionTable } from '@/components/caption-table';
 import { StyleEditor } from '@/components/style-editor';
 import { PresetManager } from '@/components/preset-manager';
-import { generateSrt, generateVtt } from '@/lib/srt';
+import { ExportMenu } from '@/components/export-menu';
 
 export default function EditorPage() {
   const file = useAppStore((s) => s.file);
@@ -32,32 +31,6 @@ export default function EditorPage() {
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
-  };
-
-  const handleDownloadSrt = () => {
-    if (!captions.length) return;
-    const srtData = generateSrt(captions);
-    const blob = new Blob([srtData], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${file?.name.replace(/\.[^/.]+$/, '') || 'subthaitle'}.srt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('ดาวน์โหลดไฟล์ .SRT เรียบร้อย');
-  };
-
-  const handleDownloadVtt = () => {
-    if (!captions.length) return;
-    const vttData = generateVtt(captions);
-    const blob = new Blob([vttData], { type: 'text/vtt;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${file?.name.replace(/\.[^/.]+$/, '') || 'subthaitle'}.vtt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('ดาวน์โหลดไฟล์ .VTT เรียบร้อย');
   };
 
   // If no active captions or media loaded, show friendly empty state
@@ -130,29 +103,9 @@ export default function EditorPage() {
             </div>
           </div>
 
-          {/* Right: Quick Export & Tools */}
+          {/* Right: Export Menu */}
           <div className="flex items-center gap-2">
-            {/* Export SRT */}
-            <button
-              type="button"
-              onClick={handleDownloadSrt}
-              className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold border border-zinc-700/80 hover:border-orange-500/40 hover:text-orange-300 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-              title="ดาวน์โหลดไฟล์ .SRT"
-            >
-              <Download className="w-3.5 h-3.5 text-orange-400" />
-              <span className="hidden sm:inline">Export</span> .SRT
-            </button>
-
-            {/* Export VTT */}
-            <button
-              type="button"
-              onClick={handleDownloadVtt}
-              className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 text-xs font-semibold border border-zinc-700/80 hover:border-emerald-500/40 hover:text-emerald-300 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-              title="ดาวน์โหลดไฟล์ WebVTT (.VTT)"
-            >
-              <Download className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="hidden sm:inline">Export</span> .VTT
-            </button>
+            <ExportMenu onShowToast={showToast} />
           </div>
         </div>
       </header>
