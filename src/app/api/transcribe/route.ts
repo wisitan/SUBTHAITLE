@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const audioFile = formData.get('file') as Blob | null;
     const language = (formData.get('language') as string) || 'th';
-    const model = (formData.get('model') as string) || 'whisper-large-v3-turbo';
+    const model = (formData.get('model') as string) || 'whisper-large-v3';
 
     if (!audioFile) {
       return NextResponse.json(
@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
     groqFormData.append('response_format', 'verbose_json');
     groqFormData.append('language', language);
     groqFormData.append('temperature', '0.0');
+    groqFormData.append('prompt', 'ตัดคำภาษาไทย เว้นวรรคตามหลักภาษาอย่างเป็นธรรมชาติ ซับไตเติลภาษาไทย');
     groqFormData.append('timestamp_granularities[]', 'word');
     groqFormData.append('timestamp_granularities[]', 'segment');
 

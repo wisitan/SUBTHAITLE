@@ -56,10 +56,11 @@ export async function transcribeAudio(
 
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.mp3');
-    formData.append('model', 'whisper-large-v3-turbo');
+    formData.append('model', 'whisper-large-v3');
     formData.append('response_format', 'verbose_json');
     formData.append('language', 'th');
     formData.append('temperature', '0.0');
+    formData.append('prompt', 'ตัดคำภาษาไทย เว้นวรรคตามหลักภาษาอย่างเป็นธรรมชาติ ซับไตเติลภาษาไทย');
     formData.append('timestamp_granularities[]', 'word');
     formData.append('timestamp_granularities[]', 'segment');
 
@@ -125,7 +126,7 @@ export async function transcribeAudio(
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.mp3');
     formData.append('language', 'th');
-    formData.append('model', 'whisper-large-v3-turbo');
+    formData.append('model', 'whisper-large-v3');
 
     const res = await fetch('/api/transcribe', {
       method: 'POST',
