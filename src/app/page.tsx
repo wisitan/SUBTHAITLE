@@ -1,9 +1,11 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Header } from '@/components/header';
 import { ProviderSelector } from '@/components/provider-selector';
 import { UploadZone } from '@/components/upload-zone';
+import { Heart, ArrowRight, MessageSquareQuote } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -35,6 +37,44 @@ export default function Home() {
         {/* Upload & Processing Area */}
         <section>
           <UploadZone />
+        </section>
+
+        {/* Creator Story Teaser Section */}
+        <section className="mt-4 p-6 sm:p-8 rounded-3xl bg-zinc-900/40 border border-zinc-800/80 backdrop-blur-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400 shrink-0">
+              <MessageSquareQuote className="w-5 h-5" />
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-orange-400 uppercase tracking-wider">
+                  Story จากทีมผู้พัฒนา
+                </span>
+              </div>
+
+              <h3 className="text-base sm:text-lg font-bold text-white leading-snug">
+                &ldquo;เราเริ่มทำ SUBTHAITLE เพราะเราเองก็เป็น Content Creator...&rdquo;
+              </h3>
+
+              <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+                เรารู้ดีว่าการทำคอนเทนต์หนึ่งชิ้นไม่ได้จบแค่ตอนถ่ายเสร็จ แต่ยังมีทั้งการตัดต่อ ทำ Subtitle จัดคำ เว้นวรรค ที่กินเวลาชีวิตสุดๆ เราเชื่อว่า Creator ทุกคนมีต้นทุนที่ต้องแบกรับอยู่แล้ว เราจึงอยากให้ทุกคนเข้าถึงเครื่องมือนี้ได้ฟรี หรือร่วมสนับสนุนผู้พัฒนาเพียงครั้งเดียวเพื่อรับของแถมพิเศษตลอดชีพ โดยไม่ต้องมีค่าสมาชิกรายเดือน
+              </p>
+
+              <div className="pt-1">
+                <Link
+                  href="/donate"
+                  className="inline-flex items-center gap-2 text-xs font-semibold text-rose-300 hover:text-white bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 px-4 py-2 rounded-xl transition-all"
+                >
+                  <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400/20" />
+                  <span>อ่านเรื่องราวฉบับเต็ม & ร่วมสนับสนุนทีมงาน</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
         </section>
       </main>
 
