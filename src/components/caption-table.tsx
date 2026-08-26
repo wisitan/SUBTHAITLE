@@ -16,9 +16,9 @@ import {
   Replace,
   Check,
   X,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { DictionarySuggestionBadge } from './dictionary-suggestion-badge';
 
 interface Props {
   onPlayCue?: (start: number) => void;
@@ -110,8 +110,9 @@ export function CaptionTable({ onPlayCue }: Props) {
         </div>
       )}
 
-      {/* Top Header & Metrics Bar */}
-      <div className="p-4 bg-zinc-900/60 border-b border-zinc-800/80 space-y-3">
+      {/* Top Header & Pacing Selector Section */}
+      <div className="p-4 bg-zinc-900/60 border-b border-zinc-800/80 space-y-3.5">
+        {/* Title, Counts, and Quick Tools */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-xs">
@@ -177,71 +178,111 @@ export function CaptionTable({ onPlayCue }: Props) {
           </div>
         </div>
 
-        {/* Search & Pacing Switcher Row */}
-        <div className="flex flex-col sm:flex-row gap-2 items-center justify-between pt-1">
-          {/* Search Box */}
-          <div className="relative w-full sm:w-64">
-            <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="ค้นหาข้อความในซับ..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-2.5 py-1.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
-              >
-                <X className="w-3 h-3" />
-              </button>
-            )}
+        {/* 🎛️ Prominent Pacing Mode Selector (3 Big Cards) */}
+        <div className="p-3 rounded-2xl bg-zinc-950/70 border border-zinc-800/90 space-y-2.5">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-bold text-zinc-200 flex items-center gap-1.5">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-orange-400" />
+              ✂️ ปรับจังหวะความยาวท่อนซับ (Caption Pacing):
+            </span>
+            <span className="text-[10px] text-zinc-400 hidden sm:inline">
+              คลิกเพื่อจัดกลุ่มคำใหม่แบบ Realtime
+            </span>
           </div>
 
-          {/* Quick Pacing Presets */}
-          <div className="flex items-center gap-1 w-full sm:w-auto justify-end">
-            <span className="text-[10px] text-zinc-400 hidden sm:inline mr-1">จังหวะ:</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {/* Option 1: Short */}
             <button
               type="button"
               onClick={() => setPacingMode('short')}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'short'
-                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/50'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                  ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
+                  : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900'
               }`}
-              title="จัดกลุ่มคำแบบสั้นกระชับ (3-5 คำ)"
             >
-              <Flame className="w-3 h-3 text-orange-400" />
-              สั้น
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs flex items-center gap-1 text-orange-300">
+                  <Flame className="w-3.5 h-3.5 text-orange-400" />
+                  สั้นกระชับ (3-5 คำ)
+                </span>
+                {pacingMode === 'short' && (
+                  <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                )}
+              </div>
+              <p className="text-[10px] text-zinc-400 leading-snug">
+                เหมาะกับ TikTok, Reels, Shorts
+              </p>
             </button>
+
+            {/* Option 2: Medium */}
             <button
               type="button"
               onClick={() => setPacingMode('medium')}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'medium'
-                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/50'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                  ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
+                  : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900'
               }`}
-              title="จัดกลุ่มคำแบบมาตรฐาน (6-9 คำ)"
             >
-              <AlignLeft className="w-3 h-3 text-amber-400" />
-              มาตรฐาน
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs flex items-center gap-1 text-amber-300">
+                  <AlignLeft className="w-3.5 h-3.5 text-amber-400" />
+                  มาตรฐาน (6-9 คำ)
+                </span>
+                {pacingMode === 'medium' && (
+                  <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                )}
+              </div>
+              <p className="text-[10px] text-zinc-400 leading-snug">
+                เหมาะกับคลิป Vlog ทั่วไป อ่านสบาย
+              </p>
             </button>
+
+            {/* Option 3: Long */}
             <button
               type="button"
               onClick={() => setPacingMode('long')}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'long'
-                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/50'
-                  : 'bg-zinc-900 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                  ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
+                  : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900'
               }`}
-              title="จัดกลุ่มคำแบบประโยคยาว (10-15 คำ)"
             >
-              <Film className="w-3 h-3 text-emerald-400" />
-              ยาว
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-xs flex items-center gap-1 text-emerald-300">
+                  <Film className="w-3.5 h-3.5 text-emerald-400" />
+                  ประโยคยาว (10-15 คำ)
+                </span>
+                {pacingMode === 'long' && (
+                  <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                )}
+              </div>
+              <p className="text-[10px] text-zinc-400 leading-snug">
+                เหมาะกับ YouTube แนวนอน, สัมภาษณ์
+              </p>
             </button>
           </div>
+        </div>
+
+        {/* Search Input Box */}
+        <div className="relative w-full">
+          <Search className="w-3.5 h-3.5 text-zinc-500 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="ค้นหาข้อความในซับไตเติล..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -398,12 +439,6 @@ export function CaptionTable({ onPlayCue }: Props) {
                     onChange={(e) => updateCaptionText(caption.id, e.target.value)}
                     className="w-full bg-transparent text-sm text-zinc-100 placeholder-zinc-600 resize-none focus:outline-none focus:ring-0 leading-relaxed font-sans font-medium"
                     placeholder="พิมพ์ข้อความซับไตเติล..."
-                  />
-
-                  {/* Smart Dictionary Suggestion Badge */}
-                  <DictionarySuggestionBadge
-                    originalText={caption.originalText}
-                    currentText={caption.text}
                   />
                 </div>
               </div>

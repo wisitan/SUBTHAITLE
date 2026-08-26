@@ -31,6 +31,7 @@ export function VideoPlayer({ className = '' }: Props) {
   const currentTime = useAppStore((s) => s.currentTime);
   const setCurrentTime = useAppStore((s) => s.setCurrentTime);
   const style = useAppStore((s) => s.style);
+  const setStyle = useAppStore((s) => s.setStyle);
   const mediaDuration = useAppStore((s) => s.mediaDuration);
   const setMediaDuration = useAppStore((s) => s.setMediaDuration);
   const activeCaptionIndex = useAppStore((s) => s.activeCaptionIndex);
@@ -295,13 +296,23 @@ export function VideoPlayer({ className = '' }: Props) {
           </button>
         </div>
 
-        {/* Word Highlight Status Indicator */}
-        {style.enableWordHighlight && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-bold backdrop-blur-md pointer-events-auto">
-            <Sparkles className="w-3 h-3 text-amber-400" />
-            <span>Word Highlight ON</span>
-          </div>
-        )}
+        {/* Word Highlight Interactive Toggle Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setStyle({ enableWordHighlight: !style.enableWordHighlight });
+          }}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold backdrop-blur-md transition-all cursor-pointer shadow-lg pointer-events-auto ${
+            style.enableWordHighlight
+              ? 'bg-amber-500/25 border border-amber-500/60 text-amber-300 hover:bg-amber-500/35 ring-1 ring-amber-500/30'
+              : 'bg-zinc-950/80 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+          }`}
+          title="คลิกเพื่อ เปิด/ปิด การไฮไลท์คำตามเสียงพูดแบบ Real-time"
+        >
+          <Sparkles className={`w-3.5 h-3.5 ${style.enableWordHighlight ? 'text-amber-400' : 'text-zinc-500'}`} />
+          <span>Word Highlight: {style.enableWordHighlight ? 'ON' : 'OFF'}</span>
+        </button>
       </div>
 
       {/* Video / Audio Display Area */}

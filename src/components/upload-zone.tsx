@@ -55,15 +55,6 @@ export function UploadZone() {
   const [transcribeMessage, setTranscribeMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Revoke object URL on unmount
-  React.useEffect(() => {
-    return () => {
-      if (videoUrl) {
-        URL.revokeObjectURL(videoUrl);
-      }
-    };
-  }, [videoUrl]);
-
   const isBYOK = provider === 'groq' && Boolean(groqApiKey);
   const isPaid = tier === 'coffee' || tier === 'meal';
   const isUnlimitedSize = isBYOK || isPaid;
@@ -189,6 +180,7 @@ export function UploadZone() {
       setCaptions(results);
       setStatus('ready', 100, 'ถอดเสียงภาษาไทยสำเร็จ!');
       setIsTranscribing(false);
+      router.push('/editor');
     } catch (err) {
       console.error('Transcription error:', err);
       setIsTranscribing(false);

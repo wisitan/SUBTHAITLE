@@ -8,7 +8,6 @@ import {
   FileVideo,
   FileAudio,
   Sparkles,
-  ShieldCheck,
   Film,
   Check,
 } from 'lucide-react';
@@ -16,16 +15,13 @@ import { useAppStore } from '@/lib/store';
 import { VideoPlayer } from '@/components/video-player';
 import { CaptionTable } from '@/components/caption-table';
 import { generateSrt, generateVtt } from '@/lib/srt';
-import { AdminPinModal } from '@/components/admin-pin-modal';
 
 export default function EditorPage() {
   const file = useAppStore((s) => s.file);
   const videoUrl = useAppStore((s) => s.videoUrl);
   const captions = useAppStore((s) => s.captions);
   const mediaDuration = useAppStore((s) => s.mediaDuration);
-  const isAdmin = useAppStore((s) => s.isAdmin);
 
-  const [showAdminModal, setShowAdminModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -129,29 +125,8 @@ export default function EditorPage() {
             </div>
           </div>
 
-          {/* Right: Quick Export, Admin Mode & Tools */}
+          {/* Right: Quick Export & Tools */}
           <div className="flex items-center gap-2">
-            {/* Admin status pill */}
-            {isAdmin ? (
-              <Link
-                href="/admin/dictionary"
-                className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-bold rounded-lg bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25 transition-all"
-                title="ไปที่หน้า Admin Dictionary"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-                <span>👑 ADMIN</span>
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowAdminModal(true)}
-                className="hidden sm:inline-flex items-center gap-1 p-1.5 rounded-lg text-zinc-600 hover:text-zinc-400 text-xs transition-colors"
-                title="เข้าสู่ระบบ Admin"
-              >
-                <span className="text-[10px]">©</span>
-              </button>
-            )}
-
             {/* Export SRT */}
             <button
               type="button"
@@ -202,12 +177,6 @@ export default function EditorPage() {
           <CaptionTable />
         </div>
       </main>
-
-      <AdminPinModal
-        isOpen={showAdminModal}
-        onClose={() => setShowAdminModal(false)}
-        onSuccess={() => setShowAdminModal(false)}
-      />
     </div>
   );
 }
