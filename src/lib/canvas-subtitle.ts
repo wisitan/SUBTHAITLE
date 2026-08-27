@@ -355,20 +355,63 @@ export async function generateCaptionImageSequence(
     }
 
     if (style.enableWordHighlight && cue.words && cue.words.length > 0) {
-      // Split into word segments
-      for (let wIdx = 0; wIdx < cue.words.length; wIdx++) {
-        const w = cue.words[wIdx];
-        const segStart = Math.max(actualStart, w.start);
-        const segEnd = Math.min(actualEnd, w.end);
-        const segDur = Math.max(0.04, segEnd - segStart);
+      // Sort words by start time
+      const sortedWords = [...cue.words].sort((a, b) => a.start - b.start);
+      let currentCueTime = actualStart;
 
+      for (let wIdx = 0; wIdx < sortedWords.length; wIdx++) {
+        const w = sortedWords[wIdx];
+        const nextWordStart = wIdx < sortedWords.length - 1 ? sortedWords[wIdx + 1].start : actualEnd;
+
+        // 1. If there's a pre-word gap before word 0, show normal unhighlighted caption
+        if (wIdx === 0 && w.start > currentCueTime + 0.02) {
+          const preDur = Math.min(w.start, actualEnd) - currentCueTime;
+          if (preDur > 0.02) {
+            const fname = `sub_${frameCounter++}.png`;
+            timeline.push({
+              filename: fname,
+              duration: preDur,
+              caption: cue,
+              activeWordIndex: null, // all normal text
+            });
+            currentCueTime += preDur;
+          }
+        }
+
+        // 2. Word active segment: continuous until the next word starts (or until actualEnd for last word)
+        let wordEndLimit = wIdx === sortedWords.length - 1
+          ? actualEnd
+          : Math.min(actualEnd, Math.max(w.end, nextWordStart));
+
+        // Guard: Prevent time regression in case of overlapping word timestamps
+        wordEndLimit = Math.max(currentCueTime, wordEndLimit);
+
+        // Exact duration calculation without artificial minimum padding
+        const segDur = wordEndLimit - currentCueTime;
+        if (segDur > 0.005) {
+          const fname = `sub_${frameCounter++}.png`;
+          timeline.push({
+            filename: fname,
+            duration: segDur,
+            caption: cue,
+            activeWordIndex: wIdx,
+          });
+        }
+
+        currentCueTime = wordEndLimit;
+      }
+
+      // 3. If there is trailing duration within the cue after all words
+      if (actualEnd > currentCueTime + 0.005) {
+        const remainingDur = actualEnd - currentCueTime;
         const fname = `sub_${frameCounter++}.png`;
         timeline.push({
           filename: fname,
-          duration: segDur,
+          duration: remainingDur,
           caption: cue,
-          activeWordIndex: wIdx,
+          activeWordIndex: sortedWords.length - 1,
         });
+        currentCueTime = actualEnd;
       }
     } else {
       // Static cue
