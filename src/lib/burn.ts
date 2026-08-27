@@ -2,6 +2,7 @@ import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { CaptionItem, CaptionStyle } from './store';
 import { generateAss } from './ass';
+import { getCustomFontBuffer } from './fonts';
 
 export type VideoResolution = '720p' | '1080p' | '4k' | 'original';
 
@@ -69,11 +70,24 @@ export async function getFFmpegInstance(onProgress?: (progress: BurnProgress) =>
   }
 }
 
+
+
 /**
  * Fetch a Google Font TTF buffer for the subtitle renderer (libass requires TTF, not WOFF2)
+ * Or retrieve custom font buffer from memory if uploaded by user
  */
 async function fetchFontBuffer(fontFamily: string): Promise<Uint8Array | null> {
   try {
+    // 0. Check if it's a custom uploaded font stored in memory
+    if (fontFamily.startsWith('Custom_')) {
+      const memBuffer = getCustomFontBuffer(fontFamily);
+      if (memBuffer) {
+        return new Uint8Array(memBuffer);
+      }
+      console.warn('Custom font buffer not found in memory:', fontFamily);
+      return null;
+    }
+
     // 1. Get the direct TTF URL from our server-side API (which spoofs UA to bypass WOFF2)
     const apiRes = await fetch(`/api/font?family=${encodeURIComponent(fontFamily)}`);
     if (!apiRes.ok) return null;

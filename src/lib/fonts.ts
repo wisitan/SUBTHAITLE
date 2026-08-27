@@ -76,6 +76,13 @@ export const THAI_SYSTEM_FONTS: FontOption[] = [
 
 const loadedGoogleFonts = new Set<string>();
 
+// Registry to hold array buffers of custom fonts so ffmpeg can use them during export
+const customFontRegistry = new Map<string, ArrayBuffer>();
+
+export function getCustomFontBuffer(fontName: string): ArrayBuffer | undefined {
+  return customFontRegistry.get(fontName);
+}
+
 /**
  * Dynamically loads a Google Font into the DOM
  */
@@ -108,6 +115,9 @@ export async function loadCustomFontFile(file: File): Promise<string> {
   const fontFace = new FontFace(fontName, arrayBuffer);
   const loadedFace = await fontFace.load();
   document.fonts.add(loadedFace);
+
+  // Store for ffmpeg export
+  customFontRegistry.set(fontName, arrayBuffer);
 
   return fontName;
 }

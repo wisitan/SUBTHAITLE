@@ -36,10 +36,10 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const validExtensions = ['.ttf', '.otf', '.woff', '.woff2'];
+    const validExtensions = ['.ttf', '.otf'];
     const ext = '.' + file.name.split('.').pop()?.toLowerCase();
     if (!validExtensions.includes(ext)) {
-      setUploadError('กรุณาเลือกไฟล์ฟอนต์ .ttf, .otf, หรือ .woff');
+      setUploadError('กรุณาเลือกไฟล์ฟอนต์ .ttf หรือ .otf เท่านั้น (เนื่องจากข้อจำกัดการ Export วิดีโอ)');
       return;
     }
 
@@ -82,7 +82,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
           className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-orange-400 hover:text-orange-300 text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-          title="อัปโหลดไฟล์ฟอนต์ภาษาไทย .ttf / .otf / .woff"
+          title="อัปโหลดไฟล์ฟอนต์ภาษาไทย .ttf / .otf"
         >
           {isUploading ? (
             <Loader2 className="w-3 h-3 animate-spin" />
@@ -95,7 +95,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".ttf,.otf,.woff,.woff2"
+          accept=".ttf,.otf"
           onChange={handleCustomFontUpload}
           className="hidden"
         />
