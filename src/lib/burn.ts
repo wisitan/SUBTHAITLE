@@ -158,9 +158,11 @@ export async function burnSubtitlesToVideo({
     // Directory might already exist
   }
 
-  const fontBuffer = await fetchFontBuffer(style.fontFamily || 'Noto Sans Thai');
+  const fontName = style.fontFamily || 'Noto Sans Thai';
+  const fontBuffer = await fetchFontBuffer(fontName);
   if (fontBuffer) {
-    await ffmpeg.writeFile('fonts/custom_font.ttf', fontBuffer);
+    // Write font with exact family name so libass dummy provider can match it by filename
+    await ffmpeg.writeFile(`fonts/${fontName}.ttf`, fontBuffer);
   }
 
   // Step 5: Configure FFmpeg progress listener
@@ -236,7 +238,7 @@ export async function burnSubtitlesToVideo({
     await ffmpeg.deleteFile('subtitles.ass');
     await ffmpeg.deleteFile('output.mp4');
     if (fontBuffer) {
-      await ffmpeg.deleteFile('fonts/custom_font.ttf');
+      await ffmpeg.deleteFile(`fonts/${fontName}.ttf`);
     }
   } catch (cleanErr) {
     console.warn('Error cleaning up virtual ffmpeg files:', cleanErr);
