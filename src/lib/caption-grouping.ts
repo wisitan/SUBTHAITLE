@@ -107,6 +107,20 @@ export function groupWordsIntoCaptions(
       // Close current bucket
       const cueText = cleanThaiText(formatCaptionWordsText(currentWords));
       if (cueText) {
+        // --- Fix for Whisper Intro Hallucination (0-6s stretch) ---
+        // If the very first word in the cue is stretched abnormally long (e.g. > 1.5s) 
+        // due to preceding silence/music, we trim its start time to snap closer to its end time.
+        // This prevents the subtitle from appearing 6 seconds early and lingering on screen.
+        if (currentWords.length > 0) {
+          const firstW = currentWords[0];
+          const wordDur = firstW.end - firstW.start;
+          if (wordDur > 1.5) {
+            // Trim start to be at most 0.8s before the word ends (keeps a natural lead-in)
+            firstW.start = Math.max(firstW.start, firstW.end - 0.8);
+            currentStart = firstW.start;
+          }
+        }
+        
         const isLowConf = currentWords.some(
           (w) => w.confidence !== undefined && w.confidence < 0.6
         );

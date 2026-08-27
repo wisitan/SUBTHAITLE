@@ -18,6 +18,7 @@ import {
   Square,
 } from 'lucide-react';
 import { loadGoogleFont } from '@/lib/fonts';
+import { formatCaptionWordsText } from '@/lib/thai-text';
 
 interface Props {
   className?: string;
@@ -424,23 +425,36 @@ export function VideoPlayer({ className = '' }: Props) {
                       const isWordActive =
                         w.start <= currentTime && currentTime <= w.end + 0.08;
 
+                      // Smart Spacing Logic: Check if we need to prepend a space before this word
+                      let prefixSpace = '';
+                      if (idx > 0) {
+                        const prevW = activeCaption.words![idx - 1];
+                        const testJoin = formatCaptionWordsText([prevW, w]);
+                        // If formatCaptionWordsText decided to insert a space between them, we render it
+                        if (testJoin.includes(' ')) {
+                          prefixSpace = ' ';
+                        }
+                      }
+
                       return (
-                        <span
-                          key={idx}
-                          className="transition-colors duration-75 inline"
-                          style={{
-                            color: isWordActive ? style.highlightColor || '#FACC15' : style.textColor || '#FFFFFF',
-                            fontWeight: isWordActive
-                              ? 800
-                              : style.fontWeight === 'bold' || style.fontWeight === '700'
-                              ? 700
-                              : style.fontWeight === '800'
-                              ? 800
-                              : 500,
-                          }}
-                        >
-                          {w.word}
-                        </span>
+                        <React.Fragment key={idx}>
+                          {prefixSpace && <span>{prefixSpace}</span>}
+                          <span
+                            className="transition-colors duration-75 inline"
+                            style={{
+                              color: isWordActive ? style.highlightColor || '#FACC15' : style.textColor || '#FFFFFF',
+                              fontWeight: isWordActive
+                                ? 800
+                                : style.fontWeight === 'bold' || style.fontWeight === '700'
+                                ? 700
+                                : style.fontWeight === '800'
+                                ? 800
+                                : 500,
+                            }}
+                          >
+                            {w.word}
+                          </span>
+                        </React.Fragment>
                       );
                     })
                   ) : (
