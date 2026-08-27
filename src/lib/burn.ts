@@ -165,18 +165,38 @@ export async function burnSubtitlesToVideo({
 
   await ffmpeg.writeFile('subtitles.ass', assContent);
 
-  // Step 4: Write font file if available
-  try {
-    await ffmpeg.createDir('fonts');
-  } catch {
-    // Directory might already exist
-  }
+  const createdFontFiles: string[] = [];
 
+  // Step 4: Write font file if available
   const fontName = style.fontFamily || 'Noto Sans Thai';
   const fontBuffer = await fetchFontBuffer(fontName);
   if (fontBuffer) {
-    // Write font with exact family name so libass dummy provider can match it by filename
-    await ffmpeg.writeFile(`fonts/${fontName}.ttf`, fontBuffer);
+    try {
+      await ffmpeg.createDir('fonts');
+    } catch {
+      // Directory might already exist
+    }
+
+    const fontPaths = [
+      `fonts/${fontName}.ttf`,
+      `fonts/${fontName.toLowerCase()}.ttf`,
+      `fonts/${fontName.replace(/\s+/g, '')}.ttf`,
+      `fonts/${fontName}-Regular.ttf`,
+      `fonts/custom_font.ttf`,
+      `${fontName}.ttf`,
+      `${fontName.toLowerCase()}.ttf`,
+      `${fontName.replace(/\s+/g, '')}.ttf`,
+      `${fontName}-Regular.ttf`,
+    ];
+
+    for (const p of fontPaths) {
+      try {
+        await ffmpeg.writeFile(p, fontBuffer);
+        createdFontFiles.push(p);
+      } catch (writeErr) {
+        console.warn(`Could not write virtual font ${p}:`, writeErr);
+      }
+    }
   }
 
   // Step 5: Configure FFmpeg progress listener
@@ -201,10 +221,10 @@ export async function burnSubtitlesToVideo({
     message: 'เริ่มต้นการประมวลผลวิดีโอ...',
   });
 
-  // Video filter: subtitles filter with font directory
+  // Video filter: use explicit parameter naming for the subtitles filter
   const vfOptions = fontBuffer
-    ? 'subtitles=subtitles.ass:fontsdir=fonts'
-    : 'subtitles=subtitles.ass';
+    ? 'subtitles=filename=subtitles.ass:fontsdir=fonts'
+    : 'subtitles=filename=subtitles.ass';
 
   const ffmpegArgs = [
     '-i',
@@ -246,13 +266,15 @@ export async function burnSubtitlesToVideo({
     : new Uint8Array(outputData as Uint8Array);
   const outputBlob = new Blob([uint8.buffer as ArrayBuffer], { type: 'video/mp4' });
 
-  // Cleanup temporary virtual files
+  // Cleanup temporary virtual files to prevent WASM memory leaks
   try {
     await ffmpeg.deleteFile('input.mp4');
     await ffmpeg.deleteFile('subtitles.ass');
     await ffmpeg.deleteFile('output.mp4');
-    if (fontBuffer) {
-      await ffmpeg.deleteFile(`fonts/${fontName}.ttf`);
+    for (const fontPath of createdFontFiles) {
+      try {
+        await ffmpeg.deleteFile(fontPath);
+      } catch {}
     }
   } catch (cleanErr) {
     console.warn('Error cleaning up virtual ffmpeg files:', cleanErr);
