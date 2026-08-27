@@ -5,7 +5,6 @@ import {
   Type,
   MoveVertical,
   Sun,
-  Sparkles,
   RotateCcw,
   Check,
   Sliders,
@@ -14,6 +13,8 @@ import {
   AlignCenter,
   AlignRight,
   Maximize2,
+  Palette,
+  Layers,
 } from 'lucide-react';
 import { useAppStore, defaultCaptionStyle } from '@/lib/store';
 import { FontPicker } from './font-picker';
@@ -58,11 +59,11 @@ export function StyleEditor() {
   };
 
   return (
-    <div className="flex-1 h-full overflow-y-auto p-4 sm:p-5 text-zinc-100 space-y-6 scrollbar-thin scrollbar-thumb-zinc-800">
+    <div className="flex-1 h-full overflow-y-auto p-4 sm:p-5 text-zinc-100 space-y-5 scrollbar-thin scrollbar-thumb-zinc-800">
       {/* Header with Reset Default Button */}
-      <div className="flex items-center justify-between pb-1 border-b border-zinc-800/80">
+      <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80">
         <div>
-          <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+          <h3 className="text-base font-bold text-white flex items-center gap-2">
             <Sliders className="w-4 h-4 text-orange-400" />
             <span>ปรับแต่งสไตล์ซับไตเติล (Subtitle Styler)</span>
           </h3>
@@ -74,7 +75,7 @@ export function StyleEditor() {
         <button
           type="button"
           onClick={handleResetDefault}
-          className="text-xs text-zinc-300 hover:text-orange-400 bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0 font-medium"
+          className="text-xs text-zinc-300 hover:text-orange-400 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0 font-medium"
           title="รีเซ็ตค่ารูปแบบกลับเป็นค่าเริ่มต้น"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -82,23 +83,25 @@ export function StyleEditor() {
         </button>
       </div>
 
-      {/* 1. Font Picker Component */}
+      {/* 🔤 Tool Card 1: Font Picker Component */}
       <FontPicker
         selectedFont={style.fontFamily}
         onSelectFont={(fontFamily) => setStyle({ fontFamily })}
       />
 
-      <hr className="border-zinc-800/80" />
-
-      {/* 2. Typography & Color (Size, Weight, Color) */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
-          <Type className="w-4 h-4 text-orange-400" />
-          <span>ขนาดและสีตัวอักษร (Typography & Color):</span>
-        </h4>
+      {/* 📏 Tool Card 2: Typography, Size & Weight */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+          <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
+            <Type className="w-3.5 h-3.5" />
+          </div>
+          <h4 className="text-sm font-bold text-white">
+            ขนาดและความหนาตัวอักษร (Typography & Size):
+          </h4>
+        </div>
 
         {/* Font Size Slider */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ขนาดตัวอักษร (Font Size):</span>
             <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
@@ -116,46 +119,66 @@ export function StyleEditor() {
             className="w-full accent-orange-500 cursor-pointer"
           />
           <div className="flex justify-between text-xs text-zinc-400">
-            <span>ซับหนังมินิมอล (10px)</span>
+            <span>ซับหนัง (10px)</span>
             <span>มาตรฐาน (24px)</span>
-            <span>ตัวใหญ่ Creator (48px)</span>
+            <span>ตัวใหญ่ (48px)</span>
           </div>
 
-          {/* Quick Font Size Presets */}
-          <div className="flex items-center gap-1.5 pt-1">
+          {/* Quick Font Size Presets (Uniform 2-Line Layout) */}
+          <div className="grid grid-cols-4 gap-1.5 pt-1">
             <button
               type="button"
               onClick={() => setStyle({ fontSize: 13 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                style.fontSize === 13
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              ซับหนัง (13px)
+              <span className="block text-xs font-semibold leading-tight">ซับหนัง</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(13px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ fontSize: 20 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                style.fontSize === 20
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              มาตรฐาน (20px)
+              <span className="block text-xs font-semibold leading-tight">มาตรฐาน</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(20px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ fontSize: 28 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                style.fontSize === 28
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              อ่านสบาย (28px)
+              <span className="block text-xs font-semibold leading-tight">อ่านสบาย</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(28px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ fontSize: 36 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                style.fontSize === 36
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              ตัวใหญ่ (36px)
+              <span className="block text-xs font-semibold leading-tight">ตัวใหญ่</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(36px)</span>
             </button>
           </div>
         </div>
 
         {/* Font Weight */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
           <span className="text-zinc-200 font-medium">ความหนาของตัวอักษร (Font Weight):</span>
           <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
             <button
@@ -174,7 +197,7 @@ export function StyleEditor() {
               onClick={() => setStyle({ fontWeight: '700' })}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 style.fontWeight === '700' || style.fontWeight === 'bold'
-                  ? 'bg-orange-500 text-zinc-950'
+                  ? 'bg-orange-500 text-zinc-950 font-bold'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -185,7 +208,7 @@ export function StyleEditor() {
               onClick={() => setStyle({ fontWeight: '800' })}
               className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
                 style.fontWeight === '800'
-                  ? 'bg-orange-500 text-zinc-950'
+                  ? 'bg-orange-500 text-zinc-950 font-bold'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -193,9 +216,21 @@ export function StyleEditor() {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* 🎨 Tool Card 3: Text Color & Highlight */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+          <div className="w-6 h-6 rounded-lg bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 flex items-center justify-center shrink-0">
+            <Palette className="w-3.5 h-3.5" />
+          </div>
+          <h4 className="text-sm font-bold text-white">
+            สีข้อความและ Word Highlight (Colors & Highlight):
+          </h4>
+        </div>
 
         {/* Text Color Swatches */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-2.5">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-2.5">
           <span className="text-sm text-zinc-200 font-medium block">
             สีข้อความหลัก (Text Color):
           </span>
@@ -240,19 +275,88 @@ export function StyleEditor() {
             </div>
           </div>
         </div>
+
+        {/* Word Highlight Box */}
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={style.enableWordHighlight}
+                onChange={(e) => setStyle({ enableWordHighlight: e.target.checked })}
+                className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
+              />
+              <span>เปิดใช้งานไฮไลท์คำตามเสียง (Word Highlight)</span>
+            </label>
+
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                style.enableWordHighlight
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                  : 'bg-zinc-800 text-zinc-400'
+              }`}
+            >
+              {style.enableWordHighlight ? 'Active ON' : 'OFF'}
+            </span>
+          </div>
+
+          {style.enableWordHighlight && (
+            <div className="space-y-2 pt-2 border-t border-zinc-900">
+              <span className="text-xs text-zinc-200 font-medium block">
+                เลือกสีไฮไลท์ของคำที่กำลังพูด (Highlight Color):
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                {HIGHLIGHT_PALETTE.map((c) => (
+                  <button
+                    key={c.hex}
+                    type="button"
+                    onClick={() => setStyle({ highlightColor: c.hex })}
+                    className={`w-7 h-7 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
+                      style.highlightColor.toLowerCase() === c.hex.toLowerCase()
+                        ? 'ring-2 ring-orange-500 scale-110 border-white'
+                        : 'border-zinc-700 hover:scale-105'
+                    }`}
+                    style={{ backgroundColor: c.hex }}
+                    title={c.name}
+                  >
+                    {style.highlightColor.toLowerCase() === c.hex.toLowerCase() && (
+                      <Check className="w-3.5 h-3.5 text-black stroke-[3]" />
+                    )}
+                  </button>
+                ))}
+
+                {/* Custom Color Input */}
+                <div className="flex items-center gap-1.5 ml-auto">
+                  <input
+                    type="color"
+                    value={style.highlightColor}
+                    onChange={(e) => setStyle({ highlightColor: e.target.value })}
+                    aria-label="เลือกสีไฮไลท์ของคำที่กำลังพูด"
+                    className="w-7 h-7 rounded-xl bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
+                  />
+                  <span className="text-xs font-mono text-zinc-300 uppercase">
+                    {style.highlightColor}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      <hr className="border-zinc-800/80" />
-
-      {/* 3. Spacing Controls (ระยะห่างตัวอักษร & ระยะห่างบรรทัด) */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
-          <Space className="w-4 h-4 text-orange-400" />
-          <span>ระยะห่างและการจัดวาง (Letter & Line Spacing):</span>
-        </h4>
+      {/* 📐 Tool Card 4: Letter & Line Spacing */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+          <div className="w-6 h-6 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
+            <Space className="w-3.5 h-3.5" />
+          </div>
+          <h4 className="text-sm font-bold text-white">
+            ระยะห่างตัวอักษรและบรรทัด (Letter & Line Spacing):
+          </h4>
+        </div>
 
         {/* Letter Spacing (Tracking) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ระยะห่างระหว่างตัวอักษร (Letter Spacing):</span>
             <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
@@ -271,41 +375,61 @@ export function StyleEditor() {
             className="w-full accent-orange-500 cursor-pointer"
           />
 
-          {/* Quick Letter Spacing Presets */}
-          <div className="flex items-center gap-1.5 pt-1">
+          {/* Quick Letter Spacing Presets (Uniform 2-Line Layout) */}
+          <div className="grid grid-cols-4 gap-1.5 pt-1">
             <button
               type="button"
               onClick={() => setStyle({ letterSpacing: -1 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.letterSpacing ?? 0) === -1
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              แนบชิด (-1px)
+              <span className="block text-xs font-semibold leading-tight">แนบชิด</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(-1px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ letterSpacing: 0 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.letterSpacing ?? 0) === 0
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              ปกติ (0px)
+              <span className="block text-xs font-semibold leading-tight">ปกติ</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(0px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ letterSpacing: 1.5 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.letterSpacing ?? 0) === 1.5
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              กว้าง (1.5px)
+              <span className="block text-xs font-semibold leading-tight">กว้าง</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(1.5px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ letterSpacing: 3 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.letterSpacing ?? 0) === 3
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              กว้างมาก (3px)
+              <span className="block text-xs font-semibold leading-tight">กว้างมาก</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(3px)</span>
             </button>
           </div>
         </div>
 
         {/* Line Height (Leading) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ระยะห่างระหว่างบรรทัด (Line Spacing / Height):</span>
             <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
@@ -324,51 +448,73 @@ export function StyleEditor() {
             className="w-full accent-orange-500 cursor-pointer"
           />
 
-          {/* Quick Line Height Presets */}
-          <div className="flex items-center gap-1.5 pt-1">
+          {/* Quick Line Height Presets (Uniform 2-Line Layout) */}
+          <div className="grid grid-cols-4 gap-1.5 pt-1">
             <button
               type="button"
               onClick={() => setStyle({ lineHeight: 1.2 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.lineHeight ?? 1.4) === 1.2
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              แคบ (1.2)
+              <span className="block text-xs font-semibold leading-tight">แคบ</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(1.2x)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ lineHeight: 1.4 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.lineHeight ?? 1.4) === 1.4
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              ปกติ (1.4)
+              <span className="block text-xs font-semibold leading-tight">ปกติ</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(1.4x)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ lineHeight: 1.6 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.lineHeight ?? 1.4) === 1.6
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              สบายตา (1.6)
+              <span className="block text-xs font-semibold leading-tight">สบายตา</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(1.6x)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ lineHeight: 1.9 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.lineHeight ?? 1.4) === 1.9
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              โปร่ง (1.9)
+              <span className="block text-xs font-semibold leading-tight">โปร่ง</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(1.9x)</span>
             </button>
           </div>
         </div>
       </div>
 
-      <hr className="border-zinc-800/80" />
-
-      {/* 4. Position, Alignment & Width (ตำแหน่ง จัดแนว และความกว้างขอบข้าง) */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
-          <MoveVertical className="w-4 h-4 text-orange-400" />
-          <span>ตำแหน่ง จัดแนว และระยะขอบข้าง (Placement, Alignment & Width):</span>
-        </h4>
+      {/* 🧭 Tool Card 5: Placement, Alignment & Width */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+          <div className="w-6 h-6 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0">
+            <MoveVertical className="w-3.5 h-3.5" />
+          </div>
+          <h4 className="text-sm font-bold text-white">
+            ตำแหน่ง จัดแนว และระยะขอบข้าง (Placement & Width):
+          </h4>
+        </div>
 
         {/* Text Alignment (Left / Center / Right) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
           <span className="text-zinc-200 font-medium">การจัดแนวข้อความ (Text Alignment):</span>
           <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
             <button
@@ -413,12 +559,12 @@ export function StyleEditor() {
           </div>
         </div>
 
-        {/* Subtitle Max Width & Side Margins / Indent */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+        {/* Subtitle Max Width & Side Margins */}
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium flex items-center gap-1.5">
               <Maximize2 className="w-4 h-4 text-orange-400" />
-              <span>ความกว้างสูงสุด / ระยะขอบข้าง (Width & Side Margins):</span>
+              <span>ความกว้างสูงสุด / ระยะขอบข้าง (Width & Margins):</span>
             </span>
             <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
               {style.maxWidth ?? 92}%
@@ -436,35 +582,55 @@ export function StyleEditor() {
             className="w-full accent-orange-500 cursor-pointer"
           />
 
-          {/* Quick Width Presets */}
-          <div className="flex items-center gap-1.5 pt-1">
+          {/* Quick Width Presets (Uniform 2-Line Layout) */}
+          <div className="grid grid-cols-4 gap-1.5 pt-1">
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 70 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.maxWidth ?? 92) === 70
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              แคบ (70%)
+              <span className="block text-xs font-semibold leading-tight">แคบ</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(70%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 85 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.maxWidth ?? 92) === 85
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              มาตรฐาน (85%)
+              <span className="block text-xs font-semibold leading-tight">มาตรฐาน</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(85%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 92 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.maxWidth ?? 92) === 92
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              กว้าง (92%)
+              <span className="block text-xs font-semibold leading-tight">กว้าง</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(92%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 98 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.maxWidth ?? 92) === 98
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              เต็มจอ (98%)
+              <span className="block text-xs font-semibold leading-tight">เต็มจอ</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(98%)</span>
             </button>
           </div>
           <p className="text-xs text-zinc-300 pt-0.5">
@@ -473,7 +639,7 @@ export function StyleEditor() {
         </div>
 
         {/* Position Y (Up-Down) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ตำแหน่งแนวตั้ง (ขึ้น - ลง จากขอบล่าง):</span>
             <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
@@ -492,34 +658,49 @@ export function StyleEditor() {
             className="w-full accent-orange-500 cursor-pointer"
           />
 
-          {/* Quick Position Presets */}
-          <div className="flex items-center gap-1.5 pt-1">
+          {/* Quick Position Presets (Uniform 2-Line Layout) */}
+          <div className="grid grid-cols-3 gap-1.5 pt-1">
             <button
               type="button"
               onClick={() => setStyle({ positionY: 10 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                style.positionY === 10
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              ล่างสุด (10%)
+              <span className="block text-xs font-semibold leading-tight">ล่างสุด</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(10%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionY: 18 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                style.positionY === 18
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              TikTok ฮิต (18%)
+              <span className="block text-xs font-semibold leading-tight">TikTok ฮิต</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(18%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionY: 50 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                style.positionY === 50
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              กึ่งกลาง (50%)
+              <span className="block text-xs font-semibold leading-tight">กึ่งกลาง</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(50%)</span>
             </button>
           </div>
         </div>
 
         {/* Position X (Left-Right) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ตำแหน่งแนวนอน (ซ้าย - ขวา):</span>
             <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
@@ -538,44 +719,61 @@ export function StyleEditor() {
             className="w-full accent-orange-500 cursor-pointer"
           />
 
-          {/* Quick Horizontal Presets */}
-          <div className="flex items-center gap-1.5 pt-1">
+          {/* Quick Horizontal Presets (Uniform 2-Line Layout) */}
+          <div className="grid grid-cols-3 gap-1.5 pt-1">
             <button
               type="button"
               onClick={() => setStyle({ positionX: 20 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                style.positionX === 20
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              ชิดซ้าย (20%)
+              <span className="block text-xs font-semibold leading-tight">ชิดซ้าย</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(20%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionX: 50 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                style.positionX === 50
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              ตรงกลาง (50%)
+              <span className="block text-xs font-semibold leading-tight">ตรงกลาง</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(50%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionX: 80 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                style.positionX === 80
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+              }`}
             >
-              ชิดขวา (80%)
+              <span className="block text-xs font-semibold leading-tight">ชิดขวา</span>
+              <span className="block text-[11px] opacity-75 font-mono leading-tight">(80%)</span>
             </button>
           </div>
         </div>
       </div>
 
-      <hr className="border-zinc-800/80" />
-
-      {/* 5. Shadow, Outline & Background Box (เงา ขอบ และกล่องพื้นหลัง) */}
-      <div className="space-y-4">
-        <h4 className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
-          <Sun className="w-4 h-4 text-orange-400" />
-          <span>เงา ขอบ และกล่องพื้นหลัง (Shadow, Outline & Box):</span>
-        </h4>
+      {/* 🔲 Tool Card 6: Shadow & Outline */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+          <div className="w-6 h-6 rounded-lg bg-teal-500/15 border border-teal-500/30 text-teal-400 flex items-center justify-center shrink-0">
+            <Sun className="w-3.5 h-3.5" />
+          </div>
+          <h4 className="text-sm font-bold text-white">
+            เงาและเส้นขอบตัวอักษร (Shadow & Stroke Outline):
+          </h4>
+        </div>
 
         {/* Drop Shadow Section */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
@@ -621,7 +819,7 @@ export function StyleEditor() {
         </div>
 
         {/* Outline Section */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
@@ -665,9 +863,20 @@ export function StyleEditor() {
             </div>
           )}
         </div>
+      </div>
 
-        {/* 🆕 Background Box Section (Color + Opacity Control) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
+      {/* 📦 Tool Card 7: Background Box & Opacity */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+          <div className="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
+            <Layers className="w-3.5 h-3.5" />
+          </div>
+          <h4 className="text-sm font-bold text-white">
+            กล่องพื้นหลังซับไตเติล (Background Box & Opacity):
+          </h4>
+        </div>
+
+        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
@@ -676,7 +885,7 @@ export function StyleEditor() {
                 onChange={(e) => setStyle({ hasBackground: e.target.checked })}
                 className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
               />
-              <span>กล่องพื้นหลังโปร่งใส (Background Box)</span>
+              <span>เปิดใช้งานกล่องพื้นหลัง (Background Box)</span>
             </label>
 
             {style.hasBackground && (
@@ -752,112 +961,56 @@ export function StyleEditor() {
                   className="w-full accent-orange-500 cursor-pointer"
                 />
 
-                {/* Quick Opacity Presets */}
-                <div className="flex items-center gap-1.5 pt-0.5">
+                {/* Quick Opacity Presets (Uniform 2-Line Layout) */}
+                <div className="grid grid-cols-4 gap-1.5 pt-0.5">
                   <button
                     type="button"
                     onClick={() => setStyle({ backgroundOpacity: 40 })}
-                    className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+                    className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                      (style.backgroundOpacity ?? 70) === 40
+                        ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                        : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                    }`}
                   >
-                    โปร่ง 40%
+                    <span className="block text-xs font-semibold leading-tight">โปร่งแสง</span>
+                    <span className="block text-[11px] opacity-75 font-mono leading-tight">(40%)</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setStyle({ backgroundOpacity: 65 })}
-                    className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+                    className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                      (style.backgroundOpacity ?? 70) === 65
+                        ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                        : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                    }`}
                   >
-                    โปร่ง 65%
+                    <span className="block text-xs font-semibold leading-tight">ปานกลาง</span>
+                    <span className="block text-[11px] opacity-75 font-mono leading-tight">(65%)</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setStyle({ backgroundOpacity: 85 })}
-                    className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+                    className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                      (style.backgroundOpacity ?? 70) === 85
+                        ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                        : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                    }`}
                   >
-                    ทึบ 85%
+                    <span className="block text-xs font-semibold leading-tight">ทึบแสง</span>
+                    <span className="block text-[11px] opacity-75 font-mono leading-tight">(85%)</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setStyle({ backgroundOpacity: 100 })}
-                    className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
-                  >
-                    ทึบ 100%
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <hr className="border-zinc-800/80" />
-
-      {/* 6. Word Highlight Styling */}
-      <div className="space-y-3">
-        <h4 className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4 text-amber-400" />
-          <span>การปรับแต่ง Word Highlight (คำพูด Realtime):</span>
-        </h4>
-
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={style.enableWordHighlight}
-                onChange={(e) => setStyle({ enableWordHighlight: e.target.checked })}
-                className="w-4 h-4 accent-orange-500 rounded cursor-pointer"
-              />
-              <span>เปิดใช้งาน Word Highlight</span>
-            </label>
-
-            <span
-              className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                style.enableWordHighlight
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                  : 'bg-zinc-800 text-zinc-400'
-              }`}
-            >
-              {style.enableWordHighlight ? 'Active ON' : 'OFF'}
-            </span>
-          </div>
-
-          {style.enableWordHighlight && (
-            <div className="space-y-2 pt-2 border-t border-zinc-900">
-              <span className="text-xs text-zinc-200 font-medium block">
-                เลือกสีไฮไลท์ของคำที่กำลังพูด (Highlight Color):
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
-                {HIGHLIGHT_PALETTE.map((c) => (
-                  <button
-                    key={c.hex}
-                    type="button"
-                    onClick={() => setStyle({ highlightColor: c.hex })}
-                    className={`w-7 h-7 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
-                      style.highlightColor.toLowerCase() === c.hex.toLowerCase()
-                        ? 'ring-2 ring-orange-500 scale-110 border-white'
-                        : 'border-zinc-700 hover:scale-105'
+                    className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                      (style.backgroundOpacity ?? 70) === 100
+                        ? 'bg-orange-500/20 border-orange-500 text-orange-300'
+                        : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
                     }`}
-                    style={{ backgroundColor: c.hex }}
-                    title={c.name}
                   >
-                    {style.highlightColor.toLowerCase() === c.hex.toLowerCase() && (
-                      <Check className="w-3.5 h-3.5 text-black stroke-[3]" />
-                    )}
+                    <span className="block text-xs font-semibold leading-tight">ทึบ 100%</span>
+                    <span className="block text-[11px] opacity-75 font-mono leading-tight">(100%)</span>
                   </button>
-                ))}
-
-                {/* Custom Color Input */}
-                <div className="flex items-center gap-1.5 ml-auto">
-                  <input
-                    type="color"
-                    value={style.highlightColor}
-                    onChange={(e) => setStyle({ highlightColor: e.target.value })}
-                    aria-label="เลือกสีไฮไลท์ของคำที่กำลังพูด"
-                    className="w-7 h-7 rounded-xl bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
-                  />
-                  <span className="text-xs font-mono text-zinc-300 uppercase">
-                    {style.highlightColor}
-                  </span>
                 </div>
               </div>
             </div>

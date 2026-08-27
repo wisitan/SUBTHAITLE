@@ -10,8 +10,6 @@ import {
   Sparkles,
   Film,
   Check,
-  AlignLeft,
-  Palette,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { VideoPlayer } from '@/components/video-player';
@@ -183,27 +181,20 @@ export default function EditorPage() {
         {/* Right Column: Studio Tabs (Captions vs Style vs Presets) (58% width on desktop) */}
         <div className="lg:col-span-7 flex flex-col space-y-3 min-h-[750px]">
           {/* Segmented Tab Switcher */}
-          <div className="flex items-center p-1.5 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl shadow-lg gap-1 shrink-0">
+          <div className="grid grid-cols-3 p-1.5 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl shadow-lg gap-1 shrink-0">
             {/* Tab 1: Captions */}
             <button
               type="button"
               onClick={() => setActiveTab('captions')}
-              className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`w-full min-w-0 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-h-[52px] sm:min-h-[42px] text-center ${
                 activeTab === 'captions'
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <AlignLeft className="w-4 h-4" />
-              <span>📝 ข้อความซับ</span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-xs font-mono ${
-                  activeTab === 'captions'
-                    ? 'bg-zinc-950/20 text-zinc-950 font-bold'
-                    : 'bg-zinc-800 text-zinc-400'
-                }`}
-              >
-                {captions.length}
+              <span className="text-sm sm:text-base shrink-0">📝</span>
+              <span className="truncate">
+                ข้อความซับ {captions.length > 0 && <span className="font-mono text-[11px] sm:text-xs opacity-90">({captions.length})</span>}
               </span>
             </button>
 
@@ -211,28 +202,28 @@ export default function EditorPage() {
             <button
               type="button"
               onClick={() => setActiveTab('style')}
-              className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`w-full min-w-0 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-h-[52px] sm:min-h-[42px] text-center ${
                 activeTab === 'style'
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <Palette className="w-4 h-4" />
-              <span>🎨 ปรับแต่งฟอนต์</span>
+              <span className="text-sm sm:text-base shrink-0">🎨</span>
+              <span className="truncate">ปรับแต่งฟอนต์</span>
             </button>
 
             {/* Tab 3: Presets */}
             <button
               type="button"
               onClick={() => setActiveTab('presets')}
-              className={`flex-1 py-2.5 px-3 rounded-xl text-sm font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+              className={`w-full min-w-0 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-h-[52px] sm:min-h-[42px] text-center ${
                 activeTab === 'presets'
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
                   : 'text-zinc-400 hover:text-zinc-200'
               }`}
             >
-              <Sparkles className="w-4 h-4" />
-              <span>⚡ ธีมสำเร็จรูป</span>
+              <span className="text-sm sm:text-base shrink-0">⚡</span>
+              <span className="truncate">ธีมสำเร็จรูป</span>
             </button>
           </div>
 

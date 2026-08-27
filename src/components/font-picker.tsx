@@ -69,11 +69,13 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
   const allFonts = [...customFonts, ...THAI_SYSTEM_FONTS];
 
   return (
-    <div className="space-y-3">
+    <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-3.5">
       {/* Upload Custom Font Button */}
-      <div className="flex items-center justify-between gap-2">
-        <label className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
-          <Type className="w-4 h-4 text-orange-400" />
+      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-zinc-800/80">
+        <label className="text-sm font-bold text-white flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
+            <Type className="w-3.5 h-3.5" />
+          </div>
           <span>เลือกฟอนต์ภาษาไทย (Thai Fonts):</span>
         </label>
 
@@ -81,7 +83,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-orange-400 hover:text-orange-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+          className="px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-700/80 text-orange-400 hover:text-orange-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0"
           title="อัปโหลดไฟล์ฟอนต์ภาษาไทย .ttf / .otf"
         >
           {isUploading ? (
@@ -118,10 +120,10 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
                 loadGoogleFont(font.id);
                 onSelectFont(font.id);
               }}
-              className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+              className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                 isSelected
                   ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-950/70 border-zinc-800/80 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/60'
+                  : 'bg-zinc-950/80 border-zinc-800/80 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/60'
               }`}
             >
               <div className="flex items-center justify-between w-full">

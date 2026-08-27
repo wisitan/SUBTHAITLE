@@ -350,7 +350,7 @@ export function CaptionTable({ onPlayCue }: Props) {
       {/* Scrollable Caption Cards Container */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[500px] max-h-[820px] scrollbar-thin scrollbar-thumb-zinc-800"
+        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-[500px] max-h-[820px] scrollbar-thin scrollbar-thumb-zinc-800 max-w-full overflow-x-hidden"
       >
         {filteredWithIndex.length === 0 ? (
           <div className="p-12 text-center text-zinc-400 text-sm space-y-2">
@@ -358,9 +358,9 @@ export function CaptionTable({ onPlayCue }: Props) {
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="text-orange-400 hover:underline font-semibold"
+                className="text-xs text-orange-400 underline hover:text-orange-300 cursor-pointer"
               >
-                ล้างการค้นหา
+                ล้างคำค้นหา
               </button>
             )}
           </div>
@@ -374,18 +374,18 @@ export function CaptionTable({ onPlayCue }: Props) {
                 key={caption.id}
                 id={`caption-card-${actualIndex}`}
                 ref={isActive ? activeCardRef : null}
-                className={`p-4 rounded-2xl border transition-all duration-150 relative group/card ${
+                className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 relative group/card max-w-full overflow-hidden ${
                   isActive
                     ? 'bg-zinc-900/90 border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/40'
                     : 'bg-zinc-900/40 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/60'
                 }`}
               >
                 {/* Header Row: Index, Timings, Play Button, and Card Actions */}
-                <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-zinc-800/60 text-sm">
+                <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 sm:gap-2 pb-2.5 border-b border-zinc-800/60 text-sm">
                   {/* Left: Index + Play Button + Timings */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
                     <span
-                      className={`w-6 h-6 rounded-lg flex items-center justify-center font-mono font-bold text-xs ${
+                      className={`w-6 h-6 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
                         isActive
                           ? 'bg-orange-500 text-zinc-950'
                           : 'bg-zinc-800 text-zinc-300'
@@ -401,14 +401,14 @@ export function CaptionTable({ onPlayCue }: Props) {
                         setCurrentTime(caption.start);
                         if (onPlayCue) onPlayCue(caption.start);
                       }}
-                      className="p-1.5 rounded-lg bg-zinc-800 hover:bg-orange-500 hover:text-zinc-950 text-zinc-200 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg bg-zinc-800 hover:bg-orange-500 hover:text-zinc-950 text-zinc-200 transition-colors cursor-pointer shrink-0"
                       title="เล่นวิดีโอตั้งแต่ท่อนนี้"
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                     </button>
 
                     {/* Timestamp Editor Controls */}
-                    <div className="flex items-center gap-1.5 font-mono text-xs">
+                    <div className="flex items-center gap-1 font-mono text-xs">
                       {/* Start Time Input */}
                       <input
                         type="number"
@@ -418,10 +418,10 @@ export function CaptionTable({ onPlayCue }: Props) {
                           const newStart = parseFloat(e.target.value) || 0;
                           updateCaptionTiming(caption.id, newStart, caption.end);
                         }}
-                        className="w-16 px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
+                        className="w-14 sm:w-16 px-1 py-0.5 rounded bg-zinc-950 border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
                         title="เวลาเริ่ม (วินาที)"
                       />
-                      <span className="text-zinc-500">➔</span>
+                      <span className="text-zinc-500 text-[11px]">➔</span>
                       {/* End Time Input */}
                       <input
                         type="number"
@@ -431,10 +431,10 @@ export function CaptionTable({ onPlayCue }: Props) {
                           const newEnd = parseFloat(e.target.value) || 0;
                           updateCaptionTiming(caption.id, caption.start, newEnd);
                         }}
-                        className="w-16 px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
+                        className="w-14 sm:w-16 px-1 py-0.5 rounded bg-zinc-950 border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
                         title="เวลาจบ (วินาที)"
                       />
-                      <span className="text-xs text-zinc-400 ml-1">
+                      <span className="text-[11px] sm:text-xs text-zinc-400">
                         ({duration}s)
                       </span>
                     </div>
@@ -442,17 +442,17 @@ export function CaptionTable({ onPlayCue }: Props) {
                     {/* Low Confidence AI Warning Flag */}
                     {caption.lowConfidence && (
                       <span
-                        className="px-2 py-0.5 text-xs rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center gap-1 font-medium"
+                        className="px-1.5 py-0.5 text-[10px] sm:text-xs rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center gap-1 font-medium shrink-0"
                         title="AI ไม่มั่นใจจุดนี้ กรุณาตรวจสอบความถูกต้อง"
                       >
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                        <AlertTriangle className="w-3 h-3 text-amber-400" />
                         AI Low Conf
                       </span>
                     )}
                   </div>
 
                   {/* Right Actions: Split, Merge, Add, Delete */}
-                  <div className="flex items-center gap-1.5 opacity-80 group-hover/card:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 opacity-90 group-hover/card:opacity-100 transition-opacity ml-auto sm:ml-0 shrink-0">
                     <button
                       type="button"
                       onClick={() => splitCaption(caption.id)}
