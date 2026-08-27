@@ -122,27 +122,27 @@ export interface AppState {
 
 export const defaultCaptionStyle: CaptionStyle = {
   fontFamily: 'Noto Sans Thai',
-  fontSize: 28,
+  fontSize: 20,
   textColor: '#FFFFFF',
-  fontWeight: '700',
+  fontWeight: 'bold',
   letterSpacing: 0,
   lineHeight: 1.4,
   positionY: 15,
   positionX: 50,
   textAlign: 'center',
-  maxWidth: 90,
+  maxWidth: 70,
   hasShadow: true,
   shadowColor: '#000000',
   shadowBlur: 8,
   shadowOpacity: 0.8,
   hasOutline: true,
   outlineColor: '#000000',
-  outlineWidth: 3,
+  outlineWidth: 1,
   enableWordHighlight: true,
-  highlightColor: '#FACC15', // Neon Yellow
+  highlightColor: '#FACC15',
   hasBackground: false,
   backgroundColor: '#000000',
-  backgroundOpacity: 70,
+  backgroundOpacity: 60,
 };
 
 export const useAppStore = create<AppState>()(
