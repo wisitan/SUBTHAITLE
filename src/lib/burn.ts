@@ -70,22 +70,19 @@ export async function getFFmpegInstance(onProgress?: (progress: BurnProgress) =>
 }
 
 /**
- * Fetch a Google Font TTF buffer for the subtitle renderer
+ * Fetch a Google Font TTF buffer for the subtitle renderer (libass requires TTF, not WOFF2)
  */
 async function fetchFontBuffer(fontFamily: string): Promise<Uint8Array | null> {
   try {
-    // Map known Google Fonts to clean URLs
-    const cleanName = fontFamily.replace(/\s+/g, '+');
-    const cssUrl = `https://fonts.googleapis.com/css2?family=${cleanName}:wght@400;700;800&display=swap`;
-    const cssRes = await fetch(cssUrl);
-    if (!cssRes.ok) return null;
+    // 1. Get the direct TTF URL from our server-side API (which spoofs UA to bypass WOFF2)
+    const apiRes = await fetch(`/api/font?family=${encodeURIComponent(fontFamily)}`);
+    if (!apiRes.ok) return null;
+    
+    const data = await apiRes.json();
+    if (!data.url) return null;
 
-    const cssText = await cssRes.text();
-    // Extract url(...) from CSS
-    const match = cssText.match(/url\((https:\/\/[^)]+\.woff2?|https:\/\/[^)]+\.ttf)\)/);
-    if (!match || !match[1]) return null;
-
-    const fontFileRes = await fetch(match[1]);
+    // 2. Fetch the actual TTF binary from Google Fonts CDN
+    const fontFileRes = await fetch(data.url);
     if (!fontFileRes.ok) return null;
 
     const arrayBuffer = await fontFileRes.arrayBuffer();
