@@ -143,7 +143,7 @@ export function ExportMenu({ onShowToast }: Props) {
 
       {/* Dropdown Menu Panel */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-3xl p-2 shadow-2xl z-50 space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 mt-2 w-72 bg-zinc-950/95 backdrop-blur-xl border border-zinc-800 rounded-3xl p-2 shadow-2xl z-[999] space-y-1 animate-in fade-in slide-in-from-top-2 duration-150">
           {/* Header Label */}
           <div className="px-3 py-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider border-b border-zinc-800/80 mb-1">
             เลือกรูปแบบการส่งออก (Export Formats)

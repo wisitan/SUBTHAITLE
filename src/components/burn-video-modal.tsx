@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   Film,
@@ -27,6 +28,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
   const style = useAppStore((s) => s.style);
   const tier = useAppStore((s) => s.tier);
 
+  const [mounted, setMounted] = useState(false);
   const [resolution, setResolution] = useState<VideoResolution>('1080p');
   const [isBurning, setIsBurning] = useState(false);
   const [progress, setProgress] = useState<BurnProgress | null>(null);
@@ -34,7 +36,11 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
   const [renderedBlob, setRenderedBlob] = useState<Blob | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!isOpen || !mounted) return null;
 
   const handleStartBurn = async () => {
     if (!file) {
@@ -99,8 +105,8 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
     onClose();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto">
       <div className="relative w-full max-w-lg my-auto bg-zinc-950 border border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-zinc-100 max-h-[92vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
@@ -323,6 +329,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

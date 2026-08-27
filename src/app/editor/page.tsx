@@ -131,7 +131,7 @@ export default function EditorPage() {
         </div>
 
         {/* Right Column: Studio Tabs (Captions vs Style vs Presets) (58% width on desktop) */}
-        <div className="lg:col-span-7 flex flex-col space-y-3 h-[calc(100vh-100px)] min-h-[640px] lg:sticky lg:top-20">
+        <div className="lg:col-span-7 flex flex-col space-y-3 min-h-[750px]">
           {/* Segmented Tab Switcher */}
           <div className="flex items-center p-1.5 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl shadow-lg gap-1 shrink-0">
             {/* Tab 1: Captions */}

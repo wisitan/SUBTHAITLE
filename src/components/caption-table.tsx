@@ -341,7 +341,7 @@ export function CaptionTable({ onPlayCue }: Props) {
       {/* Scrollable Caption Cards Container */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto p-4 space-y-3 max-h-[calc(100vh-280px)] scrollbar-thin scrollbar-thumb-zinc-800"
+        className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[500px] max-h-[820px] scrollbar-thin scrollbar-thumb-zinc-800"
       >
         {filteredWithIndex.length === 0 ? (
           <div className="p-12 text-center text-zinc-500 text-xs space-y-2">
