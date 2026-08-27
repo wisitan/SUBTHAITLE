@@ -5,39 +5,65 @@ export const dynamic = 'force-dynamic';
 
 // In-memory sliding rate limiter for IP protection (Free tier)
 const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
-const MAX_REQUESTS_PER_DAY = 10; // 10 transcriptions per IP/day max for public endpoint
+const MAX_REQUESTS_PER_IP_PER_DAY = 5; // 5 transcriptions per IP/day max
 
-function checkIpRateLimit(ip: string): boolean {
+// Global safety limit to protect owner's API key budget
+let globalRequestCount = 0;
+let globalResetAt = Date.now() + 24 * 60 * 60 * 1000;
+const MAX_GLOBAL_REQUESTS_PER_DAY = 200;
+
+function checkRateLimits(ip: string): { allowed: boolean; reason?: string } {
   const now = Date.now();
-  const record = ipRequestCounts.get(ip);
 
+  // Reset global counter if 24h passed
+  if (now > globalResetAt) {
+    globalRequestCount = 0;
+    globalResetAt = now + 24 * 60 * 60 * 1000;
+    ipRequestCounts.clear(); // Clear all IPs as well
+  }
+
+  // Check global budget first
+  if (globalRequestCount >= MAX_GLOBAL_REQUESTS_PER_DAY) {
+    return {
+      allowed: false,
+      reason: 'โควต้าฟรีรวมของเซิร์ฟเวอร์ประจำวันเต็มแล้วค่ะ เพื่อป้องกันค่าใช้จ่ายเกินลิมิต กรุณาใส่ Groq API Key ของตัวเอง (BYOK) เพื่อใช้งานต่อ',
+    };
+  }
+
+  // Check IP specific limit
+  const record = ipRequestCounts.get(ip);
   if (!record || now > record.resetAt) {
     ipRequestCounts.set(ip, {
       count: 1,
-      resetAt: now + 24 * 60 * 60 * 1000, // 24 hours
+      resetAt: now + 24 * 60 * 60 * 1000,
     });
-    return true;
+    globalRequestCount++;
+    return { allowed: true };
   }
 
-  if (record.count >= MAX_REQUESTS_PER_DAY) {
-    return false;
+  if (record.count >= MAX_REQUESTS_PER_IP_PER_DAY) {
+    return {
+      allowed: false,
+      reason: `โควต้าการใช้งานฟรีประจำวันของคุณครบ ${MAX_REQUESTS_PER_IP_PER_DAY} คลิปแล้วค่ะ กรุณาร่วมสนับสนุน หรือใส่ Groq API Key ของตัวเอง (BYOK) เพื่อใช้งานแบบไม่จำกัด`,
+    };
   }
 
   record.count += 1;
-  return true;
+  globalRequestCount++;
+  return { allowed: true };
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Check IP rate limit for abuse prevention
+    // 1. Check IP and Global rate limits for abuse prevention
     const forwardedFor = request.headers.get('x-forwarded-for');
     const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : '127.0.0.1';
 
-    if (!checkIpRateLimit(clientIp)) {
+    const limitCheck = checkRateLimits(clientIp);
+    if (!limitCheck.allowed) {
       return NextResponse.json(
         {
-          error:
-            'โควต้าการใช้งานฟรีประจำวันสำหรับเครื่องของคุณเต็มแล้วค่ะ (จำกัด 5-10 คลิป/วัน) กรุณาร่วมสนับสนุนเพื่อปลดล็อกไม่จำกัด หรือใส่ Groq API Key ของตัวเอง (BYOK)',
+          error: limitCheck.reason,
         },
         { status: 429 }
       );
