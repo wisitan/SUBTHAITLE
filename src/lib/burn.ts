@@ -1,8 +1,7 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { CaptionItem, CaptionStyle } from './store';
-import { generateAss } from './ass';
-import { getCustomFontBuffer } from './fonts';
+import { generateCaptionImageSequence } from './canvas-subtitle';
 
 export type VideoResolution = '720p' | '1080p' | '4k' | 'original';
 
@@ -70,45 +69,28 @@ export async function getFFmpegInstance(onProgress?: (progress: BurnProgress) =>
   }
 }
 
-
-
 /**
- * Fetch a Google Font TTF buffer for the subtitle renderer (libass requires TTF, not WOFF2)
- * Or retrieve custom font buffer from memory if uploaded by user
+ * Helper to get exact video duration from File/Blob
  */
-async function fetchFontBuffer(fontFamily: string): Promise<Uint8Array | null> {
-  try {
-    // 0. Check if it's a custom uploaded font stored in memory
-    if (fontFamily.startsWith('Custom_')) {
-      const memBuffer = getCustomFontBuffer(fontFamily);
-      if (memBuffer) {
-        return new Uint8Array(memBuffer);
-      }
-      console.warn('Custom font buffer not found in memory:', fontFamily);
-      return null;
-    }
-
-    // 1. Get the direct TTF URL from our server-side API (which spoofs UA to bypass WOFF2)
-    const apiRes = await fetch(`/api/font?family=${encodeURIComponent(fontFamily)}`);
-    if (!apiRes.ok) return null;
-    
-    const data = await apiRes.json();
-    if (!data.url) return null;
-
-    // 2. Fetch the actual TTF binary from Google Fonts CDN
-    const fontFileRes = await fetch(data.url);
-    if (!fontFileRes.ok) return null;
-
-    const arrayBuffer = await fontFileRes.arrayBuffer();
-    return new Uint8Array(arrayBuffer);
-  } catch (err) {
-    console.warn(`Could not load font binary for ${fontFamily}:`, err);
-    return null;
-  }
+async function getVideoDuration(file: File | Blob): Promise<number> {
+  return new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      const dur = video.duration || 60;
+      URL.revokeObjectURL(video.src);
+      resolve(dur);
+    };
+    video.onerror = () => {
+      resolve(60);
+    };
+    video.src = URL.createObjectURL(file);
+  });
 }
 
 /**
- * Burn subtitles onto video file using ffmpeg.wasm on the client-side
+ * Burn subtitles onto video file using Canvas 2D frame rendering + FFmpeg Concat Overlay
+ * Guarantees 100% WYSIWYG match with Live Preview.
  */
 export async function burnSubtitlesToVideo({
   videoFile,
@@ -126,17 +108,13 @@ export async function burnSubtitlesToVideo({
   const ffmpeg = await getFFmpegInstance(onProgress);
 
   onProgress?.({
-    ratio: 0.15,
-    percent: 15,
+    ratio: 0.1,
+    percent: 10,
     stage: 'preparing_media',
-    message: 'กำลังเตรียมไฟล์วิดีโอและซับไตเติล...',
+    message: 'กำลังเตรียมไฟล์วิดีโอและคำนวณไทม์ไลน์...',
   });
 
-  // Step 2: Write input video to virtual filesystem
-  const videoData = await fetchFile(videoFile);
-  await ffmpeg.writeFile('input.mp4', videoData);
-
-  // Step 3: Generate ASS Subtitle content and write to FS
+  // Calculate target canvas resolution
   let resWidth = 1080;
   let resHeight = 1920;
   if (aspectRatio === '16:9') {
@@ -156,136 +134,134 @@ export async function burnSubtitlesToVideo({
     resHeight = Math.round(resHeight * 2);
   }
 
-  const assContent = generateAss(captions, style, {
-    title: 'SUBTHAITLE Burn',
-    width: resWidth,
-    height: resHeight,
-    aspectRatio,
+  // Step 2: Get media duration
+  const videoDuration = await getVideoDuration(videoFile);
+
+  // Step 3: Render Subtitle frames with Canvas (WYSIWYG)
+  const imageSequence = await generateCaptionImageSequence(
+    {
+      captions,
+      style,
+      videoWidth: resWidth,
+      videoHeight: resHeight,
+      videoDuration,
+      aspectRatio,
+    },
+    (pct, msg) => {
+      onProgress?.({
+        ratio: 0.1 + (pct / 100) * 0.15,
+        percent: Math.round(10 + pct * 0.15),
+        stage: 'preparing_media',
+        message: msg,
+      });
+    }
+  );
+
+  onProgress?.({
+    ratio: 0.25,
+    percent: 25,
+    stage: 'preparing_media',
+    message: 'กำลังส่งไฟล์เข้าสู่ตัวประมวลผลวิดีโอ...',
   });
 
-  await ffmpeg.writeFile('subtitles.ass', assContent);
+  const createdFileNames: string[] = ['input.mp4', 'subtitles.txt', 'output.mp4'];
 
-  const createdFontFiles: string[] = [];
+  try {
+    // Step 4: Write input video, ffconcat script, and frame PNGs to FFmpeg MEMFS
+    const videoData = await fetchFile(videoFile);
+    await ffmpeg.writeFile('input.mp4', videoData);
 
-  // Step 4: Write font file if available
-  const fontName = style.fontFamily || 'Noto Sans Thai';
-  const fontBuffer = await fetchFontBuffer(fontName);
-  if (fontBuffer) {
-    try {
-      await ffmpeg.createDir('fonts');
-    } catch {
-      // Directory might already exist
+    await ffmpeg.writeFile(
+      'subtitles.txt',
+      new TextEncoder().encode(imageSequence.concatFileContent)
+    );
+
+    for (const frame of imageSequence.frames) {
+      await ffmpeg.writeFile(frame.filename, frame.data);
+      createdFileNames.push(frame.filename);
     }
 
-    const fontPaths = [
-      `fonts/${fontName}.ttf`,
-      `fonts/${fontName.toLowerCase()}.ttf`,
-      `fonts/${fontName.replace(/\s+/g, '')}.ttf`,
-      `fonts/${fontName}-Regular.ttf`,
-      `fonts/custom_font.ttf`,
-      `${fontName}.ttf`,
-      `${fontName.toLowerCase()}.ttf`,
-      `${fontName.replace(/\s+/g, '')}.ttf`,
-      `${fontName}-Regular.ttf`,
-    ];
+    // Step 5: Configure FFmpeg progress listener
+    ffmpeg.on('progress', ({ progress }) => {
+      const clampedRatio = Math.max(0, Math.min(1, progress));
+      const percent = Math.round(25 + clampedRatio * 70);
 
-    for (const p of fontPaths) {
-      try {
-        await ffmpeg.writeFile(p, fontBuffer);
-        createdFontFiles.push(p);
-      } catch (writeErr) {
-        console.warn(`Could not write virtual font ${p}:`, writeErr);
-      }
-    }
-  }
-
-  // Step 5: Configure FFmpeg progress listener
-  ffmpeg.on('progress', ({ progress }) => {
-    // FFmpeg progress is 0.0 to 1.0
-    const clampedRatio = Math.max(0, Math.min(1, progress));
-    const percent = Math.round(20 + clampedRatio * 75);
+      onProgress?.({
+        ratio: 0.25 + clampedRatio * 0.7,
+        percent,
+        stage: 'burning',
+        message: `กำลังเรนเดอร์และประกอบวิดีโอ... ${percent}%`,
+      });
+    });
 
     onProgress?.({
-      ratio: 0.2 + clampedRatio * 0.75,
-      percent,
+      ratio: 0.28,
+      percent: 28,
       stage: 'burning',
-      message: `กำลังเรนเดอร์และฝังซับไตเติล... ${percent}%`,
+      message: 'เริ่มต้นการประกอบวิดีโอ...',
     });
-  });
 
-  // Step 6: Build FFmpeg video filters and execute
-  onProgress?.({
-    ratio: 0.2,
-    percent: 20,
-    stage: 'burning',
-    message: 'เริ่มต้นการประมวลผลวิดีโอ...',
-  });
+    // Step 6: Execute FFmpeg with Concat Demuxer & Overlay
+    const ffmpegArgs = [
+      '-i',
+      'input.mp4',
+      '-f',
+      'concat',
+      '-safe',
+      '0',
+      '-i',
+      'subtitles.txt',
+      '-filter_complex',
+      `[0:v]scale=${resWidth}:${resHeight}[bg];[bg][1:v]overlay=0:0[outv]`,
+      '-map',
+      '[outv]',
+      '-map',
+      '0:a?',
+      '-c:v',
+      'libx264',
+      '-preset',
+      'ultrafast',
+      '-crf',
+      '23',
+      '-c:a',
+      'aac',
+      '-b:a',
+      '192k',
+      '-movflags',
+      '+faststart',
+      'output.mp4',
+    ];
 
-  // Video filter: use explicit parameter naming for the subtitles filter
-  const vfOptions = fontBuffer
-    ? 'subtitles=filename=subtitles.ass:fontsdir=fonts'
-    : 'subtitles=filename=subtitles.ass';
+    await ffmpeg.exec(ffmpegArgs);
 
-  const ffmpegArgs = [
-    '-i',
-    'input.mp4',
-    '-vf',
-    vfOptions,
-    '-map',
-    '0:v',
-    '-map',
-    '0:a?',
-    '-c:v',
-    'libx264',
-    '-preset',
-    'ultrafast',
-    '-crf',
-    '23',
-    '-c:a',
-    'aac',
-    '-b:a',
-    '192k',
-    '-movflags',
-    '+faststart',
-    'output.mp4',
-  ];
+    onProgress?.({
+      ratio: 0.98,
+      percent: 98,
+      stage: 'finishing',
+      message: 'กำลังประกอบไฟล์วิดีโอขั้นสุดท้าย...',
+    });
 
-  await ffmpeg.exec(ffmpegArgs);
+    // Step 7: Read output file
+    const outputData = await ffmpeg.readFile('output.mp4');
+    const uint8 = typeof outputData === 'string'
+      ? new TextEncoder().encode(outputData)
+      : new Uint8Array(outputData as Uint8Array);
+    const outputBlob = new Blob([uint8.buffer as ArrayBuffer], { type: 'video/mp4' });
 
-  onProgress?.({
-    ratio: 0.98,
-    percent: 98,
-    stage: 'finishing',
-    message: 'กำลังประกอบไฟล์วิดีโอขั้นสุดท้าย...',
-  });
+    onProgress?.({
+      ratio: 1.0,
+      percent: 100,
+      stage: 'completed',
+      message: 'เรนเดอร์วิดีโอพร้อมซับไตเติลสำเร็จเรียบร้อย! 🎉',
+    });
 
-  // Step 7: Read output file
-  const outputData = await ffmpeg.readFile('output.mp4');
-  const uint8 = typeof outputData === 'string'
-    ? new TextEncoder().encode(outputData)
-    : new Uint8Array(outputData as Uint8Array);
-  const outputBlob = new Blob([uint8.buffer as ArrayBuffer], { type: 'video/mp4' });
-
-  // Cleanup temporary virtual files to prevent WASM memory leaks
-  try {
-    await ffmpeg.deleteFile('input.mp4');
-    await ffmpeg.deleteFile('subtitles.ass');
-    await ffmpeg.deleteFile('output.mp4');
-    for (const fontPath of createdFontFiles) {
+    return outputBlob;
+  } finally {
+    // Cleanup temporary virtual files to prevent WASM memory leaks under all circumstances
+    for (const fname of createdFileNames) {
       try {
-        await ffmpeg.deleteFile(fontPath);
+        await ffmpeg.deleteFile(fname);
       } catch {}
     }
-  } catch (cleanErr) {
-    console.warn('Error cleaning up virtual ffmpeg files:', cleanErr);
   }
-
-  onProgress?.({
-    ratio: 1.0,
-    percent: 100,
-    stage: 'completed',
-    message: 'เรนเดอร์วิดีโอพร้อมซับไตเติลสำเร็จเรียบร้อย! 🎉',
-  });
-
-  return outputBlob;
 }
