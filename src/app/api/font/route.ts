@@ -9,8 +9,8 @@ export async function GET(request: Request) {
   }
 
   const cleanName = family.replace(/\s+/g, '+');
-  // We fetch standard weight (400) and bold (700, 800)
-  const cssUrl = `https://fonts.googleapis.com/css?family=${cleanName}:400,700,800`;
+  // We fetch standard weight (400) and bold (700, 800) and EXPLICITLY request the Thai subset
+  const cssUrl = `https://fonts.googleapis.com/css?family=${cleanName}:400,700,800&subset=thai,latin`;
 
   try {
     const cssRes = await fetch(cssUrl, {
