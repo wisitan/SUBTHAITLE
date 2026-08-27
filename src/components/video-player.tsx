@@ -288,47 +288,47 @@ export function VideoPlayer({ className = '' }: Props) {
       className={`relative flex flex-col bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl group ${className}`}
     >
       {/* Top Floating Toolbar (Aspect Ratio & Highlight Badge) */}
-      <div className="absolute top-3 left-3 right-3 z-30 flex items-center justify-between pointer-events-none">
+      <div className="absolute top-3 left-2.5 right-2.5 sm:left-3 sm:right-3 z-30 flex items-center justify-between pointer-events-none gap-2">
         {/* Aspect Ratio Selector */}
-        <div className="flex items-center gap-1 bg-zinc-950/80 backdrop-blur-md border border-zinc-800/80 p-1 rounded-xl pointer-events-auto shadow-lg">
+        <div className="flex items-center gap-0.5 sm:gap-1 bg-zinc-950/85 backdrop-blur-md border border-zinc-800/80 p-1 rounded-xl pointer-events-auto shadow-lg">
           <button
             type="button"
             onClick={() => setAspectRatio('9:16')}
-            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               aspectRatio === '9:16'
                 ? 'bg-orange-500 text-zinc-950 font-bold'
                 : 'text-zinc-400 hover:text-white'
             }`}
             title="แนวตั้ง 9:16 (TikTok, Reels, Shorts)"
           >
-            <Smartphone className="w-3.5 h-3.5 inline mr-1" />
-            9:16
+            <Smartphone className="w-3.5 h-3.5 inline sm:mr-1" />
+            <span className="hidden sm:inline">9:16</span>
           </button>
           <button
             type="button"
             onClick={() => setAspectRatio('16:9')}
-            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               aspectRatio === '16:9'
                 ? 'bg-orange-500 text-zinc-950 font-bold'
                 : 'text-zinc-400 hover:text-white'
             }`}
             title="แนวนอน 16:9 (YouTube Widescreen)"
           >
-            <Tv className="w-3.5 h-3.5 inline mr-1" />
-            16:9
+            <Tv className="w-3.5 h-3.5 inline sm:mr-1" />
+            <span className="hidden sm:inline">16:9</span>
           </button>
           <button
             type="button"
             onClick={() => setAspectRatio('1:1')}
-            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
+            className={`px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               aspectRatio === '1:1'
                 ? 'bg-orange-500 text-zinc-950 font-bold'
                 : 'text-zinc-400 hover:text-white'
             }`}
             title="จัตุรัส 1:1 (Square)"
           >
-            <Square className="w-3.5 h-3.5 inline mr-1" />
-            1:1
+            <Square className="w-3.5 h-3.5 inline sm:mr-1" />
+            <span className="hidden sm:inline">1:1</span>
           </button>
         </div>
 
@@ -339,15 +339,15 @@ export function VideoPlayer({ className = '' }: Props) {
             e.stopPropagation();
             setStyle({ enableWordHighlight: !style.enableWordHighlight });
           }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all cursor-pointer shadow-lg pointer-events-auto ${
+          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all cursor-pointer shadow-lg pointer-events-auto shrink-0 ${
             style.enableWordHighlight
               ? 'bg-amber-500/25 border border-amber-500/60 text-amber-300 hover:bg-amber-500/35 ring-1 ring-amber-500/30'
-              : 'bg-zinc-950/80 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+              : 'bg-zinc-950/85 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
           }`}
           title="คลิกเพื่อ เปิด/ปิด การไฮไลท์คำตามเสียงพูดแบบ Real-time"
         >
           <Sparkles className={`w-3.5 h-3.5 ${style.enableWordHighlight ? 'text-amber-400' : 'text-zinc-500'}`} />
-          <span>Word Highlight: {style.enableWordHighlight ? 'ON' : 'OFF'}</span>
+          <span><span className="hidden sm:inline">Word </span>Highlight: {style.enableWordHighlight ? 'ON' : 'OFF'}</span>
         </button>
       </div>
 
@@ -528,13 +528,13 @@ export function VideoPlayer({ className = '' }: Props) {
       </div>
 
       {/* Custom Video Controls Bar */}
-      <div className="p-3 bg-zinc-950 border-t border-zinc-900 flex items-center justify-between gap-3 text-sm text-zinc-300">
+      <div className="p-2.5 sm:p-3 bg-zinc-950 border-t border-zinc-900 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 text-sm text-zinc-300">
         {/* Left: Play/Pause, Rewind, Forward, Time */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3">
           <button
             type="button"
             onClick={togglePlay}
-            className="w-9 h-9 rounded-xl bg-orange-500 hover:bg-orange-400 text-zinc-950 flex items-center justify-center transition-all cursor-pointer shadow-md shadow-orange-500/20"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-orange-500 hover:bg-orange-400 text-zinc-950 flex items-center justify-center transition-all cursor-pointer shadow-md shadow-orange-500/20 shrink-0"
             title={isPlaying ? 'หยุดชั่วคราว (Spacebar)' : 'เล่น (Spacebar)'}
           >
             {isPlaying ? <Pause className="w-4 h-4 fill-zinc-950" /> : <Play className="w-4 h-4 ml-0.5 fill-zinc-950" />}
@@ -543,23 +543,23 @@ export function VideoPlayer({ className = '' }: Props) {
           <button
             type="button"
             onClick={() => videoRef.current && seekTo(videoRef.current.currentTime - 5)}
-            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer shrink-0"
             title="ย้อนกลับ 5 วินาที"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
 
           <button
             type="button"
             onClick={() => videoRef.current && seekTo(videoRef.current.currentTime + 5)}
-            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer shrink-0"
             title="ข้ามไปข้างหน้า 5 วินาที"
           >
-            <RotateCw className="w-4 h-4" />
+            <RotateCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </button>
 
           {/* Time Display */}
-          <div className="font-mono text-xs sm:text-sm text-zinc-300 flex items-center gap-1.5 font-medium">
+          <div className="font-mono text-xs sm:text-sm text-zinc-300 flex items-center gap-1 font-medium whitespace-nowrap">
             <span className="text-orange-400 font-bold">{formatTime(currentTime)}</span>
             <span className="text-zinc-500">/</span>
             <span>{formatTime(duration)}</span>
@@ -567,15 +567,15 @@ export function VideoPlayer({ className = '' }: Props) {
         </div>
 
         {/* Right: Speed selector, Volume, Fullscreen */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Speed Selector */}
           <div className="flex items-center gap-0.5 bg-zinc-900 rounded-xl p-0.5 border border-zinc-800">
-            {[0.75, 1, 1.25, 1.5, 2].map((rate) => (
+            {[1, 1.5, 2].map((rate) => (
               <button
                 key={rate}
                 type="button"
                 onClick={() => handleRateChange(rate)}
-                className={`px-2 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                   playbackRate === rate
                     ? 'bg-zinc-800 text-orange-400 shadow-sm'
                     : 'text-zinc-400 hover:text-zinc-200'
@@ -595,20 +595,20 @@ export function VideoPlayer({ className = '' }: Props) {
                 setIsMuted(!isMuted);
               }
             }}
-            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer shrink-0"
             title={isMuted ? 'เปิดเสียง' : 'ปิดเสียง'}
           >
-            {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4" />}
+            {isMuted ? <VolumeX className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-rose-400" /> : <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
           </button>
 
           {/* Fullscreen */}
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+            className="p-1.5 sm:p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer shrink-0"
             title="เต็มจอ (Fullscreen)"
           >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            {isFullscreen ? <Minimize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
           </button>
         </div>
       </div>

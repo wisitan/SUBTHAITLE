@@ -41,7 +41,7 @@ export function CaptionTable({ onPlayCue }: Props) {
   const findAndReplace = useAppStore((s) => s.findAndReplace);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [autoScroll, setAutoScroll] = useState(true);
+  const [autoScroll, setAutoScroll] = useState(false);
   const [timeShiftModalOpen, setTimeShiftModalOpen] = useState(false);
   const [timeShiftAmount, setTimeShiftAmount] = useState<string>('0.2');
   const [findReplaceModalOpen, setFindReplaceModalOpen] = useState(false);
@@ -57,13 +57,22 @@ export function CaptionTable({ onPlayCue }: Props) {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  // Smoothly scroll active card into view if autoScroll is enabled
+  // Smoothly scroll active card into view inside the container ONLY (never scroll window/outer page)
   useEffect(() => {
     if (autoScroll && activeIndex !== null && activeIndex !== -1 && activeCardRef.current && containerRef.current) {
-      activeCardRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-      });
+      const container = containerRef.current;
+      const card = activeCardRef.current;
+      const cardTop = card.offsetTop - container.offsetTop;
+      const cardHeight = card.offsetHeight;
+      const containerScrollTop = container.scrollTop;
+      const containerHeight = container.clientHeight;
+
+      if (cardTop < containerScrollTop || cardTop + cardHeight > containerScrollTop + containerHeight) {
+        container.scrollTo({
+          top: Math.max(0, cardTop - 16),
+          behavior: 'smooth',
+        });
+      }
     }
   }, [activeIndex, autoScroll]);
 
@@ -363,6 +372,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             return (
               <div
                 key={caption.id}
+                id={`caption-card-${actualIndex}`}
                 ref={isActive ? activeCardRef : null}
                 className={`p-4 rounded-2xl border transition-all duration-150 relative group/card ${
                   isActive

@@ -31,23 +31,23 @@ export function ProviderSelector() {
   };
 
   return (
-    <div className="w-full bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-5 sm:p-6 backdrop-blur-sm shadow-xl">
+    <div className="w-full max-w-full bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-4 sm:p-6 backdrop-blur-sm shadow-xl overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
-          <h3 className="text-base font-bold text-zinc-100 flex items-center gap-2">
-            <Cpu className="w-4 h-4 text-orange-400" />
+          <h3 className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2">
+            <Cpu className="w-4 h-4 text-orange-400 shrink-0" />
             <span>เครื่องมือถอดเสียง (AI Engine)</span>
           </h3>
-          <p className="text-sm text-zinc-300 mt-0.5">
+          <p className="text-xs sm:text-sm text-zinc-300 mt-0.5 leading-relaxed">
             ประมวลผลเสียงภาษาไทยความเร็วสูง แม่นยำระดับคำ (Word-level timestamps)
           </p>
         </div>
 
         {/* Tier Status & Quick Dev Testing Bar */}
-        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {/* Quick Tier Switcher for Testing */}
-          <div className="flex items-center gap-1 bg-zinc-950 px-2.5 py-1.5 rounded-xl border border-zinc-800 text-xs">
-            <FlaskConical className="w-3.5 h-3.5 text-amber-400 mr-0.5" />
+          <div className="flex items-center gap-1 bg-zinc-950 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl border border-zinc-800 text-xs">
+            <FlaskConical className="w-3.5 h-3.5 text-amber-400 mr-0.5 shrink-0" />
             <span className="text-zinc-400 hidden sm:inline mr-1 font-medium">โหมดทดสอบ:</span>
             <button
               type="button"
@@ -91,18 +91,18 @@ export function ProviderSelector() {
           {isPaid ? (
             <Link
               href="/donate"
-              className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-sm font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors"
             >
-              <CheckCircle2 className="w-4 h-4" />
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>{tier === 'coffee' ? 'สถานะ: เลี้ยงกาแฟ ☕' : 'สถานะ: เลี้ยงข้าว 🍚'}</span>
             </Link>
           ) : (
             <Link
               href="/donate"
-              className="px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white text-sm transition-colors flex items-center gap-1.5 font-medium"
+              className="px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white text-xs sm:text-sm transition-colors flex items-center gap-1.5 font-medium"
             >
-              <Heart className="w-3.5 h-3.5 text-rose-400" />
-              <span>ดูสิทธิพิเศษการสนับสนุน</span>
+              <Heart className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+              <span>ดูสิทธิพิเศษ</span>
             </Link>
           )}
         </div>

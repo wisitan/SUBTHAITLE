@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
+  ArrowRight,
   FileVideo,
   FileAudio,
   Sparkles,
@@ -23,6 +24,7 @@ export default function EditorPage() {
   const file = useAppStore((s) => s.file);
   const videoUrl = useAppStore((s) => s.videoUrl);
   const captions = useAppStore((s) => s.captions);
+  const activeCaptionIndex = useAppStore((s) => s.activeCaptionIndex);
   const mediaDuration = useAppStore((s) => s.mediaDuration);
 
   const [activeTab, setActiveTab] = useState<'captions' | 'style' | 'presets'>('captions');
@@ -113,8 +115,56 @@ export default function EditorPage() {
       {/* Main 2-Column Responsive Workspace */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Interactive Video Player (42% width on desktop) */}
-        <div className="lg:col-span-5 lg:sticky lg:top-20 space-y-4">
+        <div className="lg:col-span-5 lg:sticky lg:top-20 space-y-3 sm:space-y-4">
           <VideoPlayer />
+
+          {/* Quick Jump to Active Subtitle Card (Mobile & Desktop Thumb Ergonomics) */}
+          {captions.length > 0 && (
+            <div className="p-3 sm:p-4 rounded-2xl bg-zinc-900/90 border border-orange-500/30 backdrop-blur-md flex items-center justify-between gap-2.5 shadow-xl ring-1 ring-orange-500/20">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center shrink-0 font-mono font-bold text-xs">
+                  {activeCaptionIndex !== null && activeCaptionIndex !== -1 ? `#${activeCaptionIndex + 1}` : '📝'}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5 truncate">
+                    <span>
+                      {activeCaptionIndex !== null && activeCaptionIndex !== -1
+                        ? `ซับท่อนปัจจุบัน (#${activeCaptionIndex + 1})`
+                        : 'เลือกท่อนซับในวิดีโอ'}
+                    </span>
+                  </p>
+                  <p className="text-xs text-orange-300 truncate font-mono">
+                    {activeCaptionIndex !== null && activeCaptionIndex !== -1 && captions[activeCaptionIndex]
+                      ? `${captions[activeCaptionIndex].start.toFixed(2)}s: ${captions[activeCaptionIndex].text}`
+                      : 'แตะปุ่มเพื่อเลื่อนไปกล่องแก้ไข'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('captions');
+                  setTimeout(() => {
+                    const targetIndex =
+                      activeCaptionIndex !== null && activeCaptionIndex !== -1 ? activeCaptionIndex : 0;
+                    const el = document.getElementById(`caption-card-${targetIndex}`);
+                    if (el) {
+                      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      el.classList.add('ring-2', 'ring-amber-400', 'bg-orange-500/20');
+                      setTimeout(() => {
+                        el.classList.remove('ring-2', 'ring-amber-400', 'bg-orange-500/20');
+                      }, 1800);
+                    }
+                  }, 120);
+                }}
+                className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-xs sm:text-sm flex items-center gap-1.5 shrink-0 shadow-md cursor-pointer transition-all active:scale-95"
+              >
+                <span>📝 แก้ไขท่อนนี้</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
 
           {/* Quick tips card below video */}
           <div className="p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800 text-xs text-zinc-300 space-y-2">

@@ -278,7 +278,7 @@ export function UploadZone() {
         </div>
       ) : (
         /* File Selected / Extracted / Transcribed Preview Card */
-        <div className="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-6 backdrop-blur-md shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-4 sm:p-6 backdrop-blur-md shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 border-b border-zinc-800">
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
