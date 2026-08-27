@@ -323,23 +323,23 @@ with check (true);`;
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white transition-colors"
+              className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white transition-colors"
               title="กลับหน้าหลัก"
             >
               <ArrowLeft className="w-4 h-4" />
             </Link>
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
                 <BookOpen className="w-5 h-5" />
               </div>
               <div>
-                <h1 className="text-sm font-bold text-white flex items-center gap-2">
+                <h1 className="text-base font-bold text-white flex items-center gap-2">
                   คลังคำศัพท์แก้คำผิดภาษาไทย (Admin Dictionary)
-                  <span className="px-2 py-0.5 text-[10px] font-black bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full">
+                  <span className="px-2.5 py-0.5 text-xs font-black bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full">
                     👑 ADMIN MODE
                   </span>
                 </h1>
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-xs text-zinc-300 mt-0.5">
                   คำศัพท์ที่เพิ่มที่นี่จะถูกส่งต่อไปแก้คำผิดให้ผู้ใช้ทุกคนแบบ Real-time
                 </p>
               </div>
@@ -352,13 +352,13 @@ with check (true);`;
                 setIsAdmin(false);
                 router.push('/');
               }}
-              className="px-3 py-1.5 text-xs text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-xl transition-all"
+              className="px-3.5 py-2 text-sm text-zinc-300 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 rounded-xl transition-all font-medium"
             >
               ออกจาก Admin
             </button>
             <button
               onClick={() => handleOpenAddModal()}
-              className="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm rounded-xl shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>เพิ่มคำศัพท์ใหม่</span>
@@ -373,8 +373,8 @@ with check (true);`;
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 flex items-center justify-between">
             <div>
-              <p className="text-xs text-zinc-400 font-medium">คำศัพท์ทั้งหมดในระบบ</p>
-              <h3 className="text-2xl font-black text-white mt-1">{mergedList.length} <span className="text-xs font-normal text-zinc-500">คำ</span></h3>
+              <p className="text-sm text-zinc-300 font-medium">คำศัพท์ทั้งหมดในระบบ</p>
+              <h3 className="text-2xl sm:text-3xl font-black text-white mt-1">{mergedList.length} <span className="text-sm font-normal text-zinc-400">คำ</span></h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-orange-400">
               <BookOpen className="w-5 h-5" />
@@ -383,8 +383,8 @@ with check (true);`;
 
           <div className="p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 flex items-center justify-between">
             <div>
-              <p className="text-xs text-zinc-400 font-medium">คำศัพท์บน Cloud (Supabase)</p>
-              <h3 className="text-2xl font-black text-emerald-400 mt-1">{customDictionary.length} <span className="text-xs font-normal text-zinc-500">คำ</span></h3>
+              <p className="text-sm text-zinc-300 font-medium">คำศัพท์บน Cloud (Supabase)</p>
+              <h3 className="text-2xl sm:text-3xl font-black text-emerald-400 mt-1">{customDictionary.length} <span className="text-sm font-normal text-zinc-400">คำ</span></h3>
             </div>
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
               <Database className="w-5 h-5" />
@@ -393,8 +393,8 @@ with check (true);`;
 
           <div className="p-4 rounded-2xl bg-zinc-900/40 border border-zinc-800/80 flex items-center justify-between">
             <div>
-              <p className="text-xs text-zinc-400 font-medium">สถานะการเชื่อมต่อ Cloud</p>
-              <div className="mt-1 flex items-center gap-1.5 text-xs font-bold">
+              <p className="text-sm text-zinc-300 font-medium">สถานะการเชื่อมต่อ Cloud</p>
+              <div className="mt-1 flex items-center gap-1.5 text-sm font-bold">
                 {isCloudConnected ? (
                   <span className="text-emerald-400 flex items-center gap-1">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -402,12 +402,12 @@ with check (true);`;
                   </span>
                 ) : isTableMissing ? (
                   <span className="text-amber-400 flex items-center gap-1">
-                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <AlertTriangle className="w-4 h-4" />
                     รอรันคำสั่งสร้าง Table
                   </span>
                 ) : (
-                  <span className="text-zinc-400 flex items-center gap-1">
-                    <Cloud className="w-3.5 h-3.5" />
+                  <span className="text-zinc-300 flex items-center gap-1">
+                    <Cloud className="w-4 h-4" />
                     โหมด Local (ออฟไลน์)
                   </span>
                 )}
@@ -426,26 +426,26 @@ with check (true);`;
 
         {/* Missing Table SQL Alert Banner */}
         {isTableMissing && (
-          <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-200 space-y-3">
+          <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-sm text-amber-200 space-y-3">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0" />
-                <h4 className="font-bold text-sm text-amber-300">
+                <h4 className="font-bold text-base text-amber-300">
                   ต้องรันคำสั่ง SQL สร้างตาราง `custom_dictionary` ใน Supabase
                 </h4>
               </div>
               <button
                 onClick={copySqlToClipboard}
-                className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-3 py-1.5 rounded-lg shadow transition-all cursor-pointer"
+                className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold px-3.5 py-1.5 rounded-xl shadow transition-all cursor-pointer text-xs"
               >
-                {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copiedSql ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 <span>{copiedSql ? 'คัดลอกแล้ว!' : 'คัดลอก SQL Script'}</span>
               </button>
             </div>
-            <p className="text-zinc-300 leading-relaxed">
+            <p className="text-zinc-200 leading-relaxed">
               ไปที่เมนู <strong>SQL Editor</strong> ใน Supabase Dashboard 👉 วางคำสั่งด้านล่างแล้วกดปุ่ม <strong>Run</strong> เพื่อเปิดใช้งานระบบคลังคำศัพท์ส่วนกลางแบบ Real-time ค่ะ
             </p>
-            <pre className="p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 text-[11px] text-zinc-300 overflow-x-auto font-mono">
+            <pre className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800 text-xs text-zinc-200 overflow-x-auto font-mono">
               {sqlScript}
             </pre>
           </div>
@@ -456,13 +456,13 @@ with check (true);`;
           <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
             {/* Search */}
             <div className="relative w-full sm:w-80">
-              <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-zinc-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 placeholder="ค้นหาคำผิด หรือคำที่ถูกต้อง..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
               />
             </div>
 
@@ -470,25 +470,25 @@ with check (true);`;
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
               <button
                 onClick={handleSeedDefaults}
-                className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer"
                 title="บันทึกคำศัพท์เริ่มต้น 100+ คำขึ้น Cloud"
               >
-                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <Sparkles className="w-4 h-4 text-amber-400" />
                 <span>Seed 100+ คำขึ้น Cloud</span>
               </button>
 
-              <label className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer">
-                <Upload className="w-3.5 h-3.5 text-zinc-400" />
+              <label className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer">
+                <Upload className="w-4 h-4 text-zinc-400" />
                 <span>Import JSON</span>
                 <input type="file" accept=".json" onChange={handleImportJson} className="hidden" />
               </label>
 
               <button
                 onClick={handleExportJson}
-                className="px-3 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer"
                 title="ดาวน์โหลดคำศัพท์ทั้งหมดเป็น JSON"
               >
-                <Download className="w-3.5 h-3.5 text-zinc-400" />
+                <Download className="w-4 h-4 text-zinc-400" />
                 <span>Export JSON</span>
               </button>
             </div>
@@ -506,14 +506,14 @@ with check (true);`;
               <button
                 key={cat.id}
                 onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
                   selectedCategory === cat.id
                     ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
                     : 'bg-zinc-950/60 text-zinc-400 border border-zinc-800 hover:text-white'
                 }`}
               >
                 <span>{cat.label}</span>
-                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-zinc-800 text-zinc-400">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-300 font-mono">
                   {cat.count}
                 </span>
               </button>
@@ -524,22 +524,22 @@ with check (true);`;
         {/* Dictionary Table */}
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/30 overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-zinc-300">
-              <thead className="bg-zinc-900/80 text-[11px] font-bold text-zinc-400 uppercase tracking-wider border-b border-zinc-800">
+            <table className="w-full text-left text-sm text-zinc-200">
+              <thead className="bg-zinc-900/80 text-xs font-bold text-zinc-300 uppercase tracking-wider border-b border-zinc-800">
                 <tr>
-                  <th className="py-3 px-4 w-12">#</th>
-                  <th className="py-3 px-4">คำที่ Whisper มักผิด</th>
-                  <th className="py-3 px-4 w-8 text-center">➔</th>
-                  <th className="py-3 px-4">คำที่ถูกต้อง (แทนที่)</th>
-                  <th className="py-3 px-4">หมวดหมู่</th>
-                  <th className="py-3 px-4">แหล่งข้อมูล</th>
-                  <th className="py-3 px-4 text-right w-24">จัดการ</th>
+                  <th className="py-3.5 px-4 w-12">#</th>
+                  <th className="py-3.5 px-4">คำที่ Whisper มักผิด</th>
+                  <th className="py-3.5 px-4 w-8 text-center">➔</th>
+                  <th className="py-3.5 px-4">คำที่ถูกต้อง (แทนที่)</th>
+                  <th className="py-3.5 px-4">หมวดหมู่</th>
+                  <th className="py-3.5 px-4">แหล่งข้อมูล</th>
+                  <th className="py-3.5 px-4 text-right w-24">จัดการ</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800/60">
                 {filteredList.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-zinc-500">
+                    <td colSpan={7} className="py-12 text-center text-zinc-400 text-sm">
                       ไม่พบคำศัพท์ที่ตรงกับการค้นหา
                     </td>
                   </tr>
@@ -548,49 +548,49 @@ with check (true);`;
                     const isCloud = Boolean(entry.id);
                     return (
                       <tr key={idx} className="hover:bg-zinc-800/30 transition-colors">
-                        <td className="py-3 px-4 text-zinc-500 text-[11px] font-mono">{idx + 1}</td>
-                        <td className="py-3 px-4 font-semibold text-rose-300">
-                          <span className="px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20">
+                        <td className="py-3.5 px-4 text-zinc-400 text-xs font-mono">{idx + 1}</td>
+                        <td className="py-3.5 px-4 font-semibold text-rose-300">
+                          <span className="px-2.5 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20">
                             {entry.wrong_word}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-center text-zinc-500 font-bold">➔</td>
-                        <td className="py-3 px-4 font-semibold text-emerald-300">
-                          <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
+                        <td className="py-3.5 px-4 text-center text-zinc-500 font-bold">➔</td>
+                        <td className="py-3.5 px-4 font-semibold text-emerald-300">
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                             {entry.correct_word}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
-                          <span className="px-2 py-0.5 text-[10px] font-medium rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
+                        <td className="py-3.5 px-4">
+                          <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-zinc-800 text-zinc-300 border border-zinc-700">
                             {entry.category}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3.5 px-4">
                           {isCloud ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400">
-                              <Cloud className="w-3 h-3" /> Cloud
+                            <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400">
+                              <Cloud className="w-3.5 h-3.5" /> Cloud
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-[10px] text-zinc-400">
-                              <Database className="w-3 h-3" /> Built-in
+                            <span className="inline-flex items-center gap-1 text-xs text-zinc-400">
+                              <Database className="w-3.5 h-3.5" /> Built-in
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 text-right">
+                        <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => handleOpenAddModal(entry)}
-                              className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                              className="p-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
                               title="แก้ไขคำนี้"
                             >
-                              <Edit2 className="w-3.5 h-3.5" />
+                              <Edit2 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => handleDeleteEntry(entry)}
-                              className="p-1.5 rounded-lg bg-zinc-800 hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 transition-colors cursor-pointer"
+                              className="p-2 rounded-lg bg-zinc-800 hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 transition-colors cursor-pointer"
                               title="ลบคำนี้"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -623,13 +623,13 @@ with check (true);`;
 
             <form onSubmit={handleSaveEntry} className="space-y-4">
               {formError && (
-                <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs">
+                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm">
                   {formError}
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-bold text-zinc-300 mb-1">
+                <label className="block text-sm font-bold text-zinc-200 mb-1.5">
                   คำที่ Whisper มักสะกดผิด (Wrong Word / Typo)
                 </label>
                 <input
@@ -637,13 +637,13 @@ with check (true);`;
                   placeholder="เช่น ตักก้า, ซัมสูง, บลูทูด"
                   value={formWrongWord}
                   onChange={(e) => setFormWrongWord(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-300 mb-1">
+                <label className="block text-sm font-bold text-zinc-200 mb-1.5">
                   คำที่ถูกต้องที่ต้องการแทนที่ (Correct Word)
                 </label>
                 <input
@@ -651,19 +651,19 @@ with check (true);`;
                   placeholder="เช่น ตะกร้า, Samsung, Bluetooth"
                   value={formCorrectWord}
                   onChange={(e) => setFormCorrectWord(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-zinc-300 mb-1">
+                <label className="block text-sm font-bold text-zinc-200 mb-1.5">
                   หมวดหมู่ (Category)
                 </label>
                 <select
                   value={formCategory}
                   onChange={(e) => setFormCategory(e.target.value as DictionaryEntry['category'])}
-                  className="w-full px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white focus:outline-none focus:border-amber-500"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-sm text-white focus:outline-none focus:border-amber-500"
                 >
                   <option value="creator">🛍️ Creator & E-commerce</option>
                   <option value="tech">🤖 Tech & IT</option>
@@ -673,18 +673,18 @@ with check (true);`;
                 </select>
               </div>
 
-              <div className="pt-2 flex justify-end gap-2">
+              <div className="pt-2 flex justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-medium transition-colors"
+                  className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-sm font-medium transition-colors"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 text-xs font-bold shadow transition-all cursor-pointer disabled:opacity-50"
+                  className="px-4.5 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 text-sm font-bold shadow transition-all cursor-pointer disabled:opacity-50"
                 >
                   {isSaving ? 'กำลังบันทึก...' : 'บันทึกเข้าคลังคำศัพท์'}
                 </button>

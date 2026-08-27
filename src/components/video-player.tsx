@@ -294,40 +294,40 @@ export function VideoPlayer({ className = '' }: Props) {
           <button
             type="button"
             onClick={() => setAspectRatio('9:16')}
-            className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               aspectRatio === '9:16'
-                ? 'bg-orange-500 text-zinc-950'
+                ? 'bg-orange-500 text-zinc-950 font-bold'
                 : 'text-zinc-400 hover:text-white'
             }`}
             title="แนวตั้ง 9:16 (TikTok, Reels, Shorts)"
           >
-            <Smartphone className="w-3 h-3 inline mr-1" />
+            <Smartphone className="w-3.5 h-3.5 inline mr-1" />
             9:16
           </button>
           <button
             type="button"
             onClick={() => setAspectRatio('16:9')}
-            className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               aspectRatio === '16:9'
-                ? 'bg-orange-500 text-zinc-950'
+                ? 'bg-orange-500 text-zinc-950 font-bold'
                 : 'text-zinc-400 hover:text-white'
             }`}
             title="แนวนอน 16:9 (YouTube Widescreen)"
           >
-            <Tv className="w-3 h-3 inline mr-1" />
+            <Tv className="w-3.5 h-3.5 inline mr-1" />
             16:9
           </button>
           <button
             type="button"
             onClick={() => setAspectRatio('1:1')}
-            className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
               aspectRatio === '1:1'
-                ? 'bg-orange-500 text-zinc-950'
+                ? 'bg-orange-500 text-zinc-950 font-bold'
                 : 'text-zinc-400 hover:text-white'
             }`}
             title="จัตุรัส 1:1 (Square)"
           >
-            <Square className="w-3 h-3 inline mr-1" />
+            <Square className="w-3.5 h-3.5 inline mr-1" />
             1:1
           </button>
         </div>
@@ -339,7 +339,7 @@ export function VideoPlayer({ className = '' }: Props) {
             e.stopPropagation();
             setStyle({ enableWordHighlight: !style.enableWordHighlight });
           }}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold backdrop-blur-md transition-all cursor-pointer shadow-lg pointer-events-auto ${
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all cursor-pointer shadow-lg pointer-events-auto ${
             style.enableWordHighlight
               ? 'bg-amber-500/25 border border-amber-500/60 text-amber-300 hover:bg-amber-500/35 ring-1 ring-amber-500/30'
               : 'bg-zinc-950/80 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
@@ -517,7 +517,7 @@ export function VideoPlayer({ className = '' }: Props) {
         {/* Hover Scrubbing Bubble */}
         {hoverTime !== null && (
           <div
-            className="absolute -top-7 -translate-x-1/2 px-2 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-[10px] font-mono text-orange-400 pointer-events-none shadow-lg z-40"
+            className="absolute -top-7 -translate-x-1/2 px-2.5 py-0.5 rounded bg-zinc-900 border border-zinc-700 text-xs font-mono text-orange-400 pointer-events-none shadow-lg z-40"
             style={{
               left: `${duration > 0 ? (hoverTime / duration) * 100 : 0}%`,
             }}
@@ -528,7 +528,7 @@ export function VideoPlayer({ className = '' }: Props) {
       </div>
 
       {/* Custom Video Controls Bar */}
-      <div className="p-3 bg-zinc-950 border-t border-zinc-900 flex items-center justify-between gap-3 text-xs text-zinc-300">
+      <div className="p-3 bg-zinc-950 border-t border-zinc-900 flex items-center justify-between gap-3 text-sm text-zinc-300">
         {/* Left: Play/Pause, Rewind, Forward, Time */}
         <div className="flex items-center gap-2 sm:gap-3">
           <button
@@ -543,7 +543,7 @@ export function VideoPlayer({ className = '' }: Props) {
           <button
             type="button"
             onClick={() => videoRef.current && seekTo(videoRef.current.currentTime - 5)}
-            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"
             title="ย้อนกลับ 5 วินาที"
           >
             <RotateCcw className="w-4 h-4" />
@@ -552,16 +552,16 @@ export function VideoPlayer({ className = '' }: Props) {
           <button
             type="button"
             onClick={() => videoRef.current && seekTo(videoRef.current.currentTime + 5)}
-            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"
             title="ข้ามไปข้างหน้า 5 วินาที"
           >
             <RotateCw className="w-4 h-4" />
           </button>
 
           {/* Time Display */}
-          <div className="font-mono text-[11px] sm:text-xs text-zinc-400 flex items-center gap-1">
-            <span className="text-orange-400 font-semibold">{formatTime(currentTime)}</span>
-            <span>/</span>
+          <div className="font-mono text-xs sm:text-sm text-zinc-300 flex items-center gap-1.5 font-medium">
+            <span className="text-orange-400 font-bold">{formatTime(currentTime)}</span>
+            <span className="text-zinc-500">/</span>
             <span>{formatTime(duration)}</span>
           </div>
         </div>
@@ -575,10 +575,10 @@ export function VideoPlayer({ className = '' }: Props) {
                 key={rate}
                 type="button"
                 onClick={() => handleRateChange(rate)}
-                className={`px-2 py-1 text-[10px] font-bold rounded-lg transition-all cursor-pointer ${
+                className={`px-2 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                   playbackRate === rate
                     ? 'bg-zinc-800 text-orange-400 shadow-sm'
-                    : 'text-zinc-500 hover:text-zinc-200'
+                    : 'text-zinc-400 hover:text-zinc-200'
                 }`}
               >
                 {rate}x
@@ -595,7 +595,7 @@ export function VideoPlayer({ className = '' }: Props) {
                 setIsMuted(!isMuted);
               }
             }}
-            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"
             title={isMuted ? 'เปิดเสียง' : 'ปิดเสียง'}
           >
             {isMuted ? <VolumeX className="w-4 h-4 text-rose-400" /> : <Volume2 className="w-4 h-4" />}
@@ -605,7 +605,7 @@ export function VideoPlayer({ className = '' }: Props) {
           <button
             type="button"
             onClick={toggleFullscreen}
-            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+            className="p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"
             title="เต็มจอ (Fullscreen)"
           >
             {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}

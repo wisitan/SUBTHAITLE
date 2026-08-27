@@ -55,7 +55,7 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
       <div className="relative w-full max-w-5xl my-auto max-h-[92vh] flex flex-col bg-zinc-950 border border-zinc-800 rounded-3xl shadow-2xl overflow-hidden">
         
         {/* Modal Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-md">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4.5 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur-md">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-500/20 to-orange-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
               <Crown className="w-5 h-5" />
@@ -65,11 +65,11 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
                 <h2 className="text-base sm:text-lg font-black text-white">
                   10 พรีเมียมพรีเซ็ตซับไตเติล (Preset Showcase)
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/30 text-orange-400 text-[10px] font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-orange-500/20 to-amber-500/20 border border-orange-500/30 text-orange-400 text-xs font-bold">
                   Tier 299฿
                 </span>
               </div>
-              <p className="text-xs text-zinc-400">
+              <p className="text-sm text-zinc-300 mt-0.5">
                 สไตล์ตัวอักษรยอดนิยมที่คัดสรรมาให้พร้อมใช้สำหรับ Content Creator ทุกแพลตฟอร์ม
               </p>
             </div>
@@ -78,7 +78,7 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-full bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -89,16 +89,16 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
           
           {/* Banner CTA for Non-Paid Users */}
           {tier !== 'meal' && (
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/5 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="p-4.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/5 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-amber-300">
+                  <h3 className="text-base font-bold text-amber-300">
                     ปลดล็อกพรีเซ็ตระดับพรีเมียมครบทั้ง 10 แบบ!
                   </h3>
-                  <p className="text-xs text-zinc-400">
+                  <p className="text-sm text-zinc-300 mt-0.5">
                     ร่วมสนับสนุนค่ากาแฟหรือเลี้ยงข้าวพี่เอ เพื่อปลดล็อกพรีเซ็ตสำเร็จรูป บันทึกสไตล์ไม่อั้น และ Export 4K Ultra HD
                   </p>
                 </div>
@@ -106,7 +106,7 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
               <Link
                 href="/donate"
                 onClick={onClose}
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-black text-xs shadow-lg shadow-orange-500/20 flex items-center gap-2 shrink-0 transition-transform hover:scale-105"
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-black text-xs shadow-lg shadow-orange-500/20 flex items-center gap-2 shrink-0 transition-transform hover:scale-105"
               >
                 <Heart className="w-3.5 h-3.5 fill-zinc-950" />
                 <span>ร่วมสนับสนุน ฿299</span>
@@ -137,23 +137,23 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+                          <h4 className="text-base font-bold text-white group-hover:text-amber-300 transition-colors">
                             {preset.name}
                           </h4>
                           {isActive && (
-                            <span className="px-2 py-0.5 rounded-full bg-amber-500 text-zinc-950 text-[10px] font-black">
+                            <span className="px-2 py-0.5 rounded-full bg-amber-500 text-zinc-950 text-xs font-black">
                               ใช้งานอยู่
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-zinc-400 mt-1 line-clamp-2">
+                        <p className="text-sm text-zinc-300 mt-1 line-clamp-2">
                           {preset.description}
                         </p>
                       </div>
 
                       {/* Lock / Unlock Badge */}
                       <span
-                        className={`px-2 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1 shrink-0 ${
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 shrink-0 ${
                           unlocked
                             ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                             : 'bg-zinc-800 text-zinc-400 border border-zinc-700'
@@ -161,12 +161,12 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
                       >
                         {unlocked ? (
                           <>
-                            <Check className="w-3 h-3" />
+                            <Check className="w-3.5 h-3.5" />
                             <span>พร้อมใช้</span>
                           </>
                         ) : (
                           <>
-                            <Lock className="w-3 h-3" />
+                            <Lock className="w-3.5 h-3.5" />
                             <span>Tier 299฿</span>
                           </>
                         )}
@@ -213,15 +213,15 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
 
                     {/* Metadata tags */}
                     <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <span className="px-2 py-0.5 rounded bg-zinc-800/80 text-zinc-300 text-[10px] font-mono">
+                      <span className="px-2 py-0.5 rounded-md bg-zinc-800/80 text-zinc-200 text-xs font-mono">
                         Font: {preset.style.fontFamily}
                       </span>
-                      <span className="px-2 py-0.5 rounded bg-zinc-800/80 text-zinc-300 text-[10px] font-mono">
+                      <span className="px-2 py-0.5 rounded-md bg-zinc-800/80 text-zinc-200 text-xs font-mono">
                         Size: {preset.style.fontSize}px
                       </span>
-                      <span className="px-2 py-0.5 rounded bg-zinc-800/80 text-zinc-300 text-[10px] flex items-center gap-1">
+                      <span className="px-2 py-0.5 rounded-md bg-zinc-800/80 text-zinc-200 text-xs flex items-center gap-1.5">
                         <span
-                          className="w-2 h-2 rounded-full inline-block"
+                          className="w-2.5 h-2.5 rounded-full inline-block"
                           style={{ backgroundColor: preset.style.highlightColor }}
                         />
                         <span>Highlight</span>
@@ -235,7 +235,7 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
                       <button
                         type="button"
                         onClick={() => handleApply(preset, index)}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                           isActive
                             ? 'bg-amber-500 text-zinc-950'
                             : 'bg-zinc-800 hover:bg-orange-500 hover:text-zinc-950 text-white'
@@ -248,7 +248,7 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
                       <Link
                         href="/donate"
                         onClick={onClose}
-                        className="px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-amber-500/20 border border-zinc-800 hover:border-amber-500/40 text-zinc-300 hover:text-amber-300 text-xs font-bold transition-all flex items-center gap-1.5"
+                        className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-amber-500/20 border border-zinc-800 hover:border-amber-500/40 text-zinc-300 hover:text-amber-300 text-xs font-bold transition-all flex items-center gap-1.5"
                       >
                         <Lock className="w-3.5 h-3.5" />
                         <span>ปลดล็อกใน Tier 299฿</span>
@@ -262,12 +262,12 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-3 border-t border-zinc-800 bg-zinc-950/80 flex items-center justify-between text-xs text-zinc-400">
+        <div className="px-6 py-3.5 border-t border-zinc-800 bg-zinc-950/80 flex items-center justify-between text-sm text-zinc-300">
           <span>🎨 พรีเซ็ตทั้งหมด 10 สไตล์ (อัปเดตใหม่อย่างต่อเนื่อง)</span>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white font-medium transition-colors cursor-pointer"
+            className="px-4 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white font-medium transition-colors cursor-pointer text-xs"
           >
             ปิดหน้าต่าง
           </button>

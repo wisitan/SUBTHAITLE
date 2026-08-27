@@ -8,11 +8,11 @@ export function Footer() {
 
   return (
     <>
-      <footer className="w-full border-t border-zinc-900 py-6 text-center text-xs text-zinc-500 bg-zinc-950">
+      <footer className="w-full border-t border-zinc-900 py-6 text-center text-sm text-zinc-400 bg-zinc-950">
         <p className="flex items-center justify-center gap-1">
           <button
             onClick={() => setShowPinModal(true)}
-            className="hover:text-zinc-300 transition-colors cursor-pointer select-none focus:outline-none"
+            className="hover:text-zinc-200 transition-colors cursor-pointer select-none focus:outline-none font-medium"
             aria-label="Admin Access"
           >
             ©

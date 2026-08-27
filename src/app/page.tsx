@@ -32,7 +32,7 @@ export default function Home() {
             </span>
           </h1>
 
-          <p className="text-xs sm:text-sm text-zinc-400 max-w-xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base text-zinc-300 max-w-xl mx-auto leading-relaxed">
             ถอดเสียงภาษาไทยด้วย AI แม่นยำระดับคำ จัดเว้นวรรคและตัดคำอย่างเป็นธรรมชาติ พร้อมส่งออกเป็น FCPXML, SRT หรือฝังซับลงวิดีโอ MP4 ได้ทันที
           </p>
         </section>
@@ -67,18 +67,18 @@ export default function Home() {
                 &ldquo;เราเริ่มทำ SUBTHAITLE เพราะเราเองก็เป็น Content Creator...&rdquo;
               </h3>
 
-              <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
+              <p className="text-sm text-zinc-300 leading-relaxed">
                 เรารู้ดีว่าการทำคอนเทนต์หนึ่งชิ้นไม่ได้จบแค่ตอนถ่ายเสร็จ แต่ยังมีทั้งการตัดต่อ ทำ Subtitle จัดคำ เว้นวรรค ที่กินเวลาชีวิตสุดๆ เราเชื่อว่า Creator ทุกคนมีต้นทุนที่ต้องแบกรับอยู่แล้ว เราจึงอยากให้ทุกคนเข้าถึงเครื่องมือนี้ได้ฟรี หรือร่วมสนับสนุนผู้พัฒนาเพียงครั้งเดียวเพื่อรับของแถมพิเศษตลอดชีพ โดยไม่ต้องมีค่าสมาชิกรายเดือน
               </p>
 
               <div className="pt-1">
                 <Link
                   href="/donate"
-                  className="inline-flex items-center gap-2 text-xs font-semibold text-rose-300 hover:text-white bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 hover:border-rose-500/40 px-4 py-2 rounded-xl transition-all"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-rose-200 hover:text-white bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 hover:border-rose-500/50 px-4 py-2.5 rounded-xl transition-all shadow-sm"
                 >
-                  <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400/20" />
+                  <Heart className="w-4 h-4 text-rose-400 fill-rose-400/20" />
                   <span>อ่านเรื่องราวฉบับเต็ม & ร่วมสนับสนุนทีมงาน</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>

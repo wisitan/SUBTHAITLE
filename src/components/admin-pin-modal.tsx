@@ -105,8 +105,8 @@ export function AdminPinModal({ isOpen, onClose, onSuccess }: AdminPinModalProps
               <Lock className="h-7 w-7" />
             )}
           </div>
-          <h3 className="text-lg font-bold text-white">ระบบจัดการผู้ดูแลระบบ (Admin)</h3>
-          <p className="mt-1 text-xs text-zinc-400">
+          <h3 className="text-xl font-bold text-white">ระบบจัดการผู้ดูแลระบบ (Admin)</h3>
+          <p className="mt-1.5 text-sm text-zinc-300">
             กรุณาระบุรหัส PIN 4 หลักเพื่อเข้าสู่ระบบ Dictionary
           </p>
         </div>
@@ -137,15 +137,15 @@ export function AdminPinModal({ isOpen, onClose, onSuccess }: AdminPinModalProps
         </div>
 
         {/* Status Message */}
-        <div className="mt-4 min-h-[20px] text-center">
+        <div className="mt-4 min-h-[24px] text-center">
           {error && (
-            <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-rose-400 animate-in fade-in">
-              <AlertCircle className="h-3.5 w-3.5" /> รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง
+            <p className="flex items-center justify-center gap-1.5 text-sm font-semibold text-rose-400 animate-in fade-in">
+              <AlertCircle className="h-4 w-4" /> รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง
             </p>
           )}
           {success && (
-            <p className="flex items-center justify-center gap-1.5 text-xs font-medium text-emerald-400 animate-in fade-in">
-              <ShieldCheck className="h-3.5 w-3.5" /> ยืนยันสิทธิ์ Admin สำเร็จ กำลังเข้าสู่ระบบ...
+            <p className="flex items-center justify-center gap-1.5 text-sm font-semibold text-emerald-400 animate-in fade-in">
+              <ShieldCheck className="h-4 w-4" /> ยืนยันสิทธิ์ Admin สำเร็จ กำลังเข้าสู่ระบบ...
             </p>
           )}
         </div>

@@ -133,10 +133,10 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
               <Film className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <span>ฝังซับไตเติลลงวิดีโอ MP4 (Burn Subtitles)</span>
               </h3>
-              <p className="text-[11px] text-zinc-400">
+              <p className="text-xs text-zinc-300 mt-0.5">
                 ประมวลผลบนเครื่องของคุณ 100% ปลอดภัย ไม่ต้องอัปโหลดวิดีโอไปเซิร์ฟเวอร์
               </p>
             </div>
@@ -153,7 +153,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
 
         {/* Error Alert */}
         {errorMsg && (
-          <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
+          <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -162,7 +162,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
         {/* Step 1: Resolution Options (if not completed) */}
         {!renderedBlob && !isBurning && (
           <div className="space-y-3">
-            <label className="text-xs font-semibold text-zinc-300 block">
+            <label className="text-sm font-bold text-zinc-200 block">
               เลือกความละเอียดของวิดีโอ (Video Resolution):
             </label>
 
@@ -171,38 +171,38 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => setResolution('720p')}
-                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                   resolution === '720p'
                     ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/40'
                     : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs flex items-center gap-1">
-                    <Zap className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="font-bold text-sm flex items-center gap-1.5 text-zinc-100">
+                    <Zap className="w-4 h-4 text-amber-400" />
                     720p HD
                   </span>
                 </div>
-                <p className="text-[10px] text-zinc-400">เรนเดอร์ด่วน ไฟล์เบา ส่งงานไว</p>
+                <p className="text-xs text-zinc-300 mt-1">เรนเดอร์ด่วน ไฟล์เบา ส่งงานไว</p>
               </button>
 
               {/* Option 2: 1080p */}
               <button
                 type="button"
                 onClick={() => setResolution('1080p')}
-                className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                   resolution === '1080p'
                     ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/40'
                     : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs flex items-center gap-1 text-orange-300">
-                    <Tv className="w-3.5 h-3.5 text-orange-400" />
+                  <span className="font-bold text-sm flex items-center gap-1.5 text-orange-300">
+                    <Tv className="w-4 h-4 text-orange-400" />
                     1080p Full HD
                   </span>
                 </div>
-                <p className="text-[10px] text-zinc-400">มาตรฐานคมชัด TikTok / Reels</p>
+                <p className="text-xs text-zinc-300 mt-1">มาตรฐานคมชัด TikTok / Reels</p>
               </button>
 
               {/* Option 3: 4K (Tier 299 Exclusive) */}
@@ -213,7 +213,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                     setResolution('4k');
                   }
                 }}
-                className={`p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between gap-1.5 ${
+                className={`p-3.5 rounded-2xl border text-left transition-all relative flex flex-col justify-between gap-1.5 ${
                   tier !== 'meal'
                     ? 'bg-zinc-900/30 border-zinc-800/60 text-zinc-500 cursor-not-allowed opacity-80'
                     : resolution === '4k'
@@ -222,27 +222,27 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-bold text-xs flex items-center gap-1 text-rose-300">
-                    <Film className="w-3.5 h-3.5 text-rose-400" />
+                  <span className="font-bold text-sm flex items-center gap-1.5 text-rose-300">
+                    <Film className="w-4 h-4 text-rose-400" />
                     4K Ultra HD
                   </span>
                   {tier !== 'meal' && (
-                    <Lock className="w-3 h-3 text-rose-400" />
+                    <Lock className="w-3.5 h-3.5 text-rose-400" />
                   )}
                 </div>
-                <p className="text-[10px] text-zinc-400">
+                <p className="text-xs text-zinc-300 mt-1">
                   {tier === 'meal' ? 'คมชัดสูงสุดสำหรับโปรดักชั่น' : 'ปลดล็อกเฉพาะ Tier 299฿'}
                 </p>
               </button>
             </div>
 
             {/* Hint for typography retention */}
-            <div className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-[11px] text-zinc-300 space-y-1">
+            <div className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-200 space-y-1">
               <div className="flex items-center gap-1.5 text-amber-400 font-semibold">
-                <Sparkles className="w-3.5 h-3.5" />
+                <Sparkles className="w-4 h-4" />
                 <span>สไตล์และเอฟเฟกต์ที่ระบบจะฝังลงในวิดีโอ:</span>
               </div>
-              <p className="text-zinc-400 pl-5 leading-relaxed">
+              <p className="text-zinc-300 pl-5.5 leading-relaxed">
                 ฟอนต์ <strong>{style.fontFamily}</strong> • ขนาด {style.fontSize}px • {style.hasOutline ? `ขอบหนา ${style.outlineWidth}px` : 'ไร้ขอบ'} • {style.enableWordHighlight ? 'ไฮไลท์คำพูดตามเสียงจริง ✨' : 'ข้อความนิ่ง'}
               </p>
             </div>
@@ -252,8 +252,8 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
         {/* Step 2: Burning in Progress */}
         {isBurning && progress && (
           <div className="space-y-4 py-3">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-zinc-300 flex items-center gap-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="font-medium text-zinc-200 flex items-center gap-2">
                 <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />
                 <span>{progress.message}</span>
               </span>
@@ -261,14 +261,14 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
             </div>
 
             {/* Animated Progress Bar */}
-            <div className="w-full h-3 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800 p-0.5">
+            <div className="w-full h-3.5 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800 p-0.5">
               <div
                 className="h-full bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500 rounded-full transition-all duration-300 shadow-sm"
                 style={{ width: `${progress.percent}%` }}
               />
             </div>
 
-            <p className="text-[10px] text-zinc-400 text-center">
+            <p className="text-xs text-zinc-300 text-center">
               💡 กรุณาอย่าปิดแท็บเบราว์เซอร์ขณะที่ระบบกำลังเรนเดอร์วิดีโอ
             </p>
           </div>
@@ -282,8 +282,8 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
             </div>
 
             <div className="space-y-1">
-              <h4 className="text-sm font-bold text-white">เรนเดอร์วิดีโอพร้อมซับไตเติลสำเร็จ! 🎉</h4>
-              <p className="text-xs text-zinc-400">
+              <h4 className="text-base font-bold text-white">เรนเดอร์วิดีโอพร้อมซับไตเติลสำเร็จ! 🎉</h4>
+              <p className="text-sm text-zinc-300">
                 ขนาดไฟล์: {(renderedBlob.size / (1024 * 1024)).toFixed(2)} MB • ความละเอียด {resolution}
               </p>
             </div>
@@ -303,7 +303,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                 type="button"
                 onClick={handleClose}
                 disabled={isBurning}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all cursor-pointer"
               >
                 ยกเลิก
               </button>
@@ -311,16 +311,16 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                 type="button"
                 onClick={handleStartBurn}
                 disabled={isBurning}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-xs shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
               >
                 {isBurning ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin" />
                     <span>กำลังเรนเดอร์...</span>
                   </>
                 ) : (
                   <>
-                    <Film className="w-3.5 h-3.5" />
+                    <Film className="w-4 h-4" />
                     <span>เริ่มเรนเดอร์วิดีโอ ({resolution})</span>
                   </>
                 )}
@@ -331,25 +331,25 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
               <button
                 type="button"
                 onClick={handleReset}
-                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 transition-all flex items-center gap-1.5 cursor-pointer mr-auto shadow-sm"
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 transition-all flex items-center gap-1.5 cursor-pointer mr-auto shadow-sm"
                 title="กลับไปตั้งค่าและเรนเดอร์วิดีโอใหม่อีกครั้ง"
               >
-                <RotateCcw className="w-3.5 h-3.5 text-orange-400" />
+                <RotateCcw className="w-4 h-4 text-orange-400" />
                 <span>เรนเดอร์ใหม่</span>
               </button>
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all cursor-pointer"
               >
                 ปิดหน้าต่าง
               </button>
               <button
                 type="button"
                 onClick={handleDownload}
-                className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer"
+                className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all flex items-center gap-2 cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5" />
+                <Download className="w-4 h-4" />
                 <span>ดาวน์โหลดวิดีโอ MP4</span>
               </button>
             </>

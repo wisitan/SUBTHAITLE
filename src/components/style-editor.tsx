@@ -62,11 +62,11 @@ export function StyleEditor() {
       {/* Header with Reset Default Button */}
       <div className="flex items-center justify-between pb-1 border-b border-zinc-800/80">
         <div>
-          <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
+          <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
             <Sliders className="w-4 h-4 text-orange-400" />
             <span>ปรับแต่งสไตล์ซับไตเติล (Subtitle Styler)</span>
           </h3>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
+          <p className="text-xs text-zinc-300 mt-0.5">
             ปรับแต่งฟอนต์ ขนาด สี ระยะห่าง ตำแหน่ง และเอฟเฟกต์แบบเรียลไทม์
           </p>
         </div>
@@ -74,7 +74,7 @@ export function StyleEditor() {
         <button
           type="button"
           onClick={handleResetDefault}
-          className="text-xs text-zinc-400 hover:text-orange-400 bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0"
+          className="text-xs text-zinc-300 hover:text-orange-400 bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0 font-medium"
           title="รีเซ็ตค่ารูปแบบกลับเป็นค่าเริ่มต้น"
         >
           <RotateCcw className="w-3.5 h-3.5" />
@@ -92,16 +92,16 @@ export function StyleEditor() {
 
       {/* 2. Typography & Color (Size, Weight, Color) */}
       <div className="space-y-4">
-        <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
+        <h4 className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
           <Type className="w-4 h-4 text-orange-400" />
           <span>ขนาดและสีตัวอักษร (Typography & Color):</span>
         </h4>
 
         {/* Font Size Slider */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-300 font-medium">ขนาดตัวอักษร (Font Size):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-zinc-200 font-medium">ขนาดตัวอักษร (Font Size):</span>
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
               {style.fontSize}px
             </span>
           </div>
@@ -115,7 +115,7 @@ export function StyleEditor() {
             onChange={(e) => setStyle({ fontSize: parseInt(e.target.value, 10) })}
             className="w-full accent-orange-500 cursor-pointer"
           />
-          <div className="flex justify-between text-[10px] text-zinc-500">
+          <div className="flex justify-between text-xs text-zinc-400">
             <span>ซับหนังมินิมอล (10px)</span>
             <span>มาตรฐาน (24px)</span>
             <span>ตัวใหญ่ Creator (48px)</span>
@@ -126,28 +126,28 @@ export function StyleEditor() {
             <button
               type="button"
               onClick={() => setStyle({ fontSize: 13 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               ซับหนัง (13px)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ fontSize: 20 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               มาตรฐาน (20px)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ fontSize: 28 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               อ่านสบาย (28px)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ fontSize: 36 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               ตัวใหญ่ (36px)
             </button>
@@ -155,13 +155,13 @@ export function StyleEditor() {
         </div>
 
         {/* Font Weight */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 flex items-center justify-between gap-3 text-xs">
-          <span className="text-zinc-300 font-medium">ความหนาของตัวอักษร (Font Weight):</span>
+        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+          <span className="text-zinc-200 font-medium">ความหนาของตัวอักษร (Font Weight):</span>
           <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
             <button
               type="button"
               onClick={() => setStyle({ fontWeight: '500' })}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
                 style.fontWeight === '500' || style.fontWeight === 'normal'
                   ? 'bg-orange-500 text-zinc-950 font-bold'
                   : 'text-zinc-400 hover:text-white'
@@ -172,7 +172,7 @@ export function StyleEditor() {
             <button
               type="button"
               onClick={() => setStyle({ fontWeight: '700' })}
-              className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 style.fontWeight === '700' || style.fontWeight === 'bold'
                   ? 'bg-orange-500 text-zinc-950'
                   : 'text-zinc-400 hover:text-white'
@@ -183,7 +183,7 @@ export function StyleEditor() {
             <button
               type="button"
               onClick={() => setStyle({ fontWeight: '800' })}
-              className={`px-3 py-1 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
+              className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
                 style.fontWeight === '800'
                   ? 'bg-orange-500 text-zinc-950'
                   : 'text-zinc-400 hover:text-white'
@@ -196,7 +196,7 @@ export function StyleEditor() {
 
         {/* Text Color Swatches */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-2.5">
-          <span className="text-xs text-zinc-300 font-medium block">
+          <span className="text-sm text-zinc-200 font-medium block">
             สีข้อความหลัก (Text Color):
           </span>
           <div className="flex flex-wrap items-center gap-2">
@@ -234,7 +234,7 @@ export function StyleEditor() {
                 aria-label="เลือกสีข้อความหลัก"
                 className="w-7 h-7 rounded-xl bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
               />
-              <span className="text-xs font-mono text-zinc-400 uppercase">
+              <span className="text-xs font-mono text-zinc-300 uppercase">
                 {style.textColor}
               </span>
             </div>
@@ -246,16 +246,16 @@ export function StyleEditor() {
 
       {/* 3. Spacing Controls (ระยะห่างตัวอักษร & ระยะห่างบรรทัด) */}
       <div className="space-y-4">
-        <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
+        <h4 className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
           <Space className="w-4 h-4 text-orange-400" />
           <span>ระยะห่างและการจัดวาง (Letter & Line Spacing):</span>
         </h4>
 
         {/* Letter Spacing (Tracking) */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-300 font-medium">ระยะห่างระหว่างตัวอักษร (Letter Spacing):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-zinc-200 font-medium">ระยะห่างระหว่างตัวอักษร (Letter Spacing):</span>
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
               {style.letterSpacing ?? 0}px
             </span>
           </div>
@@ -276,28 +276,28 @@ export function StyleEditor() {
             <button
               type="button"
               onClick={() => setStyle({ letterSpacing: -1 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               แนบชิด (-1px)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ letterSpacing: 0 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               ปกติ (0px)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ letterSpacing: 1.5 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               กว้าง (1.5px)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ letterSpacing: 3 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               กว้างมาก (3px)
             </button>
@@ -306,9 +306,9 @@ export function StyleEditor() {
 
         {/* Line Height (Leading) */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-300 font-medium">ระยะห่างระหว่างบรรทัด (Line Spacing / Height):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-zinc-200 font-medium">ระยะห่างระหว่างบรรทัด (Line Spacing / Height):</span>
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
               {style.lineHeight ?? 1.4}x
             </span>
           </div>
@@ -329,28 +329,28 @@ export function StyleEditor() {
             <button
               type="button"
               onClick={() => setStyle({ lineHeight: 1.2 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               แคบ (1.2)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ lineHeight: 1.4 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               ปกติ (1.4)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ lineHeight: 1.6 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               สบายตา (1.6)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ lineHeight: 1.9 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               โปร่ง (1.9)
             </button>
@@ -362,19 +362,19 @@ export function StyleEditor() {
 
       {/* 4. Position, Alignment & Width (ตำแหน่ง จัดแนว และความกว้างขอบข้าง) */}
       <div className="space-y-4">
-        <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
+        <h4 className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
           <MoveVertical className="w-4 h-4 text-orange-400" />
           <span>ตำแหน่ง จัดแนว และระยะขอบข้าง (Placement, Alignment & Width):</span>
         </h4>
 
         {/* Text Alignment (Left / Center / Right) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 flex items-center justify-between gap-3 text-xs">
-          <span className="text-zinc-300 font-medium">การจัดแนวข้อความ (Text Alignment):</span>
+        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+          <span className="text-zinc-200 font-medium">การจัดแนวข้อความ (Text Alignment):</span>
           <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
             <button
               type="button"
               onClick={() => setStyle({ textAlign: 'left' })}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 style.textAlign === 'left'
                   ? 'bg-orange-500 text-zinc-950 font-bold'
                   : 'text-zinc-400 hover:text-white'
@@ -387,7 +387,7 @@ export function StyleEditor() {
             <button
               type="button"
               onClick={() => setStyle({ textAlign: 'center' })}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 !style.textAlign || style.textAlign === 'center'
                   ? 'bg-orange-500 text-zinc-950 font-bold'
                   : 'text-zinc-400 hover:text-white'
@@ -400,7 +400,7 @@ export function StyleEditor() {
             <button
               type="button"
               onClick={() => setStyle({ textAlign: 'right' })}
-              className={`px-3 py-1 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 style.textAlign === 'right'
                   ? 'bg-orange-500 text-zinc-950 font-bold'
                   : 'text-zinc-400 hover:text-white'
@@ -415,12 +415,12 @@ export function StyleEditor() {
 
         {/* Subtitle Max Width & Side Margins / Indent */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-300 font-medium flex items-center gap-1.5">
-              <Maximize2 className="w-3.5 h-3.5 text-orange-400" />
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-zinc-200 font-medium flex items-center gap-1.5">
+              <Maximize2 className="w-4 h-4 text-orange-400" />
               <span>ความกว้างสูงสุด / ระยะขอบข้าง (Width & Side Margins):</span>
             </span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
               {style.maxWidth ?? 92}%
             </span>
           </div>
@@ -441,42 +441,42 @@ export function StyleEditor() {
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 70 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               แคบ (70%)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 85 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               มาตรฐาน (85%)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 92 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               กว้าง (92%)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 98 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               เต็มจอ (98%)
             </button>
           </div>
-          <p className="text-[10px] text-zinc-400 pt-0.5">
+          <p className="text-xs text-zinc-300 pt-0.5">
             💡 เพิ่มความกว้างเพื่อให้ข้อความขยายออกด้านข้างได้เต็มจอ และลดการตัดขึ้นบรรทัดใหม่
           </p>
         </div>
 
         {/* Position Y (Up-Down) */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-300 font-medium">ตำแหน่งแนวตั้ง (ขึ้น - ลง จากขอบล่าง):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-zinc-200 font-medium">ตำแหน่งแนวตั้ง (ขึ้น - ลง จากขอบล่าง):</span>
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
               {style.positionY}%
             </span>
           </div>
@@ -497,21 +497,21 @@ export function StyleEditor() {
             <button
               type="button"
               onClick={() => setStyle({ positionY: 10 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               ล่างสุด (10%)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionY: 18 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               TikTok ฮิต (18%)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionY: 50 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               กึ่งกลาง (50%)
             </button>
@@ -520,9 +520,9 @@ export function StyleEditor() {
 
         {/* Position X (Left-Right) */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-zinc-300 font-medium">ตำแหน่งแนวนอน (ซ้าย - ขวา):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-zinc-200 font-medium">ตำแหน่งแนวนอน (ซ้าย - ขวา):</span>
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
               {style.positionX}%
             </span>
           </div>
@@ -543,21 +543,21 @@ export function StyleEditor() {
             <button
               type="button"
               onClick={() => setStyle({ positionX: 20 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               ชิดซ้าย (20%)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionX: 50 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               ตรงกลาง (50%)
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionX: 80 })}
-              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-[11px] font-semibold text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
+              className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-semibold text-zinc-200 border border-zinc-800 transition-colors cursor-pointer"
             >
               ชิดขวา (80%)
             </button>
@@ -569,7 +569,7 @@ export function StyleEditor() {
 
       {/* 5. Shadow, Outline & Background Box (เงา ขอบ และกล่องพื้นหลัง) */}
       <div className="space-y-4">
-        <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
+        <h4 className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
           <Sun className="w-4 h-4 text-orange-400" />
           <span>เงา ขอบ และกล่องพื้นหลัง (Shadow, Outline & Box):</span>
         </h4>
@@ -577,7 +577,7 @@ export function StyleEditor() {
         {/* Drop Shadow Section */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-zinc-200 flex items-center gap-2 cursor-pointer">
+            <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={style.hasShadow}
@@ -589,23 +589,23 @@ export function StyleEditor() {
 
             {style.hasShadow && (
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-zinc-400">สีเงา:</span>
+                <span className="text-xs text-zinc-300">สีเงา:</span>
                 <input
                   type="color"
                   value={style.shadowColor || '#000000'}
                   onChange={(e) => setStyle({ shadowColor: e.target.value })}
                   aria-label="เลือกสีเงา"
-                  className="w-5 h-5 rounded-lg bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
+                  className="w-6 h-6 rounded-lg bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
                 />
               </div>
             )}
           </div>
 
           {style.hasShadow && (
-            <div className="space-y-2 pt-1 border-t border-zinc-900 text-xs">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-zinc-400">ความฟุ้งของเงา (Blur):</span>
-                <span className="font-mono text-orange-400">{style.shadowBlur}px</span>
+            <div className="space-y-2 pt-1 border-t border-zinc-900 text-sm">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-zinc-300">ความฟุ้งของเงา (Blur):</span>
+                <span className="font-mono text-orange-400 font-bold">{style.shadowBlur}px</span>
               </div>
               <input
                 type="range"
@@ -623,7 +623,7 @@ export function StyleEditor() {
         {/* Outline Section */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-zinc-200 flex items-center gap-2 cursor-pointer">
+            <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={style.hasOutline}
@@ -635,23 +635,23 @@ export function StyleEditor() {
 
             {style.hasOutline && (
               <div className="flex items-center gap-1.5">
-                <span className="text-[10px] text-zinc-400">สีขอบ:</span>
+                <span className="text-xs text-zinc-300">สีขอบ:</span>
                 <input
                   type="color"
                   value={style.outlineColor || '#000000'}
                   onChange={(e) => setStyle({ outlineColor: e.target.value })}
                   aria-label="เลือกสีเส้นขอบ"
-                  className="w-5 h-5 rounded-lg bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
+                  className="w-6 h-6 rounded-lg bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
                 />
               </div>
             )}
           </div>
 
           {style.hasOutline && (
-            <div className="space-y-2 pt-1 border-t border-zinc-900 text-xs">
-              <div className="flex items-center justify-between text-[11px]">
-                <span className="text-zinc-400">ความหนาเส้นขอบ (Width):</span>
-                <span className="font-mono text-orange-400">{style.outlineWidth}px</span>
+            <div className="space-y-2 pt-1 border-t border-zinc-900 text-sm">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-zinc-300">ความหนาเส้นขอบ (Width):</span>
+                <span className="font-mono text-orange-400 font-bold">{style.outlineWidth}px</span>
               </div>
               <input
                 type="range"
@@ -669,7 +669,7 @@ export function StyleEditor() {
         {/* 🆕 Background Box Section (Color + Opacity Control) */}
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-zinc-200 flex items-center gap-2 cursor-pointer">
+            <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={Boolean(style.hasBackground)}
@@ -680,17 +680,17 @@ export function StyleEditor() {
             </label>
 
             {style.hasBackground && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-orange-500/20 text-orange-300 border border-orange-500/30">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-500/20 text-orange-300 border border-orange-500/30">
                 ทึบ {style.backgroundOpacity ?? 70}%
               </span>
             )}
           </div>
 
           {style.hasBackground && (
-            <div className="space-y-3 pt-2 border-t border-zinc-900 text-xs">
+            <div className="space-y-3 pt-2 border-t border-zinc-900 text-sm">
               {/* Background Color Swatches */}
               <div className="space-y-1.5">
-                <span className="text-[11px] text-zinc-300 font-medium block">
+                <span className="text-xs text-zinc-200 font-medium block">
                   เลือกสีพื้นหลัง (Box Color):
                 </span>
                 <div className="flex flex-wrap items-center gap-2">
@@ -699,7 +699,7 @@ export function StyleEditor() {
                       key={c.hex}
                       type="button"
                       onClick={() => setStyle({ backgroundColor: c.hex })}
-                      className={`w-6 h-6 rounded-lg border transition-all cursor-pointer flex items-center justify-center ${
+                      className={`w-7 h-7 rounded-lg border transition-all cursor-pointer flex items-center justify-center ${
                         (style.backgroundColor || '#000000').toLowerCase() === c.hex.toLowerCase()
                           ? 'ring-2 ring-orange-500 scale-110 border-white'
                           : 'border-zinc-700 hover:scale-105'
@@ -709,7 +709,7 @@ export function StyleEditor() {
                     >
                       {(style.backgroundColor || '#000000').toLowerCase() === c.hex.toLowerCase() && (
                         <Check
-                          className={`w-3 h-3 ${
+                          className={`w-3.5 h-3.5 ${
                             c.hex === '#FFFFFF' ? 'text-black' : 'text-white'
                           }`}
                         />
@@ -724,9 +724,9 @@ export function StyleEditor() {
                       value={style.backgroundColor || '#000000'}
                       onChange={(e) => setStyle({ backgroundColor: e.target.value })}
                       aria-label="เลือกสีพื้นหลังกล่องซับไตเติล"
-                      className="w-6 h-6 rounded-lg bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
+                      className="w-7 h-7 rounded-lg bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
                     />
-                    <span className="text-[11px] font-mono text-zinc-400 uppercase">
+                    <span className="text-xs font-mono text-zinc-300 uppercase">
                       {style.backgroundColor || '#000000'}
                     </span>
                   </div>
@@ -735,9 +735,9 @@ export function StyleEditor() {
 
               {/* Background Opacity Slider */}
               <div className="space-y-2 pt-1">
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="text-zinc-300">ความทึบแสง (Opacity):</span>
-                  <span className="font-mono text-orange-400 font-bold bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-800">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-zinc-200">ความทึบแสง (Opacity):</span>
+                  <span className="font-mono text-orange-400 font-bold bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 text-xs">
                     {style.backgroundOpacity ?? 70}%
                   </span>
                 </div>
@@ -757,28 +757,28 @@ export function StyleEditor() {
                   <button
                     type="button"
                     onClick={() => setStyle({ backgroundOpacity: 40 })}
-                    className="flex-1 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 border border-zinc-800 transition-colors cursor-pointer"
+                    className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
                   >
                     โปร่ง 40%
                   </button>
                   <button
                     type="button"
                     onClick={() => setStyle({ backgroundOpacity: 65 })}
-                    className="flex-1 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 border border-zinc-800 transition-colors cursor-pointer"
+                    className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
                   >
                     โปร่ง 65%
                   </button>
                   <button
                     type="button"
                     onClick={() => setStyle({ backgroundOpacity: 85 })}
-                    className="flex-1 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 border border-zinc-800 transition-colors cursor-pointer"
+                    className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
                   >
                     ทึบ 85%
                   </button>
                   <button
                     type="button"
                     onClick={() => setStyle({ backgroundOpacity: 100 })}
-                    className="flex-1 py-1 rounded bg-zinc-900 hover:bg-zinc-800 text-[10px] font-medium text-zinc-400 border border-zinc-800 transition-colors cursor-pointer"
+                    className="flex-1 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-xs font-medium text-zinc-300 border border-zinc-800 transition-colors cursor-pointer"
                   >
                     ทึบ 100%
                   </button>
@@ -793,14 +793,14 @@ export function StyleEditor() {
 
       {/* 6. Word Highlight Styling */}
       <div className="space-y-3">
-        <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
+        <h4 className="text-sm font-bold text-zinc-100 flex items-center gap-1.5">
           <Sparkles className="w-4 h-4 text-amber-400" />
           <span>การปรับแต่ง Word Highlight (คำพูด Realtime):</span>
         </h4>
 
         <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/80 space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-zinc-200 flex items-center gap-2 cursor-pointer">
+            <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
                 checked={style.enableWordHighlight}
@@ -811,10 +811,10 @@ export function StyleEditor() {
             </label>
 
             <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+              className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                 style.enableWordHighlight
                   ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                  : 'bg-zinc-800 text-zinc-500'
+                  : 'bg-zinc-800 text-zinc-400'
               }`}
             >
               {style.enableWordHighlight ? 'Active ON' : 'OFF'}
@@ -823,7 +823,7 @@ export function StyleEditor() {
 
           {style.enableWordHighlight && (
             <div className="space-y-2 pt-2 border-t border-zinc-900">
-              <span className="text-xs text-zinc-300 font-medium block">
+              <span className="text-xs text-zinc-200 font-medium block">
                 เลือกสีไฮไลท์ของคำที่กำลังพูด (Highlight Color):
               </span>
               <div className="flex flex-wrap items-center gap-2">
@@ -855,7 +855,7 @@ export function StyleEditor() {
                     aria-label="เลือกสีไฮไลท์ของคำที่กำลังพูด"
                     className="w-7 h-7 rounded-xl bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
                   />
-                  <span className="text-xs font-mono text-zinc-400 uppercase">
+                  <span className="text-xs font-mono text-zinc-300 uppercase">
                     {style.highlightColor}
                   </span>
                 </div>

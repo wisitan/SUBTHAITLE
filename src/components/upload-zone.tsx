@@ -252,25 +252,25 @@ export function UploadZone() {
             <UploadCloud className="w-8 h-8" />
           </div>
 
-          <h3 className="text-lg font-bold text-zinc-100 mb-1">
+          <h3 className="text-xl font-bold text-zinc-100 mb-1">
             ลากและวางไฟล์วิดีโอของคุณที่นี่
           </h3>
-          <p className="text-sm text-zinc-400 mb-4">
+          <p className="text-base text-zinc-300 mb-4">
             หรือ <span className="text-orange-400 font-semibold underline underline-offset-4">คลิกเพื่อเลือกไฟล์</span> จากคอมพิวเตอร์ของคุณ
           </p>
 
           {/* Badges & Limit notice */}
-          <div className="flex flex-wrap items-center justify-center gap-2 max-w-md">
-            <span className="px-2.5 py-1 text-xs rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-400">
+          <div className="flex flex-wrap items-center justify-center gap-2.5 max-w-md">
+            <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-900 border border-zinc-700/80 text-zinc-300 font-medium">
               รองรับ MP4, MOV, WebM, MKV, MP3, WAV
             </span>
             {isUnlimitedSize ? (
-              <span className="px-2.5 py-1 text-xs rounded-lg bg-emerald-950/60 border border-emerald-800/60 text-emerald-400 font-medium flex items-center gap-1">
-                <Zap className="w-3 h-3" />
+              <span className="px-3 py-1.5 text-xs rounded-lg bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 font-semibold flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5" />
                 โหมดไม่จำกัดขนาดไฟล์
               </span>
             ) : (
-              <span className="px-2.5 py-1 text-xs rounded-lg bg-zinc-900/80 border border-zinc-800 text-zinc-400">
+              <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-900 border border-zinc-700/80 text-zinc-300 font-medium">
                 ขนาดไฟล์สูงสุด 100 MB
               </span>
             )}
@@ -289,10 +289,10 @@ export function UploadZone() {
                 )}
               </div>
               <div>
-                <h4 className="text-sm sm:text-base font-bold text-zinc-100 line-clamp-1">
+                <h4 className="text-base sm:text-lg font-bold text-zinc-100 line-clamp-1">
                   {file.name}
                 </h4>
-                <div className="flex items-center gap-2 text-xs text-zinc-400 mt-0.5">
+                <div className="flex items-center gap-2 text-sm text-zinc-300 mt-1">
                   <span>ขนาดวิดีโอ: {(file.size / (1024 * 1024)).toFixed(2)} MB</span>
                   {audioBlob && audioBlob !== file && (
                     <>
@@ -322,22 +322,22 @@ export function UploadZone() {
           {/* Extraction Progress Bar */}
           {isExtracting && (
             <div className="my-5 p-4 bg-zinc-950/60 border border-orange-500/20 rounded-2xl">
-              <div className="flex items-center justify-between text-xs font-semibold mb-2">
-                <span className="text-orange-400 flex items-center gap-1.5">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <div className="flex items-center justify-between text-sm font-semibold mb-2">
+                <span className="text-orange-400 flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   {extractProgress?.message || 'กำลังสกัดไฟล์เสียงในเบราว์เซอร์ (Cost ฿0)...'}
                 </span>
-                <span className="text-zinc-300 font-mono">
+                <span className="text-zinc-200 font-mono">
                   {Math.round((extractProgress?.ratio || 0) * 100)}%
                 </span>
               </div>
-              <div className="w-full bg-zinc-800 rounded-full h-2 overflow-hidden">
+              <div className="w-full bg-zinc-800 rounded-full h-2.5 overflow-hidden">
                 <div
-                  className="bg-gradient-to-r from-amber-500 to-orange-500 h-2 rounded-full transition-all duration-300"
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 h-2.5 rounded-full transition-all duration-300"
                   style={{ width: `${Math.round((extractProgress?.ratio || 0) * 100)}%` }}
                 />
               </div>
-              <p className="text-[11px] text-zinc-400 mt-2">
+              <p className="text-xs text-zinc-300 mt-2">
                 💡 ระบบสกัดเฉพาะเสียง MP3 บนเครื่องของคุณทันที ทำให้ไม่ต้องอัปโหลดวิดีโอขนาดใหญ่ ประหยัดเน็ต 100%
               </p>
             </div>
@@ -349,8 +349,8 @@ export function UploadZone() {
               <div className="flex items-center gap-3">
                 <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
                 <div>
-                  <h5 className="text-sm font-bold text-white">กำลังถอดเสียงภาษาไทยด้วย AI...</h5>
-                  <p className="text-xs text-orange-300 mt-0.5">
+                  <h5 className="text-base font-bold text-white">กำลังถอดเสียงภาษาไทยด้วย AI...</h5>
+                  <p className="text-sm text-orange-200 mt-0.5">
                     {transcribeMessage || 'กำลังส่งไฟล์เสียงและคำนวณตำแหน่งเวลาของแต่ละคำ...'}
                   </p>
                 </div>
@@ -369,17 +369,17 @@ export function UploadZone() {
                 }}
                 className="w-full sm:w-48 max-h-36 rounded-xl bg-black object-contain border border-zinc-800"
               />
-              <div className="flex-1 text-xs text-zinc-400 space-y-1.5">
+              <div className="flex-1 text-sm text-zinc-300 space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold text-zinc-200">สถานะ:</span>
-                  <span className="text-emerald-400 font-medium flex items-center gap-1">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span className="font-semibold text-zinc-100">สถานะ:</span>
+                  <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                    <CheckCircle2 className="w-4 h-4" />
                     พร้อมเริ่มถอดเสียงด้วย AI
                   </span>
                 </div>
                 <p>
                   เครื่องยนต์ที่ใช้:{' '}
-                  <span className="text-zinc-200 font-medium">
+                  <span className="text-zinc-100 font-medium">
                     {provider === 'groq'
                       ? isBYOK
                         ? 'Groq Whisper Cloud (BYOK Mode)'
@@ -387,7 +387,7 @@ export function UploadZone() {
                       : 'Local Whisper (Offline Mac)'}
                   </span>
                 </p>
-                <p className="text-[11px] text-zinc-400">
+                <p className="text-xs text-zinc-400">
                   ระบบจะถอดเสียงภาษาไทยพร้อมระบุเวลาทีละคำ (Word-level timestamps) เพื่อทำซับคาราโอเกะ
                 </p>
               </div>
@@ -400,17 +400,17 @@ export function UploadZone() {
               {/* Header with Stats & Quick Export */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-4 h-4" />
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-5 h-5" />
                   </div>
                   <div>
-                    <h5 className="text-sm font-bold text-white flex items-center gap-2">
+                    <h5 className="text-base font-bold text-white flex items-center gap-2">
                       ถอดเสียงภาษาไทยสำเร็จ!
-                      <span className="px-2 py-0.5 text-[10px] rounded-full bg-emerald-950 border border-emerald-700 text-emerald-400 font-normal">
+                      <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-950 border border-emerald-700 text-emerald-300 font-medium">
                         Whisper Large v3
                       </span>
                     </h5>
-                    <span className="text-[11px] text-zinc-400">
+                    <span className="text-xs text-zinc-300">
                       มีทั้งหมด {captions.length} ท่อนซับ (~{totalWords} คำ)
                     </span>
                   </div>
@@ -421,19 +421,19 @@ export function UploadZone() {
                   <button
                     type="button"
                     onClick={handleDownloadSrt}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-orange-300 hover:border-orange-500/40"
+                    className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-orange-300 hover:border-orange-500/40"
                     title="ดาวน์โหลดไฟล์ .SRT สำหรับใช้งานทั่วไป"
                   >
-                    <Download className="w-3.5 h-3.5 text-orange-400" />
+                    <Download className="w-4 h-4 text-orange-400" />
                     ดาวน์โหลด .SRT
                   </button>
                   <button
                     type="button"
                     onClick={handleDownloadVtt}
-                    className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-emerald-300 hover:border-emerald-500/40"
+                    className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-emerald-300 hover:border-emerald-500/40"
                     title="ดาวน์โหลดไฟล์ WebVTT (.VTT)"
                   >
-                    <Download className="w-3.5 h-3.5 text-emerald-400" />
+                    <Download className="w-4 h-4 text-emerald-400" />
                     ดาวน์โหลด .VTT
                   </button>
                 </div>
@@ -444,11 +444,11 @@ export function UploadZone() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-4 h-4 text-orange-400" />
-                    <span className="text-xs font-bold text-zinc-200">
+                    <span className="text-sm font-bold text-zinc-100">
                       ✂️ ปรับจังหวะความยาวท่อนซับ (Caption Pacing):
                     </span>
                   </div>
-                  <span className="text-[11px] text-zinc-400">
+                  <span className="text-xs text-zinc-400">
                     คลิกเลือกโหมดเพื่อจัดกลุ่มคำใหม่แบบ Realtime
                   </span>
                 </div>
@@ -458,22 +458,22 @@ export function UploadZone() {
                   <button
                     type="button"
                     onClick={() => setPacingMode('short')}
-                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                       pacingMode === 'short'
                         ? 'bg-orange-500/15 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900/60'
+                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/60'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs flex items-center gap-1.5 text-orange-300">
-                        <Flame className="w-3.5 h-3.5 text-orange-400" />
+                      <span className="font-bold text-sm flex items-center gap-1.5 text-orange-300">
+                        <Flame className="w-4 h-4 text-orange-400" />
                         สั้นกระชับ (3-5 คำ)
                       </span>
                       {pacingMode === 'short' && (
                         <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
                       )}
                     </div>
-                    <p className="text-[11px] text-zinc-400 leading-snug">
+                    <p className="text-xs text-zinc-300 leading-snug">
                       เหมาะกับ TikTok, Reels, Shorts คนดูอ่านตามทันที
                     </p>
                   </button>
@@ -482,22 +482,22 @@ export function UploadZone() {
                   <button
                     type="button"
                     onClick={() => setPacingMode('medium')}
-                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                       pacingMode === 'medium'
                         ? 'bg-orange-500/15 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900/60'
+                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/60'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs flex items-center gap-1.5 text-orange-300">
-                        <AlignLeft className="w-3.5 h-3.5 text-amber-400" />
+                      <span className="font-bold text-sm flex items-center gap-1.5 text-orange-300">
+                        <AlignLeft className="w-4 h-4 text-amber-400" />
                         มาตรฐาน (6-9 คำ)
                       </span>
                       {pacingMode === 'medium' && (
                         <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
                       )}
                     </div>
-                    <p className="text-[11px] text-zinc-400 leading-snug">
+                    <p className="text-xs text-zinc-300 leading-snug">
                       เหมาะกับคลิป Vlog ทั่วไป อ่านสบาย ไม่สั้นไม่ยาวไป
                     </p>
                   </button>
@@ -506,31 +506,31 @@ export function UploadZone() {
                   <button
                     type="button"
                     onClick={() => setPacingMode('long')}
-                    className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                       pacingMode === 'long'
                         ? 'bg-orange-500/15 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:bg-zinc-900/60'
+                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/60'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs flex items-center gap-1.5 text-orange-300">
-                        <Film className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="font-bold text-sm flex items-center gap-1.5 text-orange-300">
+                        <Film className="w-4 h-4 text-emerald-400" />
                         ประโยคยาว (10-15 คำ)
                       </span>
                       {pacingMode === 'long' && (
                         <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
                       )}
                     </div>
-                    <p className="text-[11px] text-zinc-400 leading-snug">
+                    <p className="text-xs text-zinc-300 leading-snug">
                       เหมาะกับ YouTube แนวนอน, สัมภาษณ์ หรือสารคดี
                     </p>
                   </button>
                 </div>
 
                 {/* Custom Word Slider Toggle */}
-                <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-t border-zinc-800/80">
-                  <div className="flex items-center gap-2 text-zinc-400">
-                    <Settings2 className="w-3.5 h-3.5 text-zinc-400" />
+                <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm border-t border-zinc-800/80">
+                  <div className="flex items-center gap-2 text-zinc-300">
+                    <Settings2 className="w-4 h-4 text-zinc-400" />
                     <span>หรือปรับกำหนดจำนวนคำต่อท่อนเอง:</span>
                   </div>
                   <div className="flex items-center gap-3">
@@ -546,7 +546,7 @@ export function UploadZone() {
                       }}
                       className="w-36 accent-orange-500 cursor-pointer"
                     />
-                    <span className="px-2 py-0.5 rounded bg-zinc-800 text-orange-400 font-mono font-bold min-w-[3rem] text-center">
+                    <span className="px-2.5 py-0.5 rounded-lg bg-zinc-800 text-orange-400 font-mono font-bold min-w-[3.5rem] text-center text-sm">
                       {customMaxWords} คำ
                     </span>
                   </div>
@@ -555,22 +555,22 @@ export function UploadZone() {
 
               {/* Subtitle Snippet Preview */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-zinc-400">
+                <div className="flex items-center justify-between text-sm text-zinc-300">
                   <span>ตัวอย่างท่อนซับที่จัดกลุ่มแล้ว ({captions.length} ท่อน):</span>
-                  <span className="text-[11px] font-mono text-zinc-500">
+                  <span className="text-xs font-mono text-zinc-400">
                     คำนวณเวลาตรงตามเสียง 100%
                   </span>
                 </div>
-                <div className="max-h-48 overflow-y-auto space-y-2 p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 text-xs font-mono">
+                <div className="max-h-52 overflow-y-auto space-y-2 p-4 rounded-xl bg-zinc-900/70 border border-zinc-800 text-sm font-mono">
                   {captions.map((cue, idx) => (
                     <div
                       key={cue.id || idx}
-                      className="flex items-start gap-2.5 text-zinc-300 hover:bg-zinc-800/40 p-1.5 rounded-lg transition-colors"
+                      className="flex items-start gap-2.5 text-zinc-200 hover:bg-zinc-800/40 p-1.5 rounded-lg transition-colors"
                     >
-                      <span className="text-orange-400/90 font-bold shrink-0 select-none text-[11px]">
+                      <span className="text-orange-400 font-bold shrink-0 select-none text-xs font-mono">
                         [{cue.start.toFixed(2)}s ➔ {cue.end.toFixed(2)}s]
                       </span>
-                      <span className="text-zinc-200 font-sans font-medium">{cue.text}</span>
+                      <span className="text-zinc-100 font-sans font-medium">{cue.text}</span>
                     </div>
                   ))}
                 </div>
@@ -585,18 +585,18 @@ export function UploadZone() {
                 type="button"
                 disabled={isExtracting || isTranscribing}
                 onClick={handleStartTranscribe}
-                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isTranscribing ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                     <span>กำลังถอดเสียง...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
+                    <Sparkles className="w-5 h-5" />
                     <span>เริ่มถอดเสียงภาษาไทย (Start Transcription)</span>
-                    <ArrowRight className="w-4 h-4" />
+                    <ArrowRight className="w-5 h-5" />
                   </>
                 )}
               </button>
@@ -604,11 +604,11 @@ export function UploadZone() {
               <button
                 type="button"
                 onClick={() => router.push('/editor')}
-                className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
+                className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
               >
-                <SlidersHorizontal className="w-4 h-4" />
+                <SlidersHorizontal className="w-5 h-5" />
                 <span>เข้าสู่หน้าแก้ไขซับไตเติล (Open Caption Editor)</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-5 h-5" />
               </button>
             )}
           </div>
@@ -617,8 +617,8 @@ export function UploadZone() {
 
       {/* Error notification banner */}
       {errorMessage && (
-        <div className="mt-4 p-4 rounded-2xl bg-rose-950/50 border border-rose-800/80 text-rose-300 text-xs flex items-start gap-3 animate-in fade-in duration-200">
-          <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+        <div className="mt-4 p-4 rounded-2xl bg-rose-950/50 border border-rose-800/80 text-rose-300 text-sm flex items-start gap-3 animate-in fade-in duration-200">
+          <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
           <div className="flex-1">
             <span className="font-semibold block mb-0.5">เกิดข้อผิดพลาด</span>
             <span>{errorMessage}</span>

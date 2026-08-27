@@ -28,20 +28,20 @@ export function Header() {
               <span className="font-black text-lg text-white tracking-tight">
                 SUBTHAITLE
               </span>
-              <span className="px-1.5 py-0.2 text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-md">
+              <span className="px-2 py-0.5 text-xs font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-lg">
                 v4.12
               </span>
             </div>
-            <p className="text-[11px] text-zinc-400">Thai Caption & Subtitle Studio</p>
+            <p className="text-xs text-zinc-300 font-medium">Thai Caption & Subtitle Studio</p>
           </div>
         </Link>
 
         {/* Quota & Donate Button */}
         <div className="flex items-center gap-3">
           {/* Daily Quota Badge - Always visible */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-800 text-xs">
-            <Flame className="w-3.5 h-3.5 text-amber-500" />
-            <span className="text-zinc-400 hidden sm:inline">โควต้าฟรีวันนี้:</span>
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900 border border-zinc-700/80 text-sm">
+            <Flame className="w-4 h-4 text-amber-500" />
+            <span className="text-zinc-300 hidden sm:inline font-medium">โควต้าฟรีวันนี้:</span>
             <span className="font-bold text-amber-400">
               {dailyUsageCount}/{maxDailyFreeQuota} คลิป
             </span>
@@ -50,9 +50,9 @@ export function Header() {
           {/* Donate / Support Button */}
           <Link
             href="/donate"
-            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-rose-300 hover:text-white bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-all shadow-sm shadow-rose-500/10"
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-rose-200 hover:text-white bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 transition-all shadow-sm shadow-rose-500/10 cursor-pointer"
           >
-            <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400/20" />
+            <Heart className="w-4 h-4 text-rose-400 fill-rose-400/20" />
             <span>สนับสนุนผู้พัฒนา</span>
           </Link>
         </div>
