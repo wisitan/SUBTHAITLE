@@ -9,9 +9,11 @@ import {
   Bookmark,
   Lock,
   Layers,
+  Crown,
 } from 'lucide-react';
 import { useAppStore, CaptionStyle } from '@/lib/store';
 import { SUBTITLE_PRESETS } from '@/lib/presets';
+import { PresetShowcaseModal } from './preset-showcase-modal';
 
 export function PresetManager() {
   const setStyle = useAppStore((s) => s.setStyle);
@@ -24,6 +26,7 @@ export function PresetManager() {
 
   const [presetNameInput, setPresetNameInput] = useState('');
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [showcaseOpen, setShowcaseOpen] = useState(false);
 
   const showToast = (msg: string) => {
     setToastMsg(msg);
@@ -166,18 +169,25 @@ export function PresetManager() {
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-bold text-zinc-200 flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-amber-400" />
-            <span>ธีมสำเร็จรูปของระบบ (1-Click Presets):</span>
+            <span>ธีมสำเร็จรูปของระบบ ({SUBTITLE_PRESETS.length} Presets):</span>
           </h4>
-          <span className="text-[10px] text-zinc-400">คลิกเพื่อ Live Preview ทันที</span>
+          <button
+            type="button"
+            onClick={() => setShowcaseOpen(true)}
+            className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[10px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+          >
+            <Crown className="w-3 h-3 text-amber-400" />
+            <span>ดูพรีวิว 10 แบบ</span>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {SUBTITLE_PRESETS.map((preset, idx) => {
             const isSelected = activePresetId === preset.id;
             // Tier simulation logic
-            const isFreePreset = idx < 2; // Free gets 2
-            const isCoffeePreset = idx < 4; // Coffee gets 4
-            const isMealPreset = true; // Meal gets all
+            const isFreePreset = idx < 1; // Free gets 1 (TikTok Viral)
+            const isCoffeePreset = idx < 3; // Coffee ฿99 gets 3
+            const isMealPreset = true; // Meal ฿299 gets all 10
 
             const hasAccess =
               tier === 'meal'
@@ -190,7 +200,13 @@ export function PresetManager() {
               <button
                 key={preset.id}
                 type="button"
-                onClick={() => handleApplyPreset(preset.id, preset.style)}
+                onClick={() => {
+                  if (!hasAccess) {
+                    setShowcaseOpen(true);
+                    return;
+                  }
+                  handleApplyPreset(preset.id, preset.style);
+                }}
                 className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2.5 group relative ${
                   isSelected
                     ? 'bg-orange-500/15 border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
@@ -242,6 +258,13 @@ export function PresetManager() {
           })}
         </div>
       </div>
+
+      {/* Preset Showcase Gallery Modal */}
+      <PresetShowcaseModal
+        isOpen={showcaseOpen}
+        onClose={() => setShowcaseOpen(false)}
+        onSelectPreset={(p) => handleApplyPreset(p.id, p.style)}
+      />
     </div>
   );
 }

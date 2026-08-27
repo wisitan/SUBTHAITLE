@@ -8,9 +8,11 @@ import {
   FileText,
   ChevronDown,
   Sparkles,
+  Layers,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { downloadFcpxml } from '@/lib/fcpxml';
+import { downloadPremiereXml } from '@/lib/xml';
 import { downloadAss } from '@/lib/ass';
 import { BurnVideoModal } from './burn-video-modal';
 
@@ -53,6 +55,17 @@ export function ExportMenu({ onShowToast }: Props) {
     onShowToast?.(`ดาวน์โหลด ${filename} เรียบร้อย (แสดงผลตามฟอนต์ที่ลงใน Mac)`);
   };
 
+  const handleExportPremiereXml = () => {
+    setIsOpen(false);
+    if (!captions.length) {
+      onShowToast?.('ไม่มีข้อมูลซับไตเติลสำหรับส่งออก');
+      return;
+    }
+    const filename = `${getBaseFilename()}_premiere.xml`;
+    downloadPremiereXml(captions, style, filename);
+    onShowToast?.(`ดาวน์โหลด ${filename} เรียบร้อย (นำเข้าเป็น Video Clip ใน Premiere / DaVinci)`);
+  };
+
   const handleExportAss = () => {
     setIsOpen(false);
     if (!captions.length) {
@@ -74,10 +87,11 @@ export function ExportMenu({ onShowToast }: Props) {
     let srtContent = '';
     captions.forEach((c, idx) => {
       const formatTime = (seconds: number) => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
-        const ms = Math.floor((seconds % 1) * 1000);
+        const totalMs = Math.round(seconds * 1000);
+        const h = Math.floor(totalMs / 3600000);
+        const m = Math.floor((totalMs % 3600000) / 60000);
+        const s = Math.floor((totalMs % 60000) / 1000);
+        const ms = totalMs % 1000;
         return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
       };
       srtContent += `${idx + 1}\n${formatTime(c.start)} --> ${formatTime(c.end)}\n${c.text}\n\n`;
@@ -106,10 +120,11 @@ export function ExportMenu({ onShowToast }: Props) {
     let vttContent = 'WEBVTT\n\n';
     captions.forEach((c, idx) => {
       const formatTime = (seconds: number) => {
-        const h = Math.floor(seconds / 3600);
-        const m = Math.floor((seconds % 3600) / 60);
-        const s = Math.floor(seconds % 60);
-        const ms = Math.floor((seconds % 1) * 1000);
+        const totalMs = Math.round(seconds * 1000);
+        const h = Math.floor(totalMs / 3600000);
+        const m = Math.floor((totalMs % 3600000) / 60000);
+        const s = Math.floor((totalMs % 60000) / 1000);
+        const ms = totalMs % 1000;
         return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(ms).padStart(3, '0')}`;
       };
       vttContent += `${idx + 1}\n${formatTime(c.start)} --> ${formatTime(c.end)}\n${c.text}\n\n`;
@@ -192,6 +207,25 @@ export function ExportMenu({ onShowToast }: Props) {
               </div>
               <p className="text-[10px] text-zinc-400">
                 💡 ใช้ฟอนต์ที่ติดตั้งใน Mac (นำเข้าไทม์ไลน์ทันที)
+              </p>
+            </div>
+          </button>
+
+          {/* Option 3: XML for Premiere Pro & DaVinci Resolve */}
+          <button
+            type="button"
+            onClick={handleExportPremiereXml}
+            className="w-full text-left p-2.5 rounded-2xl hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-all flex items-start gap-3 cursor-pointer group"
+          >
+            <div className="w-8 h-8 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+              <Layers className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs font-bold text-white flex items-center gap-1">
+                <span>Premiere / DaVinci XML (.xml)</span>
+              </div>
+              <p className="text-[10px] text-zinc-400">
+                💡 แทร็กคลิปวิดีโอบนไทม์ไลน์ (ใส่ Effect / Motion ได้)
               </p>
             </div>
           </button>
