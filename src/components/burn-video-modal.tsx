@@ -13,6 +13,7 @@ import {
   Lock,
   Tv,
   Zap,
+  RotateCcw,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { burnSubtitlesToVideo, cancelBurn, VideoResolution, BurnProgress } from '@/lib/burn';
@@ -40,7 +41,30 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
     setMounted(true);
   }, []);
 
+  // Declarative Object URL management tied strictly to renderedBlob lifecycle
+  useEffect(() => {
+    if (!renderedBlob) {
+      setDownloadUrl(null);
+      return;
+    }
+
+    const url = URL.createObjectURL(renderedBlob);
+    setDownloadUrl(url);
+
+    // Auto cleanup when renderedBlob changes or when unmounting
+    return () => {
+      URL.revokeObjectURL(url);
+    };
+  }, [renderedBlob]);
+
   if (!isOpen || !mounted) return null;
+
+  const handleReset = () => {
+    setRenderedBlob(null);
+    setProgress(null);
+    setErrorMsg(null);
+    setIsBurning(false);
+  };
 
   const handleStartBurn = async () => {
     if (!file) {
@@ -56,7 +80,6 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
     setIsBurning(true);
     setErrorMsg(null);
     setRenderedBlob(null);
-    setDownloadUrl(null);
 
     try {
       const outputBlob = await burnSubtitlesToVideo({
@@ -68,8 +91,6 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
       });
 
       setRenderedBlob(outputBlob);
-      const url = URL.createObjectURL(outputBlob);
-      setDownloadUrl(url);
     } catch (err: unknown) {
       console.error('Burn video error:', err);
       const message = err instanceof Error ? err.message : 'เกิดข้อผิดพลาดในการเรนเดอร์วิดีโอ';
@@ -98,9 +119,6 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
         return;
       }
       cancelBurn();
-    }
-    if (downloadUrl) {
-      URL.revokeObjectURL(downloadUrl);
     }
     onClose();
   };
@@ -310,6 +328,15 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
             </>
           ) : (
             <>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 transition-all flex items-center gap-1.5 cursor-pointer mr-auto shadow-sm"
+                title="กลับไปตั้งค่าและเรนเดอร์วิดีโอใหม่อีกครั้ง"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-orange-400" />
+                <span>เรนเดอร์ใหม่</span>
+              </button>
               <button
                 type="button"
                 onClick={handleClose}
