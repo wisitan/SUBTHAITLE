@@ -79,7 +79,9 @@ export function generateAss(
     ? hexToAssColor(style.backgroundColor || '#000000', style.backgroundOpacity ?? 70)
     : '&H00000000';
 
-  const isBold = style.fontWeight === 'bold' || style.fontWeight === '700' || style.fontWeight === '800' ? -1 : 0;
+  // Force bold to 0 because ffmpeg.wasm libass dummy provider will REJECT the font
+  // if we request bold (-1) but the downloaded TTF only has regular weight.
+  const isBold = 0;
   const outlineWidth = style.hasOutline ? Math.round((style.outlineWidth || 3) * 1.8) : 0;
   const shadowDepth = style.hasShadow ? Math.round((style.shadowBlur || 8) * 0.4) : 0;
 
