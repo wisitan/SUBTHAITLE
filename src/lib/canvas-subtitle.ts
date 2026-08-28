@@ -97,7 +97,10 @@ export async function renderSubtitleCanvas(
   }
 
   // Multiplier from preview player (~360px wide) to output video canvas (e.g. 1080px)
-  const scale = width / 360;
+  // Use the shortest dimension to ensure a "20px" font is physically the same height 
+  // in both 9:16 (1080x1920) and 16:9 (1920x1080) exports!
+  const baseDimension = Math.min(width, height);
+  const scale = baseDimension / 360;
 
   const fontSize = Math.round((style.fontSize || 24) * scale);
   const baseWeight =

@@ -265,8 +265,10 @@ export function VideoPlayer({ className = '' }: Props) {
   // Build dynamic text-shadow & outline CSS with 100% WYSIWYG Proportional Scaling
   const subtitleOverlayStyle: React.CSSProperties = useMemo(() => {
     // Proportional scale factor matching Canvas Render (base width: 360px for 9:16)
-    // We scale against the EXACT visual width of the object-contain area.
-    const scale = (visualBounds.w || 360) / 360;
+    // We scale against the EXACT visual dimensions of the object-contain area.
+    // Use the shortest dimension to ensure consistent text size across landscape and portrait modes.
+    const baseDim = Math.min(visualBounds.w, visualBounds.h);
+    const scale = (baseDim || 360) / 360;
     
     const scaledFontSize = (style.fontSize || 24) * scale;
     const scaledLetterSpacing = (style.letterSpacing ?? 0) * scale;

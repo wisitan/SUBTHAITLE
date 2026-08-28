@@ -23,23 +23,11 @@ export default function EditorPage() {
   const captions = useAppStore((s) => s.captions);
   const activeCaptionIndex = useAppStore((s) => s.activeCaptionIndex);
   const mediaDuration = useAppStore((s) => s.mediaDuration);
-  const aspectRatio = useAppStore((s) => s.aspectRatio);
 
   const [activeTab, setActiveTab] = useState<'captions' | 'style' | 'presets'>('captions');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const leftColumnWidthClass = React.useMemo(() => {
-    switch (aspectRatio) {
-      case '16:9':
-        return 'lg:w-[560px] xl:w-[640px]';
-      case '1:1':
-        return 'lg:w-[460px] xl:w-[520px]';
-      case '9:16':
-      default:
-        // Moderately wide layout allowing generous video preview, with reasonable pillarboxing on max-h constraint
-        return 'lg:w-[440px] xl:w-[480px]'; 
-    }
-  }, [aspectRatio]);
+
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -126,7 +114,7 @@ export default function EditorPage() {
       {/* Main 2-Column Responsive Workspace */}
       <main className="flex-1 min-h-0 max-w-7xl w-full mx-auto px-4 py-3 sm:py-4 flex flex-col lg:flex-row gap-6 items-stretch lg:overflow-hidden">
         {/* Left Column: Interactive Video Player */}
-        <div className={`w-full ${leftColumnWidthClass} shrink-0 flex flex-col lg:h-full lg:overflow-y-auto lg:scrollbar-none space-y-3 sm:space-y-4`}>
+        <div className="w-full lg:w-[460px] xl:w-[500px] shrink-0 flex flex-col lg:h-full lg:overflow-y-auto lg:scrollbar-none space-y-3 sm:space-y-4">
           <VideoPlayer />
 
           {/* Quick Jump to Active Subtitle Card (Mobile & Desktop Thumb Ergonomics) */}
