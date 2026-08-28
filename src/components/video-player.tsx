@@ -351,13 +351,13 @@ export function VideoPlayer({ className = '' }: Props) {
     }
     switch (aspectRatio) {
       case '9:16':
-        return 'w-full aspect-[9/16] max-h-[640px] mx-auto';
+        return 'w-full aspect-[9/16] mx-auto';
       case '16:9':
-        return 'w-full aspect-[16/9]';
+        return 'w-full aspect-[16/9] mx-auto';
       case '1:1':
-        return 'w-full aspect-square max-h-[580px] mx-auto';
+        return 'w-full aspect-square mx-auto';
       default:
-        return 'w-full aspect-[9/16] max-h-[640px] mx-auto';
+        return 'w-full aspect-[9/16] mx-auto';
     }
   }, [aspectRatio, isFullscreen]);
 
