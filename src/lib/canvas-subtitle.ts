@@ -75,17 +75,20 @@ export async function renderSubtitleCanvas(
   activeWordIndex: number | null,
   style: CaptionStyle,
   width: number,
-  height: number
+  height: number,
+  sharedCanvas?: HTMLCanvasElement
 ): Promise<Uint8Array> {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  const canvas = sharedCanvas || document.createElement('canvas');
+  if (canvas.width !== width) canvas.width = width;
+  if (canvas.height !== height) canvas.height = height;
   const ctx = canvas.getContext('2d', { willReadFrequently: false });
   if (!ctx) throw new Error('Cannot get 2D context');
 
+  // Reset/clear canvas buffer for clean draw
+  ctx.clearRect(0, 0, width, height);
+
   // If no caption, return full-size transparent PNG (do NOT resize to 1x1, or FFmpeg concat demuxer will collapse entire stream resolution!)
   if (!caption) {
-    ctx.clearRect(0, 0, width, height);
     const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
     if (!blob) throw new Error('Canvas toBlob failed');
     return new Uint8Array(await blob.arrayBuffer());
@@ -316,8 +319,19 @@ export async function generateCaptionImageSequence(
   const { captions, style, videoWidth, videoHeight, videoDuration } = options;
   const frames: SubtitleFrame[] = [];
 
-  // 1. Generate 1x1 transparent frame for silence / gaps
-  const emptyFrameData = await renderSubtitleCanvas(null, null, style, videoWidth, videoHeight);
+  // Create single reusable offscreen canvas for rendering all frames
+  const sharedCanvas =
+    typeof document !== 'undefined' ? document.createElement('canvas') : undefined;
+
+  // 1. Generate transparent frame for silence / gaps
+  const emptyFrameData = await renderSubtitleCanvas(
+    null,
+    null,
+    style,
+    videoWidth,
+    videoHeight,
+    sharedCanvas
+  );
   frames.push({
     filename: 'sub_empty.png',
     data: emptyFrameData,
@@ -344,10 +358,10 @@ export async function generateCaptionImageSequence(
   for (let i = 0; i < validCaptions.length; i++) {
     const cue = validCaptions[i];
     const actualStart = Math.max(lastTime, cue.start);
-    const actualEnd = Math.max(actualStart + 0.04, cue.end);
+    const actualEnd = Math.max(actualStart + 0.01, cue.end);
 
-    // Gap between previous cue and this cue
-    if (actualStart > lastTime + 0.04) {
+    // Gap between previous cue and this cue (accurate threshold > 10ms)
+    if (actualStart > lastTime + 0.01) {
       const gapDuration = actualStart - lastTime;
       timeline.push({
         filename: 'sub_empty.png',
@@ -367,9 +381,9 @@ export async function generateCaptionImageSequence(
         const nextWordStart = wIdx < sortedWords.length - 1 ? sortedWords[wIdx + 1].start : actualEnd;
 
         // 1. If there's a pre-word gap before word 0, show normal unhighlighted caption
-        if (wIdx === 0 && w.start > currentCueTime + 0.02) {
+        if (wIdx === 0 && w.start > currentCueTime + 0.01) {
           const preDur = Math.min(w.start, actualEnd) - currentCueTime;
-          if (preDur > 0.02) {
+          if (preDur > 0.01) {
             const fname = `sub_${frameCounter++}.png`;
             timeline.push({
               filename: fname,
@@ -418,7 +432,7 @@ export async function generateCaptionImageSequence(
       }
     } else {
       // Static cue
-      const cueDur = Math.max(0.04, actualEnd - actualStart);
+      const cueDur = Math.max(0.01, actualEnd - actualStart);
       const fname = `sub_${frameCounter++}.png`;
       timeline.push({
         filename: fname,
@@ -432,16 +446,16 @@ export async function generateCaptionImageSequence(
   }
 
   // Trailing silence until video duration
-  if (videoDuration > lastTime) {
+  if (videoDuration > lastTime + 0.01) {
     timeline.push({
       filename: 'sub_empty.png',
-      duration: Math.max(0.04, videoDuration - lastTime),
+      duration: videoDuration - lastTime,
       caption: null,
       activeWordIndex: null,
     });
   }
 
-  // 2. Render unique PNG frames
+  // 2. Render unique PNG frames using sharedCanvas
   const totalRenders = timeline.filter((t) => t.caption !== null).length;
   let renderedCount = 0;
 
@@ -452,7 +466,8 @@ export async function generateCaptionImageSequence(
         seg.activeWordIndex,
         style,
         videoWidth,
-        videoHeight
+        videoHeight,
+        sharedCanvas
       );
 
       frames.push({
@@ -469,11 +484,17 @@ export async function generateCaptionImageSequence(
     }
   }
 
-  // 3. Build ffconcat format string
+  // Release shared canvas memory
+  if (sharedCanvas) {
+    sharedCanvas.width = 1;
+    sharedCanvas.height = 1;
+  }
+
+  // 3. Build ffconcat format string with 4-decimal precision
   let concatLines = 'ffconcat version 1.0\n';
   timeline.forEach((seg) => {
     concatLines += `file '${seg.filename}'\n`;
-    concatLines += `duration ${seg.duration.toFixed(3)}\n`;
+    concatLines += `duration ${seg.duration.toFixed(4)}\n`;
   });
   // ffconcat requires the last file to be repeated without duration
   if (timeline.length > 0) {
