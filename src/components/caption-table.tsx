@@ -120,18 +120,17 @@ export function CaptionTable({ onPlayCue }: Props) {
         </div>
       )}
 
-      {/* Top Header & Pacing Selector Section */}
-      <div className="shrink-0 p-4 bg-zinc-900 border-b border-zinc-700 space-y-3.5">
-        {/* Title, Counts, and Quick Tools */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-xs">
+      {/* Slim Top Header Section */}
+      <div className="shrink-0 px-4 py-3 bg-zinc-900 border-b border-zinc-700">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-7 h-7 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0">
               {captions.length}
             </div>
-            <div>
-              <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                รายการซับไตเติล (Caption Editor)
-                <span className="text-xs font-normal text-zinc-300">
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-white flex items-center gap-1.5 truncate">
+                <span>รายการซับไตเติล</span>
+                <span className="text-xs font-normal text-zinc-400">
                   (~{totalWords} คำ)
                 </span>
               </h3>
@@ -144,10 +143,10 @@ export function CaptionTable({ onPlayCue }: Props) {
             <button
               type="button"
               onClick={() => setAutoScroll(!autoScroll)}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
+              className={`px-2.5 py-1 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
                 autoScroll
                   ? 'bg-orange-500/15 border-orange-500/40 text-orange-300'
-                  : 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800'
+                  : 'bg-zinc-950 border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800'
               }`}
               title="เลื่อนหน้าจอตามวิดีโออัตโนมัติ"
             >
@@ -158,7 +157,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             <button
               type="button"
               onClick={() => setTimeShiftModalOpen(true)}
-              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-zinc-950 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
               title="ขยับเวลาซับทั้งหมดพร้อมกัน (+- Offset)"
             >
               <Clock className="w-3.5 h-3.5 text-orange-400" />
@@ -169,7 +168,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             <button
               type="button"
               onClick={() => setFindReplaceModalOpen(true)}
-              className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-zinc-950 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
               title="ค้นหาและแทนที่คำในซับไตเติล"
             >
               <Replace className="w-3.5 h-3.5 text-amber-400" />
@@ -180,20 +179,26 @@ export function CaptionTable({ onPlayCue }: Props) {
             <button
               type="button"
               onClick={() => addCaption()}
-              className="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-xs rounded-xl shadow transition-all flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-xs rounded-xl shadow transition-all flex items-center gap-1 cursor-pointer shrink-0"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               <span>เพิ่มท่อน</span>
             </button>
           </div>
         </div>
+      </div>
 
-        {/* 🎛️ Prominent Pacing Mode Selector (3 Big Cards + Manual Slider) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3">
+      {/* Scrollable Content Container: Pacing + Search + Subtitle Cards */}
+      <div
+        ref={containerRef}
+        className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3.5 scrollbar-thin scrollbar-thumb-zinc-800 max-w-full overflow-x-hidden"
+      >
+        {/* 🎛️ Pacing Mode Selector Card (Scrolls with content) */}
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-zinc-900 border border-zinc-700 space-y-3 shadow-lg">
           <div className="flex items-center justify-between text-sm">
             <span className="font-bold text-zinc-100 flex items-center gap-1.5">
               <SlidersHorizontal className="w-4 h-4 text-orange-400" />
-              ✂️ ปรับจังหวะความยาวท่อนซับ (Caption Pacing):
+              <span>✂️ ปรับจังหวะความยาวท่อนซับ (Caption Pacing):</span>
             </span>
             <span className="text-xs text-zinc-300 hidden sm:inline">
               คลิกหรือลากเพื่อจัดกลุ่มคำใหม่แบบ Realtime
@@ -208,7 +213,7 @@ export function CaptionTable({ onPlayCue }: Props) {
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'short'
                   ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-800/80'
+                  : 'bg-zinc-950 border border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -232,7 +237,7 @@ export function CaptionTable({ onPlayCue }: Props) {
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'medium'
                   ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-800/80'
+                  : 'bg-zinc-950 border border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -256,7 +261,7 @@ export function CaptionTable({ onPlayCue }: Props) {
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'long'
                   ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-800/80'
+                  : 'bg-zinc-950 border border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -275,7 +280,7 @@ export function CaptionTable({ onPlayCue }: Props) {
           </div>
 
           {/* 🎚️ Manual Custom Words per Cue Slider Bar */}
-          <div className="pt-2 border-t border-zinc-900/90 space-y-2">
+          <div className="pt-2 border-t border-zinc-800/80 space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-zinc-200 font-medium flex items-center gap-1.5">
                 <span>ความยาวคำกำหนดเอง (Manual Words Slider):</span>
@@ -285,7 +290,7 @@ export function CaptionTable({ onPlayCue }: Props) {
                   </span>
                 )}
               </span>
-              <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
+              <span className="font-mono font-bold text-orange-400 bg-zinc-950 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
                 {pacingMode === 'short'
                   ? '~4 คำ/ท่อน'
                   : pacingMode === 'medium'
@@ -334,7 +339,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             placeholder="ค้นหาข้อความในซับไตเติล..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 shadow-md"
           />
           {searchQuery && (
             <button
@@ -345,13 +350,6 @@ export function CaptionTable({ onPlayCue }: Props) {
             </button>
           )}
         </div>
-      </div>
-
-      {/* Scrollable Caption Cards Container */}
-      <div
-        ref={containerRef}
-        className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3 scrollbar-thin scrollbar-thumb-zinc-800 max-w-full overflow-x-hidden"
-      >
         {filteredWithIndex.length === 0 ? (
           <div className="p-12 text-center text-zinc-400 text-sm space-y-2">
             <p>ไม่พบรายการซับไตเติลที่ตรงกับคำค้นหา</p>
