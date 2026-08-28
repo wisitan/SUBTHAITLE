@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { loadGoogleFont } from '@/lib/fonts';
 import { formatCaptionWordsText } from '@/lib/thai-text';
+import { useCaptionSync } from '@/hooks/use-caption-sync';
 
 interface Props {
   className?: string;
@@ -35,8 +36,6 @@ export function VideoPlayer({ className = '' }: Props) {
   const setStyle = useAppStore((s) => s.setStyle);
   const mediaDuration = useAppStore((s) => s.mediaDuration);
   const setMediaDuration = useAppStore((s) => s.setMediaDuration);
-  const activeCaptionIndex = useAppStore((s) => s.activeCaptionIndex);
-  const setActiveCaptionIndex = useAppStore((s) => s.setActiveCaptionIndex);
   const aspectRatio = useAppStore((s) => s.aspectRatio);
   const setAspectRatio = useAppStore((s) => s.setAspectRatio);
 
@@ -107,51 +106,7 @@ export function VideoPlayer({ className = '' }: Props) {
     }
   }, [style.fontFamily]);
 
-  // Format seconds to mm:ss.ms
-  const formatTime = (secs: number) => {
-    if (isNaN(secs) || secs < 0) return '00:00.00';
-    const m = Math.floor(secs / 60);
-    const s = Math.floor(secs % 60);
-    const ms = Math.floor((secs % 1) * 100);
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
-  };
-
-  // Find active caption index based on currentTime
-  const activeIndex = useMemo(() => {
-    return captions.findIndex(
-      (c) => c.start <= currentTime && currentTime <= c.end + 0.05
-    );
-  }, [captions, currentTime]);
-
-  // Only dispatch to store when active index genuinely changes
-  useEffect(() => {
-    const nextIndex = activeIndex === -1 ? null : activeIndex;
-    if (activeCaptionIndex !== nextIndex) {
-      setActiveCaptionIndex(nextIndex);
-    }
-  }, [activeIndex, activeCaptionIndex, setActiveCaptionIndex]);
-
-  const activeCaption = activeIndex !== -1 ? captions[activeIndex] : null;
-
-  // Sync animation frame loop for ultra-precise word highlighting
-  useEffect(() => {
-    let animationFrameId: number;
-
-    const syncTime = () => {
-      if (videoRef.current && !videoRef.current.paused) {
-        setCurrentTime(videoRef.current.currentTime);
-      }
-      animationFrameId = requestAnimationFrame(syncTime);
-    };
-
-    if (isPlaying) {
-      animationFrameId = requestAnimationFrame(syncTime);
-    }
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, [isPlaying, setCurrentTime]);
+  const { activeCaption, formatTime } = useCaptionSync(videoRef, isPlaying);
 
   const togglePlay = useCallback(() => {
     if (!videoRef.current) return;

@@ -37,7 +37,7 @@ import { AdminPinModal } from '@/components/admin-pin-modal';
 
 export default function AdminDictionaryPage() {
   const router = useRouter();
-  const { isAdmin, setIsAdmin, customDictionary, setCustomDictionary } = useAppStore();
+  const { isAdmin, setIsAdmin, adminToken, customDictionary, setCustomDictionary } = useAppStore();
 
   const [isLoading, setIsLoading] = useState(true);
   const [isCloudConnected, setIsCloudConnected] = useState<boolean | null>(null);
@@ -98,11 +98,14 @@ export default function AdminDictionaryPage() {
   // Filtered dictionary based on search and category
   const filteredList = useMemo(() => {
     return mergedList.filter((item) => {
-      const matchesSearch =
+      const matchQuery =
+        !searchQuery.trim() ||
         item.wrong_word.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.correct_word.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCat = selectedCategory === 'all' || item.category === selectedCategory;
-      return matchesSearch && matchesCat;
+
+      const matchCat = selectedCategory === 'all' || item.category === selectedCategory;
+
+      return matchQuery && matchCat;
     });
   }, [mergedList, searchQuery, selectedCategory]);
 
@@ -111,7 +114,7 @@ export default function AdminDictionaryPage() {
       setEditingEntry(entry);
       setFormWrongWord(entry.wrong_word);
       setFormCorrectWord(entry.correct_word);
-      setFormCategory(entry.category);
+      setFormCategory(entry.category || 'general');
     } else {
       setEditingEntry(null);
       setFormWrongWord('');
@@ -125,7 +128,7 @@ export default function AdminDictionaryPage() {
   const handleSaveEntry = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formWrongWord.trim() || !formCorrectWord.trim()) {
-      setFormError('กรุณากรอกทั้งคำที่ผิดและคำที่ถูกต้อง');
+      setFormError('กรุณากรอกทั้งคำที่เขียนผิดและคำที่ถูกต้อง');
       return;
     }
 
@@ -135,11 +138,15 @@ export default function AdminDictionaryPage() {
     try {
       if (editingEntry && editingEntry.id) {
         // Update in cloud
-        const res = await updateDictionaryEntryInCloud(editingEntry.id, {
-          wrong_word: formWrongWord,
-          correct_word: formCorrectWord,
-          category: formCategory,
-        });
+        const res = await updateDictionaryEntryInCloud(
+          editingEntry.id,
+          {
+            wrong_word: formWrongWord,
+            correct_word: formCorrectWord,
+            category: formCategory,
+          },
+          adminToken
+        );
 
         if (res.error && !isTableMissing) {
           setFormError(`เกิดข้อผิดพลาด: ${res.error}`);
@@ -157,11 +164,14 @@ export default function AdminDictionaryPage() {
         showToast(`แก้ไขคำว่า "${formCorrectWord}" เรียบร้อยแล้ว`);
       } else {
         // Insert new entry
-        const res = await insertDictionaryEntryToCloud({
-          wrong_word: formWrongWord,
-          correct_word: formCorrectWord,
-          category: formCategory,
-        });
+        const res = await insertDictionaryEntryToCloud(
+          {
+            wrong_word: formWrongWord,
+            correct_word: formCorrectWord,
+            category: formCategory,
+          },
+          adminToken
+        );
 
         const newEntry: DictionaryEntry = res.data || {
           id: Date.now(),
@@ -190,7 +200,7 @@ export default function AdminDictionaryPage() {
     }
 
     if (entry.id) {
-      await deleteDictionaryEntryFromCloud(entry.id);
+      await deleteDictionaryEntryFromCloud(entry.id, adminToken);
     }
 
     const updated = customDictionary.filter(
@@ -205,7 +215,7 @@ export default function AdminDictionaryPage() {
       return;
     }
     setIsLoading(true);
-    const res = await seedStarterWordsToCloud();
+    const res = await seedStarterWordsToCloud(adminToken);
     if (res.error) {
       alert(`ไม่สามารถ Seed ข้อมูลได้: ${res.error}`);
     } else {
@@ -253,16 +263,16 @@ create table if not exists public.custom_dictionary (
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- เปิดใช้งาน RLS (Row Level Security) เพื่อความปลอดภัย
 alter table public.custom_dictionary enable row level security;
 
+-- อนุญาตให้อ่านข้อมูลได้ทุกคน (Public Read)
 create policy "Allow public read access"
 on public.custom_dictionary for select
 using (true);
 
-create policy "Allow public insert/update/delete"
-on public.custom_dictionary for all
-using (true)
-with check (true);`;
+-- สิทธิ์แก้ไข/ลบข้อมูลสงวนไว้สำหรับ Server Service Role เท่านั้น
+-- (ปลอดภัย 100% ไม่เปิดสิทธิ์เขียนผ่าน Public Anon Key)`;
 
   const copySqlToClipboard = () => {
     navigator.clipboard.writeText(sqlScript);

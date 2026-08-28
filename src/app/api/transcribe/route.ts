@@ -1,32 +1,90 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// In-memory sliding rate limiter for IP protection (Free tier)
-const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
 const MAX_REQUESTS_PER_IP_PER_DAY = 5; // 5 transcriptions per IP/day max
-
-// Global safety limit to protect owner's API key budget
-let globalRequestCount = 0;
-let globalResetAt = Date.now() + 24 * 60 * 60 * 1000;
 const MAX_GLOBAL_REQUESTS_PER_DAY = 200;
 
-function checkRateLimits(ip: string): { allowed: boolean; reason?: string } {
+// Initialize Upstash Redis if environment variables are provided
+let ipLimiter: Ratelimit | null = null;
+let globalLimiter: Ratelimit | null = null;
+
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
+  try {
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
+
+    ipLimiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(MAX_REQUESTS_PER_IP_PER_DAY, '1 d'),
+      prefix: 'subthaitle:ip',
+    });
+
+    globalLimiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(MAX_GLOBAL_REQUESTS_PER_DAY, '1 d'),
+      prefix: 'subthaitle:global',
+    });
+  } catch (err) {
+    console.warn('Failed to initialize Upstash Redis ratelimiter:', err);
+  }
+}
+
+// In-memory fallback sliding rate limiter for local dev / environments without Redis
+const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
+let globalRequestCount = 0;
+let globalResetAt = Date.now() + 24 * 60 * 60 * 1000;
+
+async function checkRateLimits(ip: string): Promise<{ allowed: boolean; reason?: string }> {
+  // If Redis is configured, use Upstash sliding window rate limiting
+  if (globalLimiter && ipLimiter) {
+    try {
+      const [globalResult, ipResult] = await Promise.all([
+        globalLimiter.limit('global_transcribe_usage'),
+        ipLimiter.limit(ip),
+      ]);
+
+      if (!globalResult.success) {
+        return {
+          allowed: false,
+          reason: 'โควต้าฟรีรวมของเซิร์ฟเวอร์ประจำวันเต็มแล้วค่ะ เพื่อป้องกันค่าใช้จ่ายเกินลิมิต กรุณาใส่ Groq API Key ของตัวเอง (BYOK) หรือรัน Local Whisper เพื่อใช้งานต่อ',
+        };
+      }
+
+      if (!ipResult.success) {
+        return {
+          allowed: false,
+          reason: `โควต้าการใช้งานฟรีประจำวันของคุณครบ ${MAX_REQUESTS_PER_IP_PER_DAY} คลิปแล้วค่ะ กรุณาร่วมสนับสนุน หรือใส่ Groq API Key ของตัวเอง (BYOK) เพื่อใช้งานแบบไม่จำกัด`,
+        };
+      }
+
+      return { allowed: true };
+    } catch (err) {
+      console.warn('Redis rate limit check error, falling back to memory:', err);
+    }
+  }
+
+  // In-memory fallback
   const now = Date.now();
 
   // Reset global counter if 24h passed
   if (now > globalResetAt) {
     globalRequestCount = 0;
     globalResetAt = now + 24 * 60 * 60 * 1000;
-    ipRequestCounts.clear(); // Clear all IPs as well
+    ipRequestCounts.clear();
   }
 
   // Check global budget first
   if (globalRequestCount >= MAX_GLOBAL_REQUESTS_PER_DAY) {
     return {
       allowed: false,
-      reason: 'โควต้าฟรีรวมของเซิร์ฟเวอร์ประจำวันเต็มแล้วค่ะ เพื่อป้องกันค่าใช้จ่ายเกินลิมิต กรุณาใส่ Groq API Key ของตัวเอง (BYOK) เพื่อใช้งานต่อ',
+      reason: 'โควต้าฟรีรวมของเซิร์ฟเวอร์ประจำวันเต็มแล้วค่ะ เพื่อป้องกันค่าใช้จ่ายเกินลิมิต กรุณาใส่ Groq API Key ของตัวเอง (BYOK) หรือรัน Local Whisper เพื่อใช้งานต่อ',
     };
   }
 
@@ -59,7 +117,7 @@ export async function POST(request: NextRequest) {
     const forwardedFor = request.headers.get('x-forwarded-for');
     const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : '127.0.0.1';
 
-    const limitCheck = checkRateLimits(clientIp);
+    const limitCheck = await checkRateLimits(clientIp);
     if (!limitCheck.allowed) {
       return NextResponse.json(
         {

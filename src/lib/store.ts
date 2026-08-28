@@ -70,6 +70,7 @@ export interface AppState {
   dailyUsageCount: number;
   maxDailyFreeQuota: number;
   isAdmin: boolean;
+  adminToken: string | null;
   
   // Dictionary & Vocab
   customDictionary: DictionaryEntry[];
@@ -99,6 +100,7 @@ export interface AppState {
   setTier: (tier: UserTier) => void;
   setGroqApiKey: (key: string) => void;
   setIsAdmin: (isAdmin: boolean) => void;
+  setAdminToken: (token: string | null) => void;
   setCustomDictionary: (entries: DictionaryEntry[]) => void;
   loadDictionary: () => Promise<void>;
   setAspectRatio: (ratio: '9:16' | '16:9' | '1:1') => void;
@@ -168,6 +170,7 @@ export const useAppStore = create<AppState>()(
       dailyUsageCount: 0,
       maxDailyFreeQuota: 5,
       isAdmin: false,
+      adminToken: null,
       
       customDictionary: DEFAULT_THAI_DICTIONARY,
       
@@ -199,6 +202,7 @@ export const useAppStore = create<AppState>()(
       setTier: (tier) => set({ tier }),
       setGroqApiKey: (groqApiKey) => set({ groqApiKey }),
       setIsAdmin: (isAdmin) => set({ isAdmin }),
+      setAdminToken: (adminToken) => set({ adminToken }),
       setCustomDictionary: (customDictionary) => set({ customDictionary }),
       
       loadDictionary: async () => {

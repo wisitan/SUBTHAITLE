@@ -53,44 +53,42 @@ export async function fetchCustomDictionaryFromCloud(): Promise<SupabaseResponse
 }
 
 /**
- * Add a new word pair to Supabase custom dictionary
+ * Add a new word pair to Supabase custom dictionary via secure server API
  */
-export async function insertDictionaryEntryToCloud(entry: {
-  wrong_word: string;
-  correct_word: string;
-  category?: string;
-}): Promise<SupabaseResponse<DictionaryEntry>> {
-  const supabase = getSupabase();
-  if (!supabase) {
-    return { data: null, error: 'Supabase URL or Key is missing' };
-  }
-
+export async function insertDictionaryEntryToCloud(
+  entry: {
+    wrong_word: string;
+    correct_word: string;
+    category?: string;
+  },
+  adminToken?: string | null
+): Promise<SupabaseResponse<DictionaryEntry>> {
   try {
-    const { data, error } = await supabase
-      .from('custom_dictionary')
-      .insert([
-        {
-          wrong_word: entry.wrong_word.trim(),
-          correct_word: entry.correct_word.trim(),
-          category: entry.category || 'general',
-        },
-      ])
-      .select()
-      .single();
-
-    if (error) {
-      return { data: null, error: error.message };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (adminToken) {
+      headers['x-admin-token'] = adminToken;
     }
 
-    return { data: data as DictionaryEntry, error: null };
+    const res = await fetch('/api/admin/dictionary', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(entry),
+    });
+
+    const json = await res.json();
+    if (!res.ok || json.error) {
+      return { data: null, error: json.error || 'Failed to insert entry' };
+    }
+
+    return { data: json.data as DictionaryEntry, error: null };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Failed to insert dictionary entry';
+    const msg = err instanceof Error ? err.message : 'Network error';
     return { data: null, error: msg };
   }
 }
 
 /**
- * Update an existing dictionary entry
+ * Update an existing dictionary entry via secure server API
  */
 export async function updateDictionaryEntryInCloud(
   id: number,
@@ -98,68 +96,70 @@ export async function updateDictionaryEntryInCloud(
     wrong_word: string;
     correct_word: string;
     category?: string;
-  }
+  },
+  adminToken?: string | null
 ): Promise<SupabaseResponse<DictionaryEntry>> {
-  const supabase = getSupabase();
-  if (!supabase) {
-    return { data: null, error: 'Supabase URL or Key is missing' };
-  }
-
   try {
-    const { data, error } = await supabase
-      .from('custom_dictionary')
-      .update({
-        wrong_word: entry.wrong_word.trim(),
-        correct_word: entry.correct_word.trim(),
-        category: entry.category || 'general',
-      })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      return { data: null, error: error.message };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (adminToken) {
+      headers['x-admin-token'] = adminToken;
     }
 
-    return { data: data as DictionaryEntry, error: null };
+    const res = await fetch('/api/admin/dictionary', {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({ id, ...entry }),
+    });
+
+    const json = await res.json();
+    if (!res.ok || json.error) {
+      return { data: null, error: json.error || 'Failed to update entry' };
+    }
+
+    return { data: json.data as DictionaryEntry, error: null };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Failed to update dictionary entry';
+    const msg = err instanceof Error ? err.message : 'Network error';
     return { data: null, error: msg };
   }
 }
 
 /**
- * Delete a dictionary entry by id
+ * Delete a dictionary entry by id via secure server API
  */
-export async function deleteDictionaryEntryFromCloud(id: number): Promise<SupabaseResponse<boolean>> {
-  const supabase = getSupabase();
-  if (!supabase) {
-    return { data: false, error: 'Supabase URL or Key is missing' };
-  }
-
+export async function deleteDictionaryEntryFromCloud(
+  id: number,
+  adminToken?: string | null
+): Promise<SupabaseResponse<boolean>> {
   try {
-    const { error } = await supabase.from('custom_dictionary').delete().eq('id', id);
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (adminToken) {
+      headers['x-admin-token'] = adminToken;
+    }
 
-    if (error) {
-      return { data: false, error: error.message };
+    const res = await fetch('/api/admin/dictionary', {
+      method: 'DELETE',
+      headers,
+      body: JSON.stringify({ id }),
+    });
+
+    const json = await res.json();
+    if (!res.ok || json.error) {
+      return { data: false, error: json.error || 'Failed to delete entry' };
     }
 
     return { data: true, error: null };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Failed to delete dictionary entry';
+    const msg = err instanceof Error ? err.message : 'Network error';
     return { data: false, error: msg };
   }
 }
 
 /**
- * Batch seed starter words to Supabase
+ * Batch seed starter words to Supabase via secure server API
  */
-export async function seedStarterWordsToCloud(): Promise<SupabaseResponse<number>> {
-  const supabase = getSupabase();
-  if (!supabase) {
-    return { data: 0, error: 'Supabase URL or Key is missing' };
-  }
-
+export async function seedStarterWordsToCloud(
+  adminToken?: string | null
+): Promise<SupabaseResponse<number>> {
   try {
     const records = DEFAULT_THAI_DICTIONARY.map((item) => ({
       wrong_word: item.wrong_word.trim(),
@@ -167,18 +167,25 @@ export async function seedStarterWordsToCloud(): Promise<SupabaseResponse<number
       category: item.category,
     }));
 
-    const { data, error } = await supabase
-      .from('custom_dictionary')
-      .upsert(records, { onConflict: 'wrong_word' })
-      .select();
-
-    if (error) {
-      return { data: 0, error: error.message };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (adminToken) {
+      headers['x-admin-token'] = adminToken;
     }
 
-    return { data: data?.length || 0, error: null };
+    const res = await fetch('/api/admin/dictionary', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ action: 'seed', entries: records }),
+    });
+
+    const json = await res.json();
+    if (!res.ok || json.error) {
+      return { data: 0, error: json.error || 'Failed to seed dictionary' };
+    }
+
+    return { data: json.count || 0, error: null };
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : 'Failed to seed dictionary';
+    const msg = err instanceof Error ? err.message : 'Network error';
     return { data: 0, error: msg };
   }
 }
