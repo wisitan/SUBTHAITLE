@@ -240,15 +240,15 @@ export function UploadZone() {
           onClick={() => fileInputRef.current?.click()}
           className={`relative cursor-pointer border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center transition-all flex flex-col items-center justify-center min-h-[300px] group ${
             isDragging
-              ? 'border-orange-500 bg-orange-500/10 scale-[1.01]'
-              : 'border-zinc-700 bg-zinc-900/80 hover:border-orange-500/60 hover:bg-zinc-900'
+              ? 'border-orange-500 bg-orange-500/15 scale-[1.01] shadow-2xl'
+              : 'border-zinc-700/80 bg-zinc-900/95 hover:border-orange-500/80 hover:bg-[#1a1a20] shadow-xl'
           }`}
         >
           {/* Subtle glow background */}
           <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent rounded-3xl pointer-events-none" />
 
           {/* Upload Icon */}
-          <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-700 flex items-center justify-center text-orange-400 mb-4 group-hover:scale-110 group-hover:border-orange-500/50 group-hover:text-orange-300 transition-all shadow-xl">
+          <div className="w-16 h-16 rounded-2xl bg-zinc-950/90 border border-zinc-700/80 flex items-center justify-center text-orange-400 mb-4 group-hover:scale-110 group-hover:border-orange-500/60 group-hover:text-orange-300 transition-all shadow-xl">
             <UploadCloud className="w-8 h-8" />
           </div>
 
@@ -261,7 +261,7 @@ export function UploadZone() {
 
           {/* Badges & Limit notice */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 max-w-md">
-            <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 font-medium">
+            <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-950/80 border border-zinc-700/80 text-zinc-300 font-medium">
               รองรับ MP4, MOV, WebM, MKV, MP3, WAV
             </span>
             {isUnlimitedSize ? (
@@ -270,7 +270,7 @@ export function UploadZone() {
                 โหมดไม่จำกัดขนาดไฟล์
               </span>
             ) : (
-              <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 font-medium">
+              <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-950/80 border border-zinc-700/80 text-zinc-300 font-medium">
                 ขนาดไฟล์สูงสุด 100 MB
               </span>
             )}
@@ -278,8 +278,8 @@ export function UploadZone() {
         </div>
       ) : (
         /* File Selected / Extracted / Transcribed Preview Card */
-        <div className="bg-zinc-900 border border-zinc-700 rounded-3xl p-4 sm:p-6 backdrop-blur-md shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 border-b border-zinc-800">
+        <div className="bg-zinc-900/95 border border-zinc-700/80 rounded-3xl p-4 sm:p-6 backdrop-blur-md shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 border-b border-zinc-700/70">
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">
                 {file.type.startsWith('video/') ? (
@@ -312,7 +312,7 @@ export function UploadZone() {
               type="button"
               disabled={isExtracting || isTranscribing}
               onClick={handleReset}
-              className="px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 bg-zinc-950 hover:bg-zinc-900 border border-zinc-800 rounded-xl transition-colors flex items-center gap-1.5 self-end md:self-auto disabled:opacity-50 cursor-pointer"
+              className="px-3 py-1.5 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-950/80 hover:bg-zinc-800 border border-zinc-700/80 hover:border-zinc-500 rounded-xl transition-colors flex items-center gap-1.5 self-end md:self-auto disabled:opacity-50 cursor-pointer shadow-sm"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               เปลี่ยนไฟล์
@@ -321,7 +321,7 @@ export function UploadZone() {
 
           {/* Extraction Progress Bar */}
           {isExtracting && (
-            <div className="my-5 p-4 bg-zinc-950/60 border border-orange-500/20 rounded-2xl">
+            <div className="my-5 p-4 bg-zinc-950/80 border border-orange-500/30 rounded-2xl">
               <div className="flex items-center justify-between text-sm font-semibold mb-2">
                 <span className="text-orange-400 flex items-center gap-2">
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -345,7 +345,7 @@ export function UploadZone() {
 
           {/* Transcription In Progress Banner */}
           {isTranscribing && (
-            <div className="my-5 p-5 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-rose-500/10 border border-orange-500/30 rounded-2xl animate-pulse">
+            <div className="my-5 p-5 bg-gradient-to-r from-orange-500/15 via-amber-500/15 to-rose-500/15 border border-orange-500/40 rounded-2xl animate-pulse">
               <div className="flex items-center gap-3">
                 <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
                 <div>
@@ -360,14 +360,14 @@ export function UploadZone() {
 
           {/* Video Preview thumbnail & Duration */}
           {videoUrl && !captions.length && (
-            <div className="my-5 flex flex-col sm:flex-row items-center gap-4 p-4 bg-zinc-950 rounded-2xl border border-zinc-800/80">
+            <div className="my-5 flex flex-col sm:flex-row items-center gap-4 p-4 bg-zinc-950/80 rounded-2xl border border-zinc-700/70">
               <video
                 src={videoUrl}
                 controls
                 onLoadedMetadata={(e) => {
                   setMediaDuration(e.currentTarget.duration);
                 }}
-                className="w-full sm:w-48 max-h-36 rounded-xl bg-black object-contain border border-zinc-800"
+                className="w-full sm:w-48 max-h-36 rounded-xl bg-black object-contain border border-zinc-700/80 shadow-md"
               />
               <div className="flex-1 text-sm text-zinc-300 space-y-1.5">
                 <div className="flex items-center gap-2">
@@ -396,9 +396,9 @@ export function UploadZone() {
 
           {/* Transcription Results & Pacing Card (Phase 3) */}
           {captions.length > 0 && (
-            <div className="my-5 p-5 bg-zinc-950 rounded-2xl border border-emerald-500/30 space-y-5 animate-in fade-in duration-300">
+            <div className="my-5 p-5 bg-zinc-950/90 rounded-2xl border border-emerald-500/40 space-y-5 animate-in fade-in duration-300 shadow-xl">
               {/* Header with Stats & Quick Export */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-700/70">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
                     <CheckCircle2 className="w-5 h-5" />
@@ -421,7 +421,7 @@ export function UploadZone() {
                   <button
                     type="button"
                     onClick={handleDownloadSrt}
-                    className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-orange-300 hover:border-orange-500/40"
+                    className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-orange-300 hover:border-orange-500/50"
                     title="ดาวน์โหลดไฟล์ .SRT สำหรับใช้งานทั่วไป"
                   >
                     <Download className="w-4 h-4 text-orange-400" />
@@ -430,7 +430,7 @@ export function UploadZone() {
                   <button
                     type="button"
                     onClick={handleDownloadVtt}
-                    className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-emerald-300 hover:border-emerald-500/40"
+                    className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-emerald-300 hover:border-emerald-500/50"
                     title="ดาวน์โหลดไฟล์ WebVTT (.VTT)"
                   >
                     <Download className="w-4 h-4 text-emerald-400" />
@@ -440,7 +440,7 @@ export function UploadZone() {
               </div>
 
               {/* 🎛️ Caption Pacing / Length Selector (Killer Feature) */}
-              <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 space-y-3">
+              <div className="p-4 rounded-2xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500/70 space-y-3 transition-all duration-200">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <SlidersHorizontal className="w-4 h-4 text-orange-400" />
@@ -448,7 +448,7 @@ export function UploadZone() {
                       ✂️ ปรับจังหวะความยาวท่อนซับ (Caption Pacing):
                     </span>
                   </div>
-                  <span className="text-xs text-zinc-400">
+                  <span className="text-xs text-zinc-300">
                     คลิกเลือกโหมดเพื่อจัดกลุ่มคำใหม่แบบ Realtime
                   </span>
                 </div>
@@ -460,8 +460,8 @@ export function UploadZone() {
                     onClick={() => setPacingMode('short')}
                     className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                       pacingMode === 'short'
-                        ? 'bg-orange-500/15 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/60'
+                        ? 'bg-orange-500/20 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
+                        : 'bg-zinc-950/70 border-zinc-700/70 text-zinc-300 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -484,8 +484,8 @@ export function UploadZone() {
                     onClick={() => setPacingMode('medium')}
                     className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                       pacingMode === 'medium'
-                        ? 'bg-orange-500/15 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/60'
+                        ? 'bg-orange-500/20 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
+                        : 'bg-zinc-950/70 border-zinc-700/70 text-zinc-300 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -508,8 +508,8 @@ export function UploadZone() {
                     onClick={() => setPacingMode('long')}
                     className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                       pacingMode === 'long'
-                        ? 'bg-orange-500/15 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                        : 'bg-zinc-950/60 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/60'
+                        ? 'bg-orange-500/20 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
+                        : 'bg-zinc-950/70 border-zinc-700/70 text-zinc-300 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -528,7 +528,7 @@ export function UploadZone() {
                 </div>
 
                 {/* Custom Word Slider Toggle */}
-                <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm border-t border-zinc-800/80">
+                <div className="pt-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm border-t border-zinc-700/70">
                   <div className="flex items-center gap-2 text-zinc-300">
                     <Settings2 className="w-4 h-4 text-zinc-400" />
                     <span>หรือปรับกำหนดจำนวนคำต่อท่อนเอง:</span>
@@ -546,7 +546,7 @@ export function UploadZone() {
                       }}
                       className="w-36 accent-orange-500 cursor-pointer"
                     />
-                    <span className="px-2.5 py-0.5 rounded-lg bg-zinc-800 text-orange-400 font-mono font-bold min-w-[3.5rem] text-center text-sm">
+                    <span className="px-2.5 py-0.5 rounded-lg bg-zinc-900 border border-zinc-700 text-orange-400 font-mono font-bold min-w-[3.5rem] text-center text-sm shadow-sm">
                       {customMaxWords} คำ
                     </span>
                   </div>
@@ -561,11 +561,11 @@ export function UploadZone() {
                     คำนวณเวลาตรงตามเสียง 100%
                   </span>
                 </div>
-                <div className="max-h-52 overflow-y-auto space-y-2 p-4 rounded-xl bg-zinc-900/70 border border-zinc-800 text-sm font-mono">
+                <div className="max-h-52 overflow-y-auto space-y-2 p-4 rounded-xl bg-zinc-950/75 border border-zinc-700/70 text-sm font-mono">
                   {captions.map((cue, idx) => (
                     <div
                       key={cue.id || idx}
-                      className="flex items-start gap-2.5 text-zinc-200 hover:bg-zinc-800/40 p-1.5 rounded-lg transition-colors"
+                      className="flex items-start gap-2.5 text-zinc-200 hover:bg-zinc-900/80 p-1.5 rounded-lg transition-colors"
                     >
                       <span className="text-orange-400 font-bold shrink-0 select-none text-xs font-mono">
                         [{cue.start.toFixed(2)}s ➔ {cue.end.toFixed(2)}s]

@@ -90,8 +90,8 @@ export function StyleEditor() {
       />
 
       {/* 📏 Tool Card 2: Typography, Size & Weight */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
           <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
             <Type className="w-3.5 h-3.5" />
           </div>
@@ -101,10 +101,10 @@ export function StyleEditor() {
         </div>
 
         {/* Font Size Slider */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ขนาดตัวอักษร (Font Size):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
               {style.fontSize}px
             </span>
           </div>
@@ -131,8 +131,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ fontSize: 13 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.fontSize === 13
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ซับหนัง</span>
@@ -143,8 +143,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ fontSize: 20 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.fontSize === 20
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">มาตรฐาน</span>
@@ -155,8 +155,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ fontSize: 28 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.fontSize === 28
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">อ่านสบาย</span>
@@ -167,8 +167,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ fontSize: 36 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.fontSize === 36
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ตัวใหญ่</span>
@@ -178,16 +178,16 @@ export function StyleEditor() {
         </div>
 
         {/* Font Weight */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <span className="text-zinc-200 font-medium">ความหนาของตัวอักษร (Font Weight):</span>
-          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-700/80">
             <button
               type="button"
               onClick={() => setStyle({ fontWeight: '500' })}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
                 style.fontWeight === '500' || style.fontWeight === 'normal'
-                  ? 'bg-orange-500 text-zinc-950 font-bold'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
               }`}
             >
               ปกติ (Normal)
@@ -197,8 +197,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ fontWeight: '700' })}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 style.fontWeight === '700' || style.fontWeight === 'bold'
-                  ? 'bg-orange-500 text-zinc-950 font-bold'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
               }`}
             >
               ตัวหนา (Bold)
@@ -208,8 +208,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ fontWeight: '800' })}
               className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
                 style.fontWeight === '800'
-                  ? 'bg-orange-500 text-zinc-950 font-bold'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
               }`}
             >
               หนาพิเศษ
@@ -219,8 +219,8 @@ export function StyleEditor() {
       </div>
 
       {/* 🎨 Tool Card 3: Text Color & Highlight */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
           <div className="w-6 h-6 rounded-lg bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 flex items-center justify-center shrink-0">
             <Palette className="w-3.5 h-3.5" />
           </div>
@@ -230,7 +230,7 @@ export function StyleEditor() {
         </div>
 
         {/* Text Color Swatches */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-2.5">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-2.5 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <span className="text-sm text-zinc-200 font-medium block">
             สีข้อความหลัก (Text Color):
           </span>
@@ -242,8 +242,8 @@ export function StyleEditor() {
                 onClick={() => setStyle({ textColor: c.hex })}
                 className={`w-7 h-7 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
                   style.textColor.toLowerCase() === c.hex.toLowerCase()
-                    ? 'ring-2 ring-orange-500 scale-110 border-white'
-                    : 'border-zinc-700 hover:scale-105'
+                    ? 'ring-2 ring-orange-500 scale-110 border-white shadow-md'
+                    : 'border-zinc-600 hover:border-zinc-400 hover:scale-105'
                 }`}
                 style={{ backgroundColor: c.hex }}
                 title={c.name}
@@ -267,7 +267,7 @@ export function StyleEditor() {
                 value={style.textColor}
                 onChange={(e) => setStyle({ textColor: e.target.value })}
                 aria-label="เลือกสีข้อความหลัก"
-                className="w-7 h-7 rounded-xl bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
+                className="w-7 h-7 rounded-xl bg-transparent border border-zinc-600 cursor-pointer overflow-hidden"
               />
               <span className="text-xs font-mono text-zinc-300 uppercase">
                 {style.textColor}
@@ -277,7 +277,7 @@ export function StyleEditor() {
         </div>
 
         {/* Word Highlight Box */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
@@ -301,7 +301,7 @@ export function StyleEditor() {
           </div>
 
           {style.enableWordHighlight && (
-            <div className="space-y-2 pt-2 border-t border-zinc-900">
+            <div className="space-y-2 pt-2 border-t border-zinc-800">
               <span className="text-xs text-zinc-200 font-medium block">
                 เลือกสีไฮไลท์ของคำที่กำลังพูด (Highlight Color):
               </span>
@@ -313,8 +313,8 @@ export function StyleEditor() {
                     onClick={() => setStyle({ highlightColor: c.hex })}
                     className={`w-7 h-7 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
                       style.highlightColor.toLowerCase() === c.hex.toLowerCase()
-                        ? 'ring-2 ring-orange-500 scale-110 border-white'
-                        : 'border-zinc-700 hover:scale-105'
+                        ? 'ring-2 ring-orange-500 scale-110 border-white shadow-md'
+                        : 'border-zinc-600 hover:border-zinc-400 hover:scale-105'
                     }`}
                     style={{ backgroundColor: c.hex }}
                     title={c.name}
@@ -332,7 +332,7 @@ export function StyleEditor() {
                     value={style.highlightColor}
                     onChange={(e) => setStyle({ highlightColor: e.target.value })}
                     aria-label="เลือกสีไฮไลท์ของคำที่กำลังพูด"
-                    className="w-7 h-7 rounded-xl bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
+                    className="w-7 h-7 rounded-xl bg-transparent border border-zinc-600 cursor-pointer overflow-hidden"
                   />
                   <span className="text-xs font-mono text-zinc-300 uppercase">
                     {style.highlightColor}
@@ -345,8 +345,8 @@ export function StyleEditor() {
       </div>
 
       {/* 📐 Tool Card 4: Letter & Line Spacing */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
           <div className="w-6 h-6 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
             <Space className="w-3.5 h-3.5" />
           </div>
@@ -356,10 +356,10 @@ export function StyleEditor() {
         </div>
 
         {/* Letter Spacing (Tracking) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ระยะห่างระหว่างตัวอักษร (Letter Spacing):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
               {style.letterSpacing ?? 0}px
             </span>
           </div>
@@ -382,8 +382,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ letterSpacing: -1 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.letterSpacing ?? 0) === -1
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">แนบชิด</span>
@@ -394,8 +394,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ letterSpacing: 0 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.letterSpacing ?? 0) === 0
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ปกติ</span>
@@ -406,8 +406,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ letterSpacing: 1.5 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.letterSpacing ?? 0) === 1.5
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">กว้าง</span>
@@ -418,8 +418,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ letterSpacing: 3 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.letterSpacing ?? 0) === 3
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">กว้างมาก</span>
@@ -429,10 +429,10 @@ export function StyleEditor() {
         </div>
 
         {/* Line Height (Leading) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ระยะห่างระหว่างบรรทัด (Line Spacing / Height):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
               {style.lineHeight ?? 1.4}x
             </span>
           </div>
@@ -455,8 +455,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ lineHeight: 1.2 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.lineHeight ?? 1.4) === 1.2
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">แคบ</span>
@@ -467,8 +467,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ lineHeight: 1.4 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.lineHeight ?? 1.4) === 1.4
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ปกติ</span>
@@ -479,8 +479,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ lineHeight: 1.6 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.lineHeight ?? 1.4) === 1.6
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">สบายตา</span>
@@ -491,8 +491,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ lineHeight: 1.9 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.lineHeight ?? 1.4) === 1.9
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">โปร่ง</span>
@@ -503,8 +503,8 @@ export function StyleEditor() {
       </div>
 
       {/* 🧭 Tool Card 5: Placement, Alignment & Width */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
           <div className="w-6 h-6 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0">
             <MoveVertical className="w-3.5 h-3.5" />
           </div>
@@ -514,16 +514,16 @@ export function StyleEditor() {
         </div>
 
         {/* Text Alignment (Left / Center / Right) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <span className="text-zinc-200 font-medium">การจัดแนวข้อความ (Text Alignment):</span>
-          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-800">
+          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-700/80">
             <button
               type="button"
               onClick={() => setStyle({ textAlign: 'left' })}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 style.textAlign === 'left'
-                  ? 'bg-orange-500 text-zinc-950 font-bold'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
               }`}
               title="จัดข้อความชิดซ้าย"
             >
@@ -535,8 +535,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ textAlign: 'center' })}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 !style.textAlign || style.textAlign === 'center'
-                  ? 'bg-orange-500 text-zinc-950 font-bold'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
               }`}
               title="จัดข้อความกึ่งกลาง"
             >
@@ -548,8 +548,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ textAlign: 'right' })}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 style.textAlign === 'right'
-                  ? 'bg-orange-500 text-zinc-950 font-bold'
-                  : 'text-zinc-400 hover:text-white'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
+                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
               }`}
               title="จัดข้อความชิดขวา"
             >
@@ -560,13 +560,13 @@ export function StyleEditor() {
         </div>
 
         {/* Subtitle Max Width & Side Margins */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium flex items-center gap-1.5">
               <Maximize2 className="w-4 h-4 text-orange-400" />
               <span>ความกว้างสูงสุด / ระยะขอบข้าง (Width & Margins):</span>
             </span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
               {style.maxWidth ?? 92}%
             </span>
           </div>
@@ -589,8 +589,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ maxWidth: 70 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.maxWidth ?? 92) === 70
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">แคบ</span>
@@ -601,8 +601,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ maxWidth: 85 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.maxWidth ?? 92) === 85
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">มาตรฐาน</span>
@@ -613,8 +613,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ maxWidth: 92 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.maxWidth ?? 92) === 92
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">กว้าง</span>
@@ -625,8 +625,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ maxWidth: 98 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.maxWidth ?? 92) === 98
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">เต็มจอ</span>
@@ -639,10 +639,10 @@ export function StyleEditor() {
         </div>
 
         {/* Position Y (Up-Down) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ตำแหน่งแนวตั้ง (ขึ้น - ลง จากขอบล่าง):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
               {style.positionY}%
             </span>
           </div>
@@ -665,8 +665,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ positionY: 10 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionY === 10
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ล่างสุด</span>
@@ -677,8 +677,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ positionY: 18 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionY === 18
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">TikTok ฮิต</span>
@@ -689,8 +689,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ positionY: 50 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionY === 50
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">กึ่งกลาง</span>
@@ -700,10 +700,10 @@ export function StyleEditor() {
         </div>
 
         {/* Position X (Left-Right) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ตำแหน่งแนวนอน (ซ้าย - ขวา):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
+            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
               {style.positionX}%
             </span>
           </div>
@@ -726,8 +726,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ positionX: 20 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionX === 20
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ชิดซ้าย</span>
@@ -738,8 +738,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ positionX: 50 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionX === 50
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ตรงกลาง</span>
@@ -750,8 +750,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ positionX: 80 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionX === 80
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                  : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ชิดขวา</span>
@@ -762,8 +762,8 @@ export function StyleEditor() {
       </div>
 
       {/* 🔲 Tool Card 6: Shadow & Outline */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
           <div className="w-6 h-6 rounded-lg bg-teal-500/15 border border-teal-500/30 text-teal-400 flex items-center justify-center shrink-0">
             <Sun className="w-3.5 h-3.5" />
           </div>
@@ -773,7 +773,7 @@ export function StyleEditor() {
         </div>
 
         {/* Drop Shadow Section */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
@@ -793,14 +793,14 @@ export function StyleEditor() {
                   value={style.shadowColor || '#000000'}
                   onChange={(e) => setStyle({ shadowColor: e.target.value })}
                   aria-label="เลือกสีเงา"
-                  className="w-6 h-6 rounded-lg bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
+                  className="w-6 h-6 rounded-lg bg-transparent border border-zinc-600 cursor-pointer overflow-hidden"
                 />
               </div>
             )}
           </div>
 
           {style.hasShadow && (
-            <div className="space-y-2 pt-1 border-t border-zinc-900 text-sm">
+            <div className="space-y-2 pt-1 border-t border-zinc-800 text-sm">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-zinc-300">ความฟุ้งของเงา (Blur):</span>
                 <span className="font-mono text-orange-400 font-bold">{style.shadowBlur}px</span>
@@ -819,7 +819,7 @@ export function StyleEditor() {
         </div>
 
         {/* Outline Section */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
@@ -839,14 +839,14 @@ export function StyleEditor() {
                   value={style.outlineColor || '#000000'}
                   onChange={(e) => setStyle({ outlineColor: e.target.value })}
                   aria-label="เลือกสีเส้นขอบ"
-                  className="w-6 h-6 rounded-lg bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
+                  className="w-6 h-6 rounded-lg bg-transparent border border-zinc-600 cursor-pointer overflow-hidden"
                 />
               </div>
             )}
           </div>
 
           {style.hasOutline && (
-            <div className="space-y-2 pt-1 border-t border-zinc-900 text-sm">
+            <div className="space-y-2 pt-1 border-t border-zinc-800 text-sm">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-zinc-300">ความหนาเส้นขอบ (Width):</span>
                 <span className="font-mono text-orange-400 font-bold">{style.outlineWidth}px</span>
@@ -866,8 +866,8 @@ export function StyleEditor() {
       </div>
 
       {/* 📦 Tool Card 7: Background Box & Opacity */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
           <div className="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
             <Layers className="w-3.5 h-3.5" />
           </div>
@@ -876,7 +876,7 @@ export function StyleEditor() {
           </h4>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-zinc-950/80 border border-zinc-800/70 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
@@ -896,7 +896,7 @@ export function StyleEditor() {
           </div>
 
           {style.hasBackground && (
-            <div className="space-y-3 pt-2 border-t border-zinc-900 text-sm">
+            <div className="space-y-3 pt-2 border-t border-zinc-800 text-sm">
               {/* Background Color Swatches */}
               <div className="space-y-1.5">
                 <span className="text-xs text-zinc-200 font-medium block">
@@ -910,8 +910,8 @@ export function StyleEditor() {
                       onClick={() => setStyle({ backgroundColor: c.hex })}
                       className={`w-7 h-7 rounded-lg border transition-all cursor-pointer flex items-center justify-center ${
                         (style.backgroundColor || '#000000').toLowerCase() === c.hex.toLowerCase()
-                          ? 'ring-2 ring-orange-500 scale-110 border-white'
-                          : 'border-zinc-700 hover:scale-105'
+                          ? 'ring-2 ring-orange-500 scale-110 border-white shadow-md'
+                          : 'border-zinc-600 hover:border-zinc-400 hover:scale-105'
                       }`}
                       style={{ backgroundColor: c.hex }}
                       title={c.name}
@@ -933,7 +933,7 @@ export function StyleEditor() {
                       value={style.backgroundColor || '#000000'}
                       onChange={(e) => setStyle({ backgroundColor: e.target.value })}
                       aria-label="เลือกสีพื้นหลังกล่องซับไตเติล"
-                      className="w-7 h-7 rounded-lg bg-transparent border border-zinc-700 cursor-pointer overflow-hidden"
+                      className="w-7 h-7 rounded-lg bg-transparent border border-zinc-600 cursor-pointer overflow-hidden"
                     />
                     <span className="text-xs font-mono text-zinc-300 uppercase">
                       {style.backgroundColor || '#000000'}
@@ -946,7 +946,7 @@ export function StyleEditor() {
               <div className="space-y-2 pt-1">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-zinc-200">ความทึบแสง (Opacity):</span>
-                  <span className="font-mono text-orange-400 font-bold bg-zinc-900 px-2 py-0.5 rounded border border-zinc-800 text-xs">
+                  <span className="font-mono text-orange-400 font-bold bg-zinc-900 px-2 py-0.5 rounded border border-zinc-700 text-xs">
                     {style.backgroundOpacity ?? 70}%
                   </span>
                 </div>
@@ -968,8 +968,8 @@ export function StyleEditor() {
                     onClick={() => setStyle({ backgroundOpacity: 40 })}
                     className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                       (style.backgroundOpacity ?? 70) === 40
-                        ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                        : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                        ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                        : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
                     }`}
                   >
                     <span className="block text-xs font-semibold leading-tight">โปร่งแสง</span>
@@ -980,8 +980,8 @@ export function StyleEditor() {
                     onClick={() => setStyle({ backgroundOpacity: 65 })}
                     className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                       (style.backgroundOpacity ?? 70) === 65
-                        ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                        : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                        ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                        : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
                     }`}
                   >
                     <span className="block text-xs font-semibold leading-tight">ปานกลาง</span>
@@ -992,8 +992,8 @@ export function StyleEditor() {
                     onClick={() => setStyle({ backgroundOpacity: 85 })}
                     className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                       (style.backgroundOpacity ?? 70) === 85
-                        ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                        : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                        ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                        : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
                     }`}
                   >
                     <span className="block text-xs font-semibold leading-tight">ทึบแสง</span>
@@ -1004,8 +1004,8 @@ export function StyleEditor() {
                     onClick={() => setStyle({ backgroundOpacity: 100 })}
                     className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                       (style.backgroundOpacity ?? 70) === 100
-                        ? 'bg-orange-500/20 border-orange-500 text-orange-300'
-                        : 'bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border-zinc-800'
+                        ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
+                        : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
                     }`}
                   >
                     <span className="block text-xs font-semibold leading-tight">ทึบ 100%</span>

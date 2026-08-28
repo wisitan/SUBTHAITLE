@@ -65,7 +65,7 @@ export function ProviderSelector() {
   };
 
   return (
-    <div className="w-full max-w-full bg-zinc-900 border border-zinc-700 rounded-3xl p-4 sm:p-6 shadow-xl overflow-hidden">
+    <div className="w-full max-w-full bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 rounded-3xl p-4 sm:p-6 shadow-xl overflow-hidden transition-all duration-200">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
           <h3 className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2">
@@ -80,7 +80,7 @@ export function ProviderSelector() {
         {/* Tier Status & Quick Dev Testing Bar */}
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           {/* Quick Tier Switcher for Testing */}
-          <div className="flex items-center gap-1 bg-zinc-950 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl border border-zinc-800 text-xs">
+          <div className="flex items-center gap-1 bg-zinc-950/80 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl border border-zinc-700/80 text-xs">
             <FlaskConical className="w-3.5 h-3.5 text-amber-400 mr-0.5 shrink-0" />
             <span className="text-zinc-400 hidden sm:inline mr-1 font-medium">โหมดทดสอบ:</span>
             <button
@@ -133,7 +133,7 @@ export function ProviderSelector() {
           ) : (
             <Link
               href="/donate"
-              className="px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-white text-xs sm:text-sm transition-colors flex items-center gap-1.5 font-medium"
+              className="px-3 py-1.5 rounded-xl bg-zinc-950/80 hover:bg-zinc-900 border border-zinc-700/80 text-zinc-300 hover:text-white text-xs sm:text-sm transition-colors flex items-center gap-1.5 font-medium"
             >
               <Heart className="w-3.5 h-3.5 text-rose-400 shrink-0" />
               <span>ดูสิทธิพิเศษ</span>
@@ -152,8 +152,8 @@ export function ProviderSelector() {
           }}
           className={`cursor-pointer p-4 sm:p-5 rounded-2xl border transition-all flex flex-col justify-between h-full ${
             provider === 'groq' && !showKeyInput
-              ? 'border-orange-500/80 bg-orange-500/10 ring-1 ring-orange-500/30'
-              : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/60'
+              ? 'border-orange-500/80 bg-orange-500/15 ring-1 ring-orange-500/40 shadow-lg shadow-orange-500/5'
+              : 'border-zinc-700/70 bg-zinc-950/70 hover:border-zinc-500 hover:bg-zinc-900 shadow-sm'
           }`}
         >
           <div>
@@ -180,7 +180,7 @@ export function ProviderSelector() {
             </div>
           </div>
 
-          <p className="text-xs text-zinc-400 mt-3 leading-relaxed border-t border-zinc-800/60 pt-2.5 min-h-[3.75rem] flex items-start">
+          <p className="text-xs text-zinc-300 mt-3 leading-relaxed border-t border-zinc-800/80 pt-2.5 min-h-[3.75rem] flex items-start">
             ถอดเสียงภาษาไทยอัตโนมัติความเร็วสูง สำหรับคลิปความยาวไม่เกิน 2 นาที และขนาดไฟล์ไม่เกิน 100 MB
           </p>
         </div>
@@ -196,8 +196,8 @@ export function ProviderSelector() {
             !isPaid
               ? 'border-zinc-800/60 bg-zinc-950/20 opacity-80'
               : provider === 'groq' && showKeyInput
-              ? 'border-emerald-500/80 bg-emerald-500/10 ring-1 ring-emerald-500/30 cursor-pointer'
-              : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/60 cursor-pointer'
+              ? 'border-emerald-500/80 bg-emerald-500/15 ring-1 ring-emerald-500/40 shadow-lg shadow-emerald-500/5 cursor-pointer'
+              : 'border-zinc-700/70 bg-zinc-950/70 hover:border-zinc-500 hover:bg-zinc-900 shadow-sm cursor-pointer'
           }`}
         >
           <div>
@@ -233,7 +233,7 @@ export function ProviderSelector() {
             </div>
           </div>
 
-          <p className="text-xs text-zinc-400 mt-3 leading-relaxed border-t border-zinc-800/60 pt-2.5 min-h-[3.75rem] flex items-start">
+          <p className="text-xs text-zinc-300 mt-3 leading-relaxed border-t border-zinc-800/80 pt-2.5 min-h-[3.75rem] flex items-start">
             {isPaid
               ? 'ใส่ Groq API Key ส่วนตัว ถอดเสียงไม่จำกัดขนาดไฟล์ ไม่จำกัดความยาวคลิป และไม่จำกัดจำนวน ฟรีไม่มีค่าใช้จ่ายเพิ่ม'
               : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงได้ไม่จำกัดขนาดไฟล์ ไม่จำกัดความยาว และไม่จำกัดจำนวนคลิป พร้อมใส่ API Key ตัวเอง'}
@@ -250,8 +250,8 @@ export function ProviderSelector() {
             !isPaid
               ? 'border-zinc-800/60 bg-zinc-950/20 opacity-80'
               : provider === 'local'
-              ? 'border-indigo-500/80 bg-indigo-500/10 ring-1 ring-indigo-500/30 cursor-pointer'
-              : 'border-zinc-800 bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/60 cursor-pointer'
+              ? 'border-indigo-500/80 bg-indigo-500/15 ring-1 ring-indigo-500/40 shadow-lg shadow-indigo-500/5 cursor-pointer'
+              : 'border-zinc-700/70 bg-zinc-950/70 hover:border-zinc-500 hover:bg-zinc-900 shadow-sm cursor-pointer'
           }`}
         >
           <div>
@@ -318,7 +318,7 @@ export function ProviderSelector() {
             </div>
           </div>
 
-          <p className="text-xs text-zinc-400 mt-3 leading-relaxed border-t border-zinc-800/60 pt-2.5 min-h-[3.75rem] flex items-start">
+          <p className="text-xs text-zinc-300 mt-3 leading-relaxed border-t border-zinc-800/80 pt-2.5 min-h-[3.75rem] flex items-start">
             {isPaid
               ? 'ประมวลผลบนเครื่องของคุณ 100% (Apple Silicon / NVIDIA GPU) ไม่จำกัดขนาดและความยาวคลิป ข้อมูลปลอดภัยไม่หลุดออกนอกเครื่อง'
               : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงในเครื่อง Mac/PC ออฟไลน์ 100% ไม่จำกัดขนาดและความยาวคลิป ข้อมูลปลอดภัย'}
@@ -336,7 +336,7 @@ export function ProviderSelector() {
                 placeholder="กรอก Groq API Key ของคุณ (gsk_...)"
                 value={groqApiKey}
                 onChange={(e) => setGroqApiKey(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                className="w-full bg-zinc-950/80 border border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
               />
             </div>
             <a

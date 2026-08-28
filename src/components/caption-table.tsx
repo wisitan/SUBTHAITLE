@@ -121,7 +121,7 @@ export function CaptionTable({ onPlayCue }: Props) {
       )}
 
       {/* Slim Top Header Section */}
-      <div className="shrink-0 px-4 py-3 bg-zinc-900 border-b border-zinc-700">
+      <div className="shrink-0 px-4 py-3 bg-zinc-900/95 border-b border-zinc-700/80">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-7 h-7 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0">
@@ -130,7 +130,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             <div className="min-w-0">
               <h3 className="text-sm font-bold text-white flex items-center gap-1.5 truncate">
                 <span>รายการซับไตเติล</span>
-                <span className="text-xs font-normal text-zinc-400">
+                <span className="text-xs font-normal text-zinc-300">
                   (~{totalWords} คำ)
                 </span>
               </h3>
@@ -145,8 +145,8 @@ export function CaptionTable({ onPlayCue }: Props) {
               onClick={() => setAutoScroll(!autoScroll)}
               className={`px-2.5 py-1 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
                 autoScroll
-                  ? 'bg-orange-500/15 border-orange-500/40 text-orange-300'
-                  : 'bg-zinc-950 border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800'
+                  ? 'bg-orange-500/20 border-orange-500/50 text-orange-300 ring-1 ring-orange-500/30'
+                  : 'bg-zinc-950/80 border-zinc-700/80 text-zinc-300 hover:text-white hover:bg-zinc-800'
               }`}
               title="เลื่อนหน้าจอตามวิดีโออัตโนมัติ"
             >
@@ -157,7 +157,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             <button
               type="button"
               onClick={() => setTimeShiftModalOpen(true)}
-              className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-zinc-950 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+              className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-zinc-950/80 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 hover:border-zinc-500 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
               title="ขยับเวลาซับทั้งหมดพร้อมกัน (+- Offset)"
             >
               <Clock className="w-3.5 h-3.5 text-orange-400" />
@@ -168,7 +168,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             <button
               type="button"
               onClick={() => setFindReplaceModalOpen(true)}
-              className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-zinc-950 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+              className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-zinc-950/80 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 hover:border-zinc-500 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
               title="ค้นหาและแทนที่คำในซับไตเติล"
             >
               <Replace className="w-3.5 h-3.5 text-amber-400" />
@@ -194,7 +194,7 @@ export function CaptionTable({ onPlayCue }: Props) {
         className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3.5 scrollbar-thin scrollbar-thumb-zinc-800 max-w-full overflow-x-hidden"
       >
         {/* 🎛️ Pacing Mode Selector Card (Scrolls with content) */}
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-zinc-900 border border-zinc-700 space-y-3 shadow-lg">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500/80 space-y-3 shadow-xl transition-all duration-200">
           <div className="flex items-center justify-between text-sm">
             <span className="font-bold text-zinc-100 flex items-center gap-1.5">
               <SlidersHorizontal className="w-4 h-4 text-orange-400" />
@@ -212,8 +212,8 @@ export function CaptionTable({ onPlayCue }: Props) {
               onClick={() => setPacingMode('short')}
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'short'
-                  ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-950 border border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900'
+                  ? 'bg-orange-500/20 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
+                  : 'bg-zinc-950/70 border-zinc-700/70 text-zinc-300 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -236,8 +236,8 @@ export function CaptionTable({ onPlayCue }: Props) {
               onClick={() => setPacingMode('medium')}
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'medium'
-                  ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-950 border border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900'
+                  ? 'bg-orange-500/20 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
+                  : 'bg-zinc-950/70 border-zinc-700/70 text-zinc-300 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -260,8 +260,8 @@ export function CaptionTable({ onPlayCue }: Props) {
               onClick={() => setPacingMode('long')}
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'long'
-                  ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-950 border border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900'
+                  ? 'bg-orange-500/20 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
+                  : 'bg-zinc-950/70 border-zinc-700/70 text-zinc-300 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -280,7 +280,7 @@ export function CaptionTable({ onPlayCue }: Props) {
           </div>
 
           {/* 🎚️ Manual Custom Words per Cue Slider Bar */}
-          <div className="pt-2 border-t border-zinc-800/80 space-y-2">
+          <div className="pt-2.5 border-t border-zinc-700/70 space-y-2">
             <div className="flex items-center justify-between text-sm">
               <span className="text-zinc-200 font-medium flex items-center gap-1.5">
                 <span>ความยาวคำกำหนดเอง (Manual Words Slider):</span>
@@ -290,7 +290,7 @@ export function CaptionTable({ onPlayCue }: Props) {
                   </span>
                 )}
               </span>
-              <span className="font-mono font-bold text-orange-400 bg-zinc-950 px-2.5 py-0.5 rounded-lg border border-zinc-800 text-sm">
+              <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
                 {pacingMode === 'short'
                   ? '~4 คำ/ท่อน'
                   : pacingMode === 'medium'
@@ -339,7 +339,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             placeholder="ค้นหาข้อความในซับไตเติล..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 shadow-md"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 shadow-md transition-colors"
           />
           {searchQuery && (
             <button
@@ -374,12 +374,12 @@ export function CaptionTable({ onPlayCue }: Props) {
                 ref={isActive ? activeCardRef : null}
                 className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 relative group/card max-w-full overflow-hidden ${
                   isActive
-                    ? 'bg-zinc-900 border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/40'
-                    : 'bg-zinc-900 border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800/90'
+                    ? 'bg-[#1c1c24] border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/40'
+                    : 'bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-md'
                 }`}
               >
                 {/* Header Row: Index, Timings, Play Button, and Card Actions */}
-                <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 sm:gap-2 pb-2.5 border-b border-zinc-800/60 text-sm">
+                <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 sm:gap-2 pb-2.5 border-b border-zinc-700/70 text-sm">
                   {/* Left: Index + Play Button + Timings */}
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
                     <span
@@ -416,7 +416,7 @@ export function CaptionTable({ onPlayCue }: Props) {
                           const newStart = parseFloat(e.target.value) || 0;
                           updateCaptionTiming(caption.id, newStart, caption.end);
                         }}
-                        className="w-14 sm:w-16 px-1 py-0.5 rounded bg-zinc-950 border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
+                        className="w-14 sm:w-16 px-1 py-0.5 rounded bg-zinc-950/80 border border-zinc-700/80 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
                         title="เวลาเริ่ม (วินาที)"
                       />
                       <span className="text-zinc-500 text-[11px]">➔</span>
@@ -429,10 +429,10 @@ export function CaptionTable({ onPlayCue }: Props) {
                           const newEnd = parseFloat(e.target.value) || 0;
                           updateCaptionTiming(caption.id, caption.start, newEnd);
                         }}
-                        className="w-14 sm:w-16 px-1 py-0.5 rounded bg-zinc-950 border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
+                        className="w-14 sm:w-16 px-1 py-0.5 rounded bg-zinc-950/80 border border-zinc-700/80 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
                         title="เวลาจบ (วินาที)"
                       />
-                      <span className="text-[11px] sm:text-xs text-zinc-400">
+                      <span className="text-[11px] sm:text-xs text-zinc-300 font-medium">
                         ({duration}s)
                       </span>
                     </div>
@@ -454,7 +454,7 @@ export function CaptionTable({ onPlayCue }: Props) {
                     <button
                       type="button"
                       onClick={() => splitCaption(caption.id)}
-                      className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg bg-zinc-800/90 border border-zinc-700/60 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
                       title="แยกท่อนนี้ออกเป็น 2 ท่อน (Split)"
                     >
                       <Scissors className="w-3.5 h-3.5" />
@@ -464,7 +464,7 @@ export function CaptionTable({ onPlayCue }: Props) {
                       <button
                         type="button"
                         onClick={() => mergeCaption(caption.id, 'next')}
-                        className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                        className="p-1.5 rounded-lg bg-zinc-800/90 border border-zinc-700/60 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
                         title="รวมท่อนนี้กับท่อนถัดไป (Merge)"
                       >
                         <LinkIcon className="w-3.5 h-3.5" />
@@ -474,7 +474,7 @@ export function CaptionTable({ onPlayCue }: Props) {
                     <button
                       type="button"
                       onClick={() => addCaption(caption.id)}
-                      className="p-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg bg-zinc-800/90 border border-zinc-700/60 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
                       title="เพิ่มท่อนใหม่ต่อจากท่อนนี้"
                     >
                       <Plus className="w-3.5 h-3.5" />
@@ -483,7 +483,7 @@ export function CaptionTable({ onPlayCue }: Props) {
                     <button
                       type="button"
                       onClick={() => deleteCaption(caption.id)}
-                      className="p-1.5 rounded-lg bg-zinc-800 hover:bg-rose-500/20 text-zinc-400 hover:text-rose-400 transition-colors cursor-pointer"
+                      className="p-1.5 rounded-lg bg-zinc-800/90 border border-zinc-700/60 hover:bg-rose-500/20 hover:border-rose-500/50 text-zinc-400 hover:text-rose-400 transition-all cursor-pointer"
                       title="ลบท่อนนี้"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

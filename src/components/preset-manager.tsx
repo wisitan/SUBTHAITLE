@@ -60,9 +60,9 @@ export function PresetManager() {
       {/* 1. Save Current Style Card */}
       <form
         onSubmit={handleSaveCurrent}
-        className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-3.5"
+        className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-3.5 transition-all duration-200"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-zinc-800/80">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-zinc-700/70">
           <h4 className="text-sm font-bold text-white flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
               <Bookmark className="w-3.5 h-3.5" />
@@ -78,7 +78,7 @@ export function PresetManager() {
             placeholder="ตั้งชื่อสไตล์ของคุณ เช่น สไตล์ TikTok ประจำตัว..."
             value={presetNameInput}
             onChange={(e) => setPresetNameInput(e.target.value)}
-            className="w-full sm:flex-1 px-3.5 py-2.5 rounded-xl bg-zinc-950 border border-zinc-700 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500"
+            className="w-full sm:flex-1 px-3.5 py-2.5 rounded-xl bg-zinc-950/80 border border-zinc-700/80 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500"
             required
           />
           <button
@@ -92,8 +92,8 @@ export function PresetManager() {
       </form>
 
       {/* 2. User's Custom Presets Box */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-3.5">
-        <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-3.5 transition-all duration-200">
+        <div className="flex items-center justify-between pb-2 border-b border-zinc-700/70">
           <h4 className="text-sm font-bold text-white flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
               <Layers className="w-3.5 h-3.5" />
@@ -103,7 +103,7 @@ export function PresetManager() {
         </div>
 
         {customPresets.length === 0 ? (
-          <div className="p-5 sm:p-6 rounded-2xl bg-zinc-950/60 border border-dashed border-zinc-800 text-center space-y-1.5">
+          <div className="p-5 sm:p-6 rounded-2xl bg-zinc-950/60 border border-dashed border-zinc-700 text-center space-y-1.5">
             <p className="text-sm text-zinc-300 font-medium">ยังไม่มี Custom Preset ที่คุณบันทึกไว้</p>
             <p className="text-xs text-zinc-400">ปรับแต่งฟอนต์และสีในแท็บ &quot;สไตล์&quot; แล้วพิมพ์ชื่อกดบันทึกด้านบนได้เลยค่ะ</p>
           </div>
@@ -118,8 +118,8 @@ export function PresetManager() {
                   onClick={() => handleApplyPreset(cp.id, cp.style)}
                   className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2.5 group w-full box-border ${
                     isSelected
-                      ? 'bg-orange-500/15 border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                      : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
+                      ? 'bg-orange-500/20 border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
+                      : 'bg-zinc-950/70 border-zinc-700/70 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -170,8 +170,8 @@ export function PresetManager() {
       </div>
 
       {/* 3. 1-Click System Presets List */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-3.5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-zinc-800/80">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-3.5 transition-all duration-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-zinc-700/70">
           <h4 className="text-sm font-bold text-white flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
               <Sparkles className="w-3.5 h-3.5" />
@@ -216,8 +216,8 @@ export function PresetManager() {
                 }}
                 className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-2.5 group relative w-full box-border ${
                   isSelected
-                    ? 'bg-orange-500/15 border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                    : 'bg-zinc-950/80 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900'
+                    ? 'bg-orange-500/20 border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
+                    : 'bg-zinc-950/70 border-zinc-700/70 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
                 }`}
               >
                 <div className="flex items-center justify-between w-full">

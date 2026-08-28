@@ -69,9 +69,9 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
   const allFonts = [...customFonts, ...THAI_SYSTEM_FONTS];
 
   return (
-    <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-3.5">
+    <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-3.5 transition-all duration-200">
       {/* Upload Custom Font Button */}
-      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-zinc-800/80">
+      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-zinc-700/70">
         <label className="text-sm font-bold text-white flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
             <Type className="w-3.5 h-3.5" />
@@ -122,8 +122,8 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
               }}
               className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                 isSelected
-                  ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-950/80 border-zinc-800/80 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900/60'
+                  ? 'bg-orange-500/20 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
+                  : 'bg-zinc-950/70 border-zinc-700/70 text-zinc-300 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
               }`}
             >
               <div className="flex items-center justify-between w-full">
