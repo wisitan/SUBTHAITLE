@@ -85,6 +85,9 @@ export interface AppState {
   activePresetId: string;
   customPresets: Array<{ id: string; name: string; style: CaptionStyle; createdAt: string }>;
   
+  // Player Settings
+  aspectRatio: '9:16' | '16:9' | '1:1';
+  
   // Actions
   setFile: (file: File | null) => void;
   setVideoUrl: (url: string | null) => void;
@@ -98,6 +101,7 @@ export interface AppState {
   setIsAdmin: (isAdmin: boolean) => void;
   setCustomDictionary: (entries: DictionaryEntry[]) => void;
   loadDictionary: () => Promise<void>;
+  setAspectRatio: (ratio: '9:16' | '16:9' | '1:1') => void;
   incrementDailyUsage: () => void;
   setRawWords: (words: CaptionWord[]) => void;
   setPacingMode: (mode: PacingMode, customWords?: number) => void;
@@ -177,10 +181,14 @@ export const useAppStore = create<AppState>()(
       activePresetId: 'tiktok-viral',
       customPresets: [],
       
+      aspectRatio: '9:16',
+      
       setFile: (file) => set({ file }),
       setVideoUrl: (videoUrl) => set({ videoUrl }),
       setAudioBlob: (audioBlob) => set({ audioBlob }),
       setMediaDuration: (mediaDuration) => set({ mediaDuration }),
+      
+      setAspectRatio: (aspectRatio) => set({ aspectRatio }),
       
       setStatus: (status, progress = 0, statusMessage = '') =>
         set({ status, progress, statusMessage }),

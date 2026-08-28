@@ -37,6 +37,8 @@ export function VideoPlayer({ className = '' }: Props) {
   const setMediaDuration = useAppStore((s) => s.setMediaDuration);
   const activeCaptionIndex = useAppStore((s) => s.activeCaptionIndex);
   const setActiveCaptionIndex = useAppStore((s) => s.setActiveCaptionIndex);
+  const aspectRatio = useAppStore((s) => s.aspectRatio);
+  const setAspectRatio = useAppStore((s) => s.setAspectRatio);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -47,7 +49,6 @@ export function VideoPlayer({ className = '' }: Props) {
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9' | '1:1'>('9:16');
   const [hoverTime, setHoverTime] = useState<number | null>(null);
   
   // Track the exact pixel dimensions of the video container for perfect WYSIWYG scaling
@@ -351,13 +352,13 @@ export function VideoPlayer({ className = '' }: Props) {
     }
     switch (aspectRatio) {
       case '9:16':
-        return 'w-full aspect-[9/16] mx-auto';
+        return 'w-full aspect-[9/16] max-h-[70vh] mx-auto';
       case '16:9':
-        return 'w-full aspect-[16/9] mx-auto';
+        return 'w-full aspect-[16/9] max-h-[70vh] mx-auto';
       case '1:1':
-        return 'w-full aspect-square mx-auto';
+        return 'w-full aspect-square max-h-[70vh] mx-auto';
       default:
-        return 'w-full aspect-[9/16] mx-auto';
+        return 'w-full aspect-[9/16] max-h-[70vh] mx-auto';
     }
   }, [aspectRatio, isFullscreen]);
 

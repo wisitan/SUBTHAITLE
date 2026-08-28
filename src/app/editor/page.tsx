@@ -7,7 +7,6 @@ import {
   ArrowRight,
   FileVideo,
   FileAudio,
-  Sparkles,
   Film,
   Check,
 } from 'lucide-react';
@@ -24,9 +23,23 @@ export default function EditorPage() {
   const captions = useAppStore((s) => s.captions);
   const activeCaptionIndex = useAppStore((s) => s.activeCaptionIndex);
   const mediaDuration = useAppStore((s) => s.mediaDuration);
+  const aspectRatio = useAppStore((s) => s.aspectRatio);
 
   const [activeTab, setActiveTab] = useState<'captions' | 'style' | 'presets'>('captions');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const leftColumnWidthClass = React.useMemo(() => {
+    switch (aspectRatio) {
+      case '16:9':
+        return 'lg:w-[560px] xl:w-[640px]';
+      case '1:1':
+        return 'lg:w-[460px] xl:w-[520px]';
+      case '9:16':
+      default:
+        // Moderately wide layout allowing generous video preview, with reasonable pillarboxing on max-h constraint
+        return 'lg:w-[440px] xl:w-[480px]'; 
+    }
+  }, [aspectRatio]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -113,7 +126,7 @@ export default function EditorPage() {
       {/* Main 2-Column Responsive Workspace */}
       <main className="flex-1 min-h-0 max-w-7xl w-full mx-auto px-4 py-3 sm:py-4 flex flex-col lg:flex-row gap-6 items-stretch lg:overflow-hidden">
         {/* Left Column: Interactive Video Player */}
-        <div className="w-full lg:w-[340px] xl:w-[380px] shrink-0 flex flex-col lg:h-full lg:overflow-y-auto lg:scrollbar-none space-y-3 sm:space-y-4">
+        <div className={`w-full ${leftColumnWidthClass} shrink-0 flex flex-col lg:h-full lg:overflow-y-auto lg:scrollbar-none space-y-3 sm:space-y-4`}>
           <VideoPlayer />
 
           {/* Quick Jump to Active Subtitle Card (Mobile & Desktop Thumb Ergonomics) */}
@@ -163,19 +176,6 @@ export default function EditorPage() {
               </button>
             </div>
           )}
-
-          {/* Quick tips card below video */}
-          <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-300 space-y-2 shadow-lg shrink-0">
-            <div className="flex items-center gap-1.5 text-zinc-200 font-semibold text-xs">
-              <Sparkles className="w-4 h-4 text-orange-400" />
-              <span>คีย์ลัดสำหรับ Video Player:</span>
-            </div>
-            <ul className="list-disc list-inside space-y-1 text-zinc-300 pl-1 leading-relaxed">
-              <li>กด <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200 font-mono text-xs">Spacebar</kbd> เพื่อ เล่น / หยุดชั่วคราว</li>
-              <li>กด <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200 font-mono text-xs">←</kbd> หรือ <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200 font-mono text-xs">→</kbd> เพื่อ ย้อน/ข้าม 2 วินาที</li>
-              <li>คลิกปุ่ม <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-200 font-mono text-xs">▶</kbd> ในแถวซับเพื่อกระโดดไปเล่นที่ท่อนนั้นทันที</li>
-            </ul>
-          </div>
         </div>
 
         {/* Right Column: Studio Tabs & Independent Scrolling Tool Panel */}
