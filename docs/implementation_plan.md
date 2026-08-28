@@ -1026,12 +1026,12 @@ graph TB
          UI ต้องตรวจจับว่า local server รันอยู่หรือไม่"
 ```
 
-- [ ] `local-server/server.py` — FastAPI: `POST /transcribe` รับไฟล์ → mlx_whisper → JSON
-- [ ] `local-server/requirements.txt` — fastapi, uvicorn, python-multipart
-- [ ] `lib/transcribe/local.ts` — Client: ส่งไฟล์ไป `localhost:8765/transcribe`
-- [ ] UI: Auto-detect local server (ping `localhost:8765/health`)
-- [ ] UI: ถ้า local server ไม่ทำงาน → แสดง tooltip "กรุณาเปิด Local Server ก่อน"
-- [ ] ใช้ `.venv-local-whisper` ที่มีอยู่แล้ว (824MB)
+- [x] `local-server/server.py` — FastAPI: `POST /transcribe` รับไฟล์ → mlx_whisper / faster-whisper → JSON
+- [x] `local-server/requirements-mac.txt` & `requirements-win.txt` — fastapi, uvicorn, python-multipart
+- [x] `lib/transcribe.ts` — Client: ส่งไฟล์ไป `localhost:8765/transcribe`
+- [x] UI: Auto-detect local server (ping `localhost:8765/health`)
+- [x] UI: ถ้า local server ไม่ทำงาน → แสดง Live badge + Modal แนะนำวิธีเปิดและปุ่มดาวน์โหลด 1-Click
+- [x] รองรับ `.venv-local-whisper` ที่มีอยู่แล้วในเครื่อง
 
 ---
 
@@ -1042,12 +1042,12 @@ graph TB
          สร้าง README อธิบายวิธี setup ทั้ง Cloud mode และ Local mode"
 ```
 
-- [ ] Responsive: Desktop (2 col) / Tablet (stacked)
-- [ ] Loading states + error messages ทุกจุด
-- [ ] Micro-animations (hover, transition)
-- [ ] Push GitHub → Import Vercel → Set env vars → Deploy
-- [ ] ทดสอบ full flow บน production URL
-- [ ] README.md ครบถ้วน
+- [x] Responsive: Desktop (2 col) / Tablet & Mobile (stacked)
+- [x] Loading states + error messages ทุกจุด
+- [x] Micro-animations (hover, transition)
+- [x] Push GitHub → Import Vercel → Set env vars → Deploy (UAT / Main)
+- [x] OpenGraph, Twitter cards, Social Share Preview & Rich SEO Metadata
+- [x] README.md ครบถ้วน พร้อมสถาปัตยกรรมและคู่มือการใช้งาน
 
 ---
 
