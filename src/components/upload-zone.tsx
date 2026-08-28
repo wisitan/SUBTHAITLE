@@ -590,7 +590,7 @@ export function UploadZone() {
                 {isTranscribing ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>กำลังถอดเสียง...</span>
+                    <span>{transcribeMessage || 'กำลังถอดเสียง...'}</span>
                   </>
                 ) : (
                   <>

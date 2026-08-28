@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAppStore, TranscriptionProvider } from '@/lib/store';
 import {
@@ -12,13 +12,44 @@ import {
   Heart,
   ShieldCheck,
   FlaskConical,
+  Zap,
 } from 'lucide-react';
+import { LocalServerModal } from './local-server-modal';
 
 export function ProviderSelector() {
   const { provider, setProvider, tier, setTier, groqApiKey, setGroqApiKey } = useAppStore();
   const [showKeyInput, setShowKeyInput] = useState(Boolean(groqApiKey));
+  const [isLocalServerOnline, setIsLocalServerOnline] = useState<boolean | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const isPaid = tier === 'coffee' || tier === 'meal';
+
+  // Live healthcheck polling for Local Whisper Server (http://127.0.0.1:8765/health)
+  useEffect(() => {
+    let isMounted = true;
+    const checkHealth = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:8765/health', {
+          method: 'GET',
+          signal: AbortSignal.timeout(1500),
+        });
+        if (res.ok && isMounted) {
+          setIsLocalServerOnline(true);
+        } else if (isMounted) {
+          setIsLocalServerOnline(false);
+        }
+      } catch {
+        if (isMounted) setIsLocalServerOnline(false);
+      }
+    };
+
+    checkHealth();
+    const interval = setInterval(checkHealth, 4000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
 
   const handleSelect = (selected: TranscriptionProvider) => {
     if (selected === 'groq' && !showKeyInput) {
@@ -27,6 +58,9 @@ export function ProviderSelector() {
       if (!isPaid) return; // Locked on free tier
       setProvider('local');
       setShowKeyInput(false);
+      if (!isLocalServerOnline) {
+        setIsModalOpen(true);
+      }
     }
   };
 
@@ -228,7 +262,7 @@ export function ProviderSelector() {
                 </div>
                 <div className="min-w-0">
                   <span className="font-bold text-sm text-zinc-100 block">
-                    Local Whisper (Mac)
+                    Local Whisper (Mac / PC)
                   </span>
                 </div>
               </div>
@@ -241,22 +275,53 @@ export function ProviderSelector() {
                   <Lock className="w-3 h-3 text-rose-400" />
                   <span>ดูวิธีปลดล็อก</span>
                 </Link>
-              ) : provider === 'local' ? (
-                <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-              ) : null}
+              ) : (
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsModalOpen(true);
+                    }}
+                    className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/25 transition-all cursor-pointer"
+                    title="ดูวิธีเปิดใช้งานเซิร์ฟเวอร์ในเครื่อง"
+                  >
+                    <Zap className="w-3 h-3 text-indigo-400" />
+                    <span>วิธีเปิดใช้</span>
+                  </button>
+                  {provider === 'local' && (
+                    <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0" />
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="min-h-[2rem] flex items-center mt-2.5">
-              <span className="text-xs text-indigo-400 font-semibold leading-snug">
-                {isPaid ? '🔒 Offline 100% ไม่จำกัด' : '🔒 ปลดล็อกเมื่อร่วมสนับสนุน'}
-              </span>
+              {!isPaid ? (
+                <span className="text-xs text-indigo-400 font-semibold leading-snug">
+                  🔒 ปลดล็อกเมื่อร่วมสนับสนุน
+                </span>
+              ) : isLocalServerOnline ? (
+                <span className="text-xs text-emerald-400 font-semibold leading-snug flex items-center gap-1.5">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  🟢 Online (localhost:8765)
+                </span>
+              ) : (
+                <span className="text-xs text-amber-400 font-semibold leading-snug flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-amber-500"></span>
+                  🔴 Offline (คลิกเพื่อดูวิธีเปิด)
+                </span>
+              )}
             </div>
           </div>
 
           <p className="text-xs text-zinc-400 mt-3 leading-relaxed border-t border-zinc-800/60 pt-2.5 min-h-[3.75rem] flex items-start">
             {isPaid
-              ? 'ประมวลผลบนชิป Apple Silicon ออฟไลน์ 100% ไม่จำกัดขนาดและความยาวคลิป ข้อมูลปลอดภัยไม่หลุดออกนอกเครื่อง'
-              : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงในเครื่อง Mac ออฟไลน์ 100% ไม่จำกัดขนาดและความยาวคลิป ข้อมูลปลอดภัย'}
+              ? 'ประมวลผลบนเครื่องของคุณ 100% (Apple Silicon / NVIDIA GPU) ไม่จำกัดขนาดและความยาวคลิป ข้อมูลปลอดภัยไม่หลุดออกนอกเครื่อง'
+              : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงในเครื่อง Mac/PC ออฟไลน์ 100% ไม่จำกัดขนาดและความยาวคลิป ข้อมูลปลอดภัย'}
           </p>
         </div>
       </div>
@@ -290,6 +355,13 @@ export function ProviderSelector() {
           </p>
         </div>
       )}
+
+      {/* Local Server Setup Modal */}
+      <LocalServerModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        isOnline={isLocalServerOnline}
+      />
     </div>
   );
 }

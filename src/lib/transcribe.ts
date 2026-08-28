@@ -96,6 +96,7 @@ export async function transcribeAudio(
 
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.mp3');
+    formData.append('language', 'th');
 
     try {
       const res = await fetch('http://127.0.0.1:8765/transcribe', {
@@ -104,13 +105,18 @@ export async function transcribeAudio(
       });
 
       if (!res.ok) {
-        throw new Error(`Local Whisper Server returned status ${res.status}`);
+        const errJson = await res.json().catch(() => null);
+        throw new Error(errJson?.detail || `Local Whisper Server returned status ${res.status}`);
       }
 
       data = await res.json();
-    } catch {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes('Local Transcription Failed') || message.includes('status')) {
+        throw new Error(message);
+      }
       throw new Error(
-        'ไม่สามารถเชื่อมต่อ Local Whisper Server ได้ กรุณาตรวจสอบว่าได้เปิดคำสั่งรัน Local Server ในเครื่องแล้ว (python engine/local_server.py)'
+        'ไม่สามารถเชื่อมต่อ Local Whisper Server ได้ กรุณาดาวน์โหลดและเปิดใช้งาน start_server บนเครื่องของคุณก่อนกดถอดเสียงค่ะ (http://localhost:8765)'
       );
     }
   } else {
