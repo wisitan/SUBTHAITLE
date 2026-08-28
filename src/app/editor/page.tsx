@@ -113,7 +113,7 @@ export default function EditorPage() {
       {/* Main 2-Column Responsive Workspace */}
       <main className="flex-1 min-h-0 max-w-7xl w-full mx-auto px-4 py-3 sm:py-4 flex flex-col lg:flex-row gap-6 items-stretch lg:overflow-hidden">
         {/* Left Column: Interactive Video Player (Fixed / Contained on Desktop) */}
-        <div className="w-full lg:w-[420px] xl:w-[460px] shrink-0 flex flex-col lg:h-full lg:overflow-y-auto lg:scrollbar-none space-y-3 sm:space-y-4">
+        <div className="w-full lg:w-[480px] xl:w-[540px] shrink-0 flex flex-col lg:h-full lg:overflow-y-auto lg:scrollbar-none space-y-3 sm:space-y-4">
           <VideoPlayer />
 
           {/* Quick Jump to Active Subtitle Card (Mobile & Desktop Thumb Ergonomics) */}

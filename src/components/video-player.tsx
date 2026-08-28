@@ -49,6 +49,44 @@ export function VideoPlayer({ className = '' }: Props) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9' | '1:1'>('9:16');
   const [hoverTime, setHoverTime] = useState<number | null>(null);
+  const [renderedWidth, setRenderedWidth] = useState(360);
+
+  const videoDisplayRef = useRef<HTMLDivElement>(null);
+
+  // Sync fullscreen change events (including Esc key)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Measure actual rendered canvas width dynamically for 100% WYSIWYG parity with Export Canvas
+  useEffect(() => {
+    if (!videoDisplayRef.current) return;
+    const updateSize = () => {
+      if (videoDisplayRef.current) {
+        const w = videoDisplayRef.current.clientWidth;
+        if (w > 0) setRenderedWidth(w);
+      }
+    };
+    updateSize();
+
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0) {
+          setRenderedWidth(entry.contentRect.width);
+        }
+      }
+    });
+    ro.observe(videoDisplayRef.current);
+    return () => ro.disconnect();
+  }, []);
 
   const isAudioFile = useMemo(() => {
     if (!file) return false;
@@ -195,37 +233,45 @@ export function VideoPlayer({ className = '' }: Props) {
     return `rgba(${r}, ${g}, ${b}, ${a})`;
   };
 
-  // Build dynamic text-shadow & outline CSS
+  // Build dynamic text-shadow & outline CSS with 100% WYSIWYG Proportional Scaling
   const subtitleOverlayStyle: React.CSSProperties = useMemo(() => {
+    // Proportional scale factor matching Canvas Render (base: 360px)
+    const scale = (renderedWidth || 360) / 360;
+    const scaledFontSize = (style.fontSize || 24) * scale;
+    const scaledLetterSpacing = (style.letterSpacing ?? 0) * scale;
+    const scaledOutline = (style.outlineWidth ?? 0) * scale;
+    const scaledBoxPaddingX = (style.hasBackground ? 18 : 8) * scale;
+    const scaledBoxPaddingY = (style.hasBackground ? 10 : 4) * scale;
+    const scaledBorderRadius = (style.hasBackground ? 14 : 0) * scale;
+    const scaledShadowBlur = (style.shadowBlur || 8) * scale;
+
     const shadows: string[] = [];
 
     // Drop shadow
     if (style.hasShadow) {
       const hex = style.shadowColor || '#000000';
       const opacity = style.shadowOpacity ?? 0.8;
-      // Convert hex + opacity to rgba
       const r = parseInt(hex.slice(1, 3) || '0', 16);
       const g = parseInt(hex.slice(3, 5) || '0', 16);
       const b = parseInt(hex.slice(5, 7) || '0', 16);
-      shadows.push(`0 4px ${style.shadowBlur || 8}px rgba(${r},${g},${b},${opacity})`);
+      shadows.push(`0 ${4 * scale}px ${scaledShadowBlur}px rgba(${r},${g},${b},${opacity})`);
     }
 
     // Outline using multi-angle radial text-shadow (prevents diagonal gaps and broken strokes)
-    if (style.hasOutline && style.outlineWidth > 0) {
+    if (style.hasOutline && scaledOutline > 0) {
       const oColor = style.outlineColor || '#000000';
-      const w = style.outlineWidth;
       
       // Generate 16 radial points in a full 360-degree circle for butter-smooth continuous outline
       for (let angle = 0; angle < 360; angle += 22.5) {
         const rad = (angle * Math.PI) / 180;
-        const x = Number((Math.cos(rad) * w).toFixed(2));
-        const y = Number((Math.sin(rad) * w).toFixed(2));
+        const x = Number((Math.cos(rad) * scaledOutline).toFixed(2));
+        const y = Number((Math.sin(rad) * scaledOutline).toFixed(2));
         shadows.push(`${x}px ${y}px 0 ${oColor}`);
       }
       
       // If stroke width is thick (>= 3px), add inner fill ring at half radius to ensure 100% solid opacity
-      if (w >= 3) {
-        const halfW = w / 2;
+      if (scaledOutline >= 3) {
+        const halfW = scaledOutline / 2;
         for (let angle = 0; angle < 360; angle += 45) {
           const rad = (angle * Math.PI) / 180;
           const x = Number((Math.cos(rad) * halfW).toFixed(2));
@@ -244,7 +290,7 @@ export function VideoPlayer({ className = '' }: Props) {
 
     return {
       fontFamily: `"${style.fontFamily}", sans-serif`,
-      fontSize: `${style.fontSize}px`,
+      fontSize: `${scaledFontSize}px`,
       color: style.textColor || '#FFFFFF',
       fontWeight:
         style.fontWeight === 'bold' || style.fontWeight === '700'
@@ -252,7 +298,7 @@ export function VideoPlayer({ className = '' }: Props) {
           : style.fontWeight === '800'
           ? 800
           : 500,
-      letterSpacing: `${style.letterSpacing ?? 0}px`,
+      letterSpacing: `${scaledLetterSpacing}px`,
       lineHeight: style.lineHeight ?? 1.4,
       textAlign,
       width: `${maxWidthPct}%`,
@@ -262,25 +308,28 @@ export function VideoPlayer({ className = '' }: Props) {
       transform: 'translateX(-50%)',
       textShadow: shadows.length > 0 ? shadows.join(', ') : 'none',
       backgroundColor: bgColor,
-      padding: style.hasBackground ? '8px 18px' : '4px 8px',
-      borderRadius: style.hasBackground ? '14px' : '0px',
+      padding: `${scaledBoxPaddingY}px ${scaledBoxPaddingX}px`,
+      borderRadius: `${scaledBorderRadius}px`,
       boxSizing: 'border-box' as const,
     };
-  }, [style]);
+  }, [style, renderedWidth]);
 
-  // Aspect ratio wrapper styling
+  // Aspect ratio wrapper styling - Full-width and natural proportions without dark sidebars
   const aspectClass = useMemo(() => {
+    if (isFullscreen) {
+      return 'w-full h-full flex-1 max-h-none max-w-none aspect-auto';
+    }
     switch (aspectRatio) {
       case '9:16':
-        return 'aspect-[9/16] max-w-[340px] mx-auto';
+        return 'w-full aspect-[9/16] max-h-[640px] mx-auto';
       case '16:9':
-        return 'aspect-[16/9] w-full';
+        return 'w-full aspect-[16/9]';
       case '1:1':
-        return 'aspect-square max-w-[420px] mx-auto';
+        return 'w-full aspect-square max-h-[580px] mx-auto';
       default:
-        return 'aspect-[9/16] max-w-[340px] mx-auto';
+        return 'w-full aspect-[9/16] max-h-[640px] mx-auto';
     }
-  }, [aspectRatio]);
+  }, [aspectRatio, isFullscreen]);
 
   return (
     <div
@@ -353,8 +402,9 @@ export function VideoPlayer({ className = '' }: Props) {
 
       {/* Video / Audio Display Area */}
       <div
+        ref={videoDisplayRef}
         onClick={togglePlay}
-        className={`relative flex items-center justify-center bg-black cursor-pointer overflow-hidden min-h-[280px] max-h-[520px] ${aspectClass}`}
+        className={`relative flex items-center justify-center bg-black cursor-pointer overflow-hidden min-h-[280px] ${aspectClass}`}
       >
         {videoUrl ? (
           <>
