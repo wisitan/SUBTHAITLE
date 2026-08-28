@@ -111,9 +111,9 @@ export default function EditorPage() {
       </header>
 
       {/* Main 2-Column Responsive Workspace */}
-      <main className="flex-1 min-h-0 max-w-7xl w-full mx-auto px-4 py-3 sm:py-4 lg:py-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch lg:h-[calc(100vh-64px)] lg:overflow-hidden">
+      <main className="flex-1 min-h-0 max-w-7xl w-full mx-auto px-4 py-3 sm:py-4 flex flex-col lg:flex-row gap-6 items-stretch lg:overflow-hidden">
         {/* Left Column: Interactive Video Player (Fixed / Contained on Desktop) */}
-        <div className="lg:col-span-5 lg:h-full lg:overflow-y-auto lg:scrollbar-none space-y-3 sm:space-y-4 pr-0.5">
+        <div className="w-full lg:w-[420px] xl:w-[460px] shrink-0 flex flex-col lg:h-full lg:overflow-y-auto lg:scrollbar-none space-y-3 sm:space-y-4">
           <VideoPlayer />
 
           {/* Quick Jump to Active Subtitle Card (Mobile & Desktop Thumb Ergonomics) */}
@@ -178,8 +178,8 @@ export default function EditorPage() {
           </div>
         </div>
 
-        {/* Right Column: Studio Tabs & Independent Scrolling Tool Panel (58% width on desktop) */}
-        <div className="lg:col-span-7 lg:h-full lg:overflow-hidden flex flex-col space-y-3 min-h-0">
+        {/* Right Column: Studio Tabs & Independent Scrolling Tool Panel */}
+        <div className="flex-1 min-w-0 w-full flex flex-col lg:h-full min-h-0 space-y-3 lg:overflow-hidden">
           {/* Segmented Tab Switcher */}
           <div className="grid grid-cols-3 p-1.5 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-xl gap-1 shrink-0">
             {/* Tab 1: Captions */}
@@ -228,7 +228,7 @@ export default function EditorPage() {
           </div>
 
           {/* Tab Content Panels (Scrolls independently inside this box on Desktop) */}
-          <div className="flex-1 min-h-0 bg-zinc-950 rounded-3xl border border-zinc-700 overflow-hidden shadow-2xl flex flex-col">
+          <div className="flex-1 min-h-0 bg-zinc-950 rounded-3xl border border-zinc-700 lg:overflow-hidden shadow-2xl flex flex-col">
             {activeTab === 'captions' ? (
               <CaptionTable />
             ) : activeTab === 'style' ? (
