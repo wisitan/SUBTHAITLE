@@ -285,12 +285,12 @@ export function VideoPlayer({ className = '' }: Props) {
   return (
     <div
       ref={containerRef}
-      className={`relative flex flex-col bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl group ${className}`}
+      className={`relative flex flex-col bg-zinc-950 rounded-3xl border border-zinc-700 overflow-hidden shadow-2xl group ${className}`}
     >
       {/* Top Floating Toolbar (Aspect Ratio & Highlight Badge) */}
       <div className="absolute top-3 left-2.5 right-2.5 sm:left-3 sm:right-3 z-30 flex items-center justify-between pointer-events-none gap-2">
         {/* Aspect Ratio Selector */}
-        <div className="flex items-center gap-0.5 sm:gap-1 bg-zinc-950/85 backdrop-blur-md border border-zinc-800/80 p-1 rounded-xl pointer-events-auto shadow-lg">
+        <div className="flex items-center gap-0.5 sm:gap-1 bg-zinc-900/90 backdrop-blur-md border border-zinc-700 p-1 rounded-xl pointer-events-auto shadow-lg">
           <button
             type="button"
             onClick={() => setAspectRatio('9:16')}
@@ -342,7 +342,7 @@ export function VideoPlayer({ className = '' }: Props) {
           className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all cursor-pointer shadow-lg pointer-events-auto shrink-0 ${
             style.enableWordHighlight
               ? 'bg-amber-500/25 border border-amber-500/60 text-amber-300 hover:bg-amber-500/35 ring-1 ring-amber-500/30'
-              : 'bg-zinc-950/85 border border-zinc-800 text-zinc-400 hover:text-white hover:border-zinc-700'
+              : 'bg-zinc-900/90 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600'
           }`}
           title="คลิกเพื่อ เปิด/ปิด การไฮไลท์คำตามเสียงพูดแบบ Real-time"
         >
@@ -528,7 +528,7 @@ export function VideoPlayer({ className = '' }: Props) {
       </div>
 
       {/* Custom Video Controls Bar */}
-      <div className="p-2.5 sm:p-3 bg-zinc-950 border-t border-zinc-900 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 text-sm text-zinc-300">
+      <div className="p-2.5 sm:p-3 bg-zinc-900 border-t border-zinc-700 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 text-sm text-zinc-300">
         {/* Left: Play/Pause, Rewind, Forward, Time */}
         <div className="flex items-center gap-1.5 sm:gap-3">
           <button

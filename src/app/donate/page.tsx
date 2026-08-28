@@ -44,7 +44,7 @@ export default function DonatePage() {
         </div>
 
         {/* 1. The Full Creator Story (Open Letter) */}
-        <section className="rounded-3xl bg-zinc-900/40 border border-zinc-800/80 p-6 sm:p-10 relative overflow-hidden shadow-2xl">
+        <section className="rounded-3xl bg-zinc-900 border border-zinc-700 p-6 sm:p-10 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-80 h-80 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
           
           <div className="max-w-3xl mx-auto space-y-6">
@@ -122,7 +122,7 @@ export default function DonatePage() {
             className={`relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between border transition-all ${
               tier === 'coffee'
                 ? 'border-orange-500/80 bg-orange-500/5 ring-1 ring-orange-500/30'
-                : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700'
+                : 'border-zinc-700 bg-zinc-900 shadow-xl hover:border-zinc-600'
             }`}
           >
             <div>
@@ -214,7 +214,7 @@ export default function DonatePage() {
             className={`relative rounded-3xl p-6 sm:p-8 flex flex-col justify-between border transition-all ${
               tier === 'meal'
                 ? 'border-rose-500/80 bg-rose-500/5 ring-1 ring-rose-500/30'
-                : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700'
+                : 'border-zinc-700 bg-zinc-900 shadow-xl hover:border-zinc-600'
             }`}
           >
             {/* Top highlight ribbon */}

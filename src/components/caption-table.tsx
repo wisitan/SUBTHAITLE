@@ -121,7 +121,7 @@ export function CaptionTable({ onPlayCue }: Props) {
       )}
 
       {/* Top Header & Pacing Selector Section */}
-      <div className="p-4 bg-zinc-900/60 border-b border-zinc-800/80 space-y-3.5">
+      <div className="p-4 bg-zinc-900 border-b border-zinc-700 space-y-3.5">
         {/* Title, Counts, and Quick Tools */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -147,7 +147,7 @@ export function CaptionTable({ onPlayCue }: Props) {
               className={`px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
                 autoScroll
                   ? 'bg-orange-500/15 border-orange-500/40 text-orange-300'
-                  : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-zinc-200'
+                  : 'bg-zinc-900 border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800'
               }`}
               title="เลื่อนหน้าจอตามวิดีโออัตโนมัติ"
             >
@@ -189,7 +189,7 @@ export function CaptionTable({ onPlayCue }: Props) {
         </div>
 
         {/* 🎛️ Prominent Pacing Mode Selector (3 Big Cards + Manual Slider) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/70 border border-zinc-800/90 space-y-3">
+        <div className="p-3.5 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-3">
           <div className="flex items-center justify-between text-sm">
             <span className="font-bold text-zinc-100 flex items-center gap-1.5">
               <SlidersHorizontal className="w-4 h-4 text-orange-400" />
@@ -208,7 +208,7 @@ export function CaptionTable({ onPlayCue }: Props) {
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'short'
                   ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900'
+                  : 'bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-800/80'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -232,7 +232,7 @@ export function CaptionTable({ onPlayCue }: Props) {
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'medium'
                   ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900'
+                  : 'bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-800/80'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -256,7 +256,7 @@ export function CaptionTable({ onPlayCue }: Props) {
               className={`p-3 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
                 pacingMode === 'long'
                   ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-900/60 border-zinc-800 text-zinc-300 hover:border-zinc-700 hover:bg-zinc-900'
+                  : 'bg-zinc-900 border border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:bg-zinc-800/80'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -350,7 +350,7 @@ export function CaptionTable({ onPlayCue }: Props) {
       {/* Scrollable Caption Cards Container */}
       <div
         ref={containerRef}
-        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 min-h-[500px] max-h-[820px] scrollbar-thin scrollbar-thumb-zinc-800 max-w-full overflow-x-hidden"
+        className="flex-1 min-h-0 overflow-y-auto p-3 sm:p-4 space-y-3 scrollbar-thin scrollbar-thumb-zinc-800 max-w-full overflow-x-hidden"
       >
         {filteredWithIndex.length === 0 ? (
           <div className="p-12 text-center text-zinc-400 text-sm space-y-2">
@@ -376,8 +376,8 @@ export function CaptionTable({ onPlayCue }: Props) {
                 ref={isActive ? activeCardRef : null}
                 className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 relative group/card max-w-full overflow-hidden ${
                   isActive
-                    ? 'bg-zinc-900/90 border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/40'
-                    : 'bg-zinc-900/40 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/60'
+                    ? 'bg-zinc-900 border-orange-500 shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/40'
+                    : 'bg-zinc-900 border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-800/90'
                 }`}
               >
                 {/* Header Row: Index, Timings, Play Button, and Card Actions */}

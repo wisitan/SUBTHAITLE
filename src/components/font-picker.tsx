@@ -69,7 +69,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
   const allFonts = [...customFonts, ...THAI_SYSTEM_FONTS];
 
   return (
-    <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-3.5">
+    <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-3.5">
       {/* Upload Custom Font Button */}
       <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-zinc-800/80">
         <label className="text-sm font-bold text-white flex items-center gap-2">

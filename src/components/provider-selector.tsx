@@ -31,7 +31,7 @@ export function ProviderSelector() {
   };
 
   return (
-    <div className="w-full max-w-full bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-4 sm:p-6 backdrop-blur-sm shadow-xl overflow-hidden">
+    <div className="w-full max-w-full bg-zinc-900 border border-zinc-700 rounded-3xl p-4 sm:p-6 shadow-xl overflow-hidden">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <div>
           <h3 className="text-base sm:text-lg font-bold text-zinc-100 flex items-center gap-2">

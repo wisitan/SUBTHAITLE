@@ -37,7 +37,7 @@ export default function EditorPage() {
   if (!videoUrl && captions.length === 0) {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center p-4 selection:bg-orange-500/30">
-        <div className="w-full max-w-md p-8 rounded-3xl bg-zinc-900/60 border border-zinc-800 text-center space-y-4 shadow-2xl backdrop-blur-sm">
+        <div className="w-full max-w-md p-8 rounded-3xl bg-zinc-900 border border-zinc-700 text-center space-y-4 shadow-2xl backdrop-blur-sm">
           <div className="w-14 h-14 rounded-2xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center mx-auto">
             <Film className="w-7 h-7" />
           </div>
@@ -111,14 +111,14 @@ export default function EditorPage() {
       </header>
 
       {/* Main 2-Column Responsive Workspace */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Interactive Video Player (42% width on desktop) */}
-        <div className="lg:col-span-5 lg:sticky lg:top-20 space-y-3 sm:space-y-4">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-4 lg:py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start lg:h-[calc(100vh-76px)] lg:overflow-hidden">
+        {/* Left Column: Interactive Video Player (Fixed / Contained on Desktop) */}
+        <div className="lg:col-span-5 lg:h-full lg:overflow-y-auto lg:scrollbar-none space-y-3 sm:space-y-4">
           <VideoPlayer />
 
           {/* Quick Jump to Active Subtitle Card (Mobile & Desktop Thumb Ergonomics) */}
           {captions.length > 0 && (
-            <div className="p-3 sm:p-4 rounded-2xl bg-zinc-900/90 border border-orange-500/30 backdrop-blur-md flex items-center justify-between gap-2.5 shadow-xl ring-1 ring-orange-500/20">
+            <div className="p-3 sm:p-4 rounded-2xl bg-zinc-900 border border-zinc-700 flex items-center justify-between gap-2.5 shadow-xl">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center shrink-0 font-mono font-bold text-xs">
                   {activeCaptionIndex !== null && activeCaptionIndex !== -1 ? `#${activeCaptionIndex + 1}` : '📝'}
@@ -165,7 +165,7 @@ export default function EditorPage() {
           )}
 
           {/* Quick tips card below video */}
-          <div className="p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800 text-xs text-zinc-300 space-y-2">
+          <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-300 space-y-2 shadow-lg">
             <div className="flex items-center gap-1.5 text-zinc-200 font-semibold text-xs">
               <Sparkles className="w-4 h-4 text-orange-400" />
               <span>คีย์ลัดสำหรับ Video Player:</span>
@@ -178,10 +178,10 @@ export default function EditorPage() {
           </div>
         </div>
 
-        {/* Right Column: Studio Tabs (Captions vs Style vs Presets) (58% width on desktop) */}
-        <div className="lg:col-span-7 flex flex-col space-y-3 min-h-[750px]">
+        {/* Right Column: Studio Tabs & Independent Scrolling Tool Panel (58% width on desktop) */}
+        <div className="lg:col-span-7 lg:h-full lg:overflow-hidden flex flex-col space-y-3 min-h-0">
           {/* Segmented Tab Switcher */}
-          <div className="grid grid-cols-3 p-1.5 bg-zinc-900/80 backdrop-blur border border-zinc-800 rounded-2xl shadow-lg gap-1 shrink-0">
+          <div className="grid grid-cols-3 p-1.5 bg-zinc-900 border border-zinc-700 rounded-2xl shadow-xl gap-1 shrink-0">
             {/* Tab 1: Captions */}
             <button
               type="button"
@@ -189,7 +189,7 @@ export default function EditorPage() {
               className={`w-full min-w-0 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-h-[52px] sm:min-h-[42px] text-center ${
                 activeTab === 'captions'
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
               }`}
             >
               <span className="text-sm sm:text-base shrink-0">📝</span>
@@ -205,7 +205,7 @@ export default function EditorPage() {
               className={`w-full min-w-0 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-h-[52px] sm:min-h-[42px] text-center ${
                 activeTab === 'style'
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
               }`}
             >
               <span className="text-sm sm:text-base shrink-0">🎨</span>
@@ -219,7 +219,7 @@ export default function EditorPage() {
               className={`w-full min-w-0 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-h-[52px] sm:min-h-[42px] text-center ${
                 activeTab === 'presets'
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60'
               }`}
             >
               <span className="text-sm sm:text-base shrink-0">⚡</span>
@@ -227,8 +227,8 @@ export default function EditorPage() {
             </button>
           </div>
 
-          {/* Tab Content Panels */}
-          <div className="flex-1 bg-zinc-950 rounded-3xl border border-zinc-800 overflow-hidden shadow-2xl flex flex-col min-h-0">
+          {/* Tab Content Panels (Scrolls independently inside this box on Desktop) */}
+          <div className="flex-1 min-h-0 bg-zinc-950 rounded-3xl border border-zinc-700 overflow-hidden shadow-2xl flex flex-col">
             {activeTab === 'captions' ? (
               <CaptionTable />
             ) : activeTab === 'style' ? (

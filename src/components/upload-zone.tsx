@@ -241,14 +241,14 @@ export function UploadZone() {
           className={`relative cursor-pointer border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center transition-all flex flex-col items-center justify-center min-h-[300px] group ${
             isDragging
               ? 'border-orange-500 bg-orange-500/10 scale-[1.01]'
-              : 'border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 hover:bg-zinc-900/40'
+              : 'border-zinc-700 bg-zinc-900/80 hover:border-orange-500/60 hover:bg-zinc-900'
           }`}
         >
           {/* Subtle glow background */}
           <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent rounded-3xl pointer-events-none" />
 
           {/* Upload Icon */}
-          <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-orange-400 mb-4 group-hover:scale-110 group-hover:border-orange-500/50 group-hover:text-orange-300 transition-all shadow-xl">
+          <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-700 flex items-center justify-center text-orange-400 mb-4 group-hover:scale-110 group-hover:border-orange-500/50 group-hover:text-orange-300 transition-all shadow-xl">
             <UploadCloud className="w-8 h-8" />
           </div>
 
@@ -261,7 +261,7 @@ export function UploadZone() {
 
           {/* Badges & Limit notice */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 max-w-md">
-            <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-900 border border-zinc-700/80 text-zinc-300 font-medium">
+            <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 font-medium">
               รองรับ MP4, MOV, WebM, MKV, MP3, WAV
             </span>
             {isUnlimitedSize ? (
@@ -270,7 +270,7 @@ export function UploadZone() {
                 โหมดไม่จำกัดขนาดไฟล์
               </span>
             ) : (
-              <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-900 border border-zinc-700/80 text-zinc-300 font-medium">
+              <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-900 border border-zinc-700 text-zinc-300 font-medium">
                 ขนาดไฟล์สูงสุด 100 MB
               </span>
             )}
@@ -278,7 +278,7 @@ export function UploadZone() {
         </div>
       ) : (
         /* File Selected / Extracted / Transcribed Preview Card */
-        <div className="bg-zinc-900/80 border border-zinc-800 rounded-3xl p-4 sm:p-6 backdrop-blur-md shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+        <div className="bg-zinc-900 border border-zinc-700 rounded-3xl p-4 sm:p-6 backdrop-blur-md shadow-2xl animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-5 border-b border-zinc-800">
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-orange-500/20 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0">

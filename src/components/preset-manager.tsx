@@ -60,7 +60,7 @@ export function PresetManager() {
       {/* 1. Save Current Style Card */}
       <form
         onSubmit={handleSaveCurrent}
-        className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-3.5"
+        className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-3.5"
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-zinc-800/80">
           <h4 className="text-sm font-bold text-white flex items-center gap-2">
@@ -92,7 +92,7 @@ export function PresetManager() {
       </form>
 
       {/* 2. User's Custom Presets Box */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-3.5">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-3.5">
         <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80">
           <h4 className="text-sm font-bold text-white flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
@@ -170,7 +170,7 @@ export function PresetManager() {
       </div>
 
       {/* 3. 1-Click System Presets List */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-3.5">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-3.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-zinc-800/80">
           <h4 className="text-sm font-bold text-white flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">

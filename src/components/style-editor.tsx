@@ -90,7 +90,7 @@ export function StyleEditor() {
       />
 
       {/* 📏 Tool Card 2: Typography, Size & Weight */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
           <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
             <Type className="w-3.5 h-3.5" />
@@ -219,7 +219,7 @@ export function StyleEditor() {
       </div>
 
       {/* 🎨 Tool Card 3: Text Color & Highlight */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
           <div className="w-6 h-6 rounded-lg bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 flex items-center justify-center shrink-0">
             <Palette className="w-3.5 h-3.5" />
@@ -345,7 +345,7 @@ export function StyleEditor() {
       </div>
 
       {/* 📐 Tool Card 4: Letter & Line Spacing */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
           <div className="w-6 h-6 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
             <Space className="w-3.5 h-3.5" />
@@ -503,7 +503,7 @@ export function StyleEditor() {
       </div>
 
       {/* 🧭 Tool Card 5: Placement, Alignment & Width */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
           <div className="w-6 h-6 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0">
             <MoveVertical className="w-3.5 h-3.5" />
@@ -762,7 +762,7 @@ export function StyleEditor() {
       </div>
 
       {/* 🔲 Tool Card 6: Shadow & Outline */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
           <div className="w-6 h-6 rounded-lg bg-teal-500/15 border border-teal-500/30 text-teal-400 flex items-center justify-center shrink-0">
             <Sun className="w-3.5 h-3.5" />
@@ -866,7 +866,7 @@ export function StyleEditor() {
       </div>
 
       {/* 📦 Tool Card 7: Background Box & Opacity */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/80 border border-zinc-800 shadow-xl space-y-4">
+      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900 border border-zinc-700 shadow-xl space-y-4">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-800/80">
           <div className="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
             <Layers className="w-3.5 h-3.5" />
