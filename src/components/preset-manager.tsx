@@ -48,7 +48,7 @@ export function PresetManager() {
   };
 
   return (
-    <div className="flex-1 h-full overflow-y-auto p-4 sm:p-5 text-zinc-100 space-y-5 scrollbar-thin scrollbar-thumb-zinc-800 max-w-full overflow-x-hidden">
+    <div className="flex-1 min-h-0 h-full overflow-y-auto p-4 sm:p-5 text-zinc-100 space-y-5 scrollbar-thin scrollbar-thumb-zinc-800 max-w-full overflow-x-hidden">
       {/* Toast */}
       {toastMsg && (
         <div className="flex items-center gap-2 p-3 rounded-2xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold animate-in fade-in">

@@ -111,7 +111,7 @@ export function CaptionTable({ onPlayCue }: Props) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-zinc-950 overflow-hidden">
+    <div className="flex-1 min-h-0 flex flex-col h-full bg-zinc-950 overflow-hidden">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="absolute top-4 right-4 z-50 flex items-center gap-2 bg-emerald-500 text-zinc-950 font-bold px-3.5 py-2 rounded-xl shadow-2xl animate-in slide-in-from-top-2 text-xs">
@@ -121,7 +121,7 @@ export function CaptionTable({ onPlayCue }: Props) {
       )}
 
       {/* Top Header & Pacing Selector Section */}
-      <div className="p-4 bg-zinc-900 border-b border-zinc-700 space-y-3.5">
+      <div className="shrink-0 p-4 bg-zinc-900 border-b border-zinc-700 space-y-3.5">
         {/* Title, Counts, and Quick Tools */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">

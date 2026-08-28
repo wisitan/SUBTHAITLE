@@ -60,7 +60,7 @@ export default function EditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col selection:bg-orange-500/30">
+    <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden bg-zinc-950 text-zinc-100 flex flex-col selection:bg-orange-500/30">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 flex items-center gap-2 bg-emerald-500 text-zinc-950 font-bold px-4 py-2.5 rounded-xl shadow-2xl animate-in slide-in-from-top-2 text-sm">
@@ -70,7 +70,7 @@ export default function EditorPage() {
       )}
 
       {/* Top Navbar */}
-      <header className="border-b border-zinc-900 bg-zinc-950/90 backdrop-blur sticky top-0 z-40">
+      <header className="border-b border-zinc-900 bg-zinc-950/90 backdrop-blur sticky top-0 z-40 shrink-0">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           {/* Left: Back button & File info */}
           <div className="flex items-center gap-3 min-w-0">
@@ -111,9 +111,9 @@ export default function EditorPage() {
       </header>
 
       {/* Main 2-Column Responsive Workspace */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-4 lg:py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start lg:h-[calc(100vh-76px)] lg:overflow-hidden">
+      <main className="flex-1 min-h-0 max-w-7xl w-full mx-auto px-4 py-3 sm:py-4 lg:py-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch lg:h-[calc(100vh-64px)] lg:overflow-hidden">
         {/* Left Column: Interactive Video Player (Fixed / Contained on Desktop) */}
-        <div className="lg:col-span-5 lg:h-full lg:overflow-y-auto lg:scrollbar-none space-y-3 sm:space-y-4">
+        <div className="lg:col-span-5 lg:h-full lg:overflow-y-auto lg:scrollbar-none space-y-3 sm:space-y-4 pr-0.5">
           <VideoPlayer />
 
           {/* Quick Jump to Active Subtitle Card (Mobile & Desktop Thumb Ergonomics) */}
