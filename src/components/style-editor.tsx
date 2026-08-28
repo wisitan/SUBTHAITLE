@@ -90,9 +90,9 @@ export function StyleEditor() {
       />
 
       {/* 📏 Tool Card 2: Typography, Size & Weight */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+      <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
-          <div className="w-6 h-6 rounded-lg bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-orange-500 group-focus-within/card:text-zinc-950 transition-all">
             <Type className="w-3.5 h-3.5" />
           </div>
           <h4 className="text-sm font-bold text-white">
@@ -101,10 +101,10 @@ export function StyleEditor() {
         </div>
 
         {/* Font Size Slider */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ขนาดตัวอักษร (Font Size):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
+            <span className="font-mono font-bold text-orange-300 bg-orange-500/15 px-2.5 py-0.5 rounded-lg border border-orange-500/40 text-sm shadow-sm">
               {style.fontSize}px
             </span>
           </div>
@@ -118,7 +118,7 @@ export function StyleEditor() {
             onChange={(e) => setStyle({ fontSize: parseInt(e.target.value, 10) })}
             className="w-full accent-orange-500 cursor-pointer"
           />
-          <div className="flex justify-between text-xs text-zinc-400">
+          <div className="flex justify-between text-xs text-zinc-400 font-medium">
             <span>ซับหนัง (10px)</span>
             <span>มาตรฐาน (24px)</span>
             <span>ตัวใหญ่ (48px)</span>
@@ -131,63 +131,63 @@ export function StyleEditor() {
               onClick={() => setStyle({ fontSize: 13 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.fontSize === 13
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ซับหนัง</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(13px)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(13px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ fontSize: 20 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.fontSize === 20
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">มาตรฐาน</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(20px)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(20px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ fontSize: 28 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.fontSize === 28
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">อ่านสบาย</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(28px)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(28px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ fontSize: 36 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.fontSize === 36
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ตัวใหญ่</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(36px)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(36px)</span>
             </button>
           </div>
         </div>
 
         {/* Font Weight */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <span className="text-zinc-200 font-medium">ความหนาของตัวอักษร (Font Weight):</span>
-          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-700/80">
+          <div className="flex items-center gap-1 bg-[#14141e] p-1 rounded-xl border border-zinc-700">
             <button
               type="button"
               onClick={() => setStyle({ fontWeight: '500' })}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer ${
                 style.fontWeight === '500' || style.fontWeight === 'normal'
-                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-md'
+                  : 'text-zinc-300 hover:text-white hover:bg-[#242434]'
               }`}
             >
               ปกติ (Normal)
@@ -197,8 +197,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ fontWeight: '700' })}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 style.fontWeight === '700' || style.fontWeight === 'bold'
-                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-md'
+                  : 'text-zinc-300 hover:text-white hover:bg-[#242434]'
               }`}
             >
               ตัวหนา (Bold)
@@ -208,8 +208,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ fontWeight: '800' })}
               className={`px-3 py-1.5 text-xs font-extrabold rounded-lg transition-all cursor-pointer ${
                 style.fontWeight === '800'
-                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-md'
+                  : 'text-zinc-300 hover:text-white hover:bg-[#242434]'
               }`}
             >
               หนาพิเศษ
@@ -219,9 +219,9 @@ export function StyleEditor() {
       </div>
 
       {/* 🎨 Tool Card 3: Text Color & Highlight */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+      <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
-          <div className="w-6 h-6 rounded-lg bg-yellow-500/15 border border-yellow-500/30 text-yellow-400 flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-yellow-500 group-focus-within/card:text-zinc-950 transition-all">
             <Palette className="w-3.5 h-3.5" />
           </div>
           <h4 className="text-sm font-bold text-white">
@@ -230,7 +230,7 @@ export function StyleEditor() {
         </div>
 
         {/* Text Color Swatches */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-2.5 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-2.5 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <span className="text-sm text-zinc-200 font-medium block">
             สีข้อความหลัก (Text Color):
           </span>
@@ -277,7 +277,7 @@ export function StyleEditor() {
         </div>
 
         {/* Word Highlight Box */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
@@ -292,7 +292,7 @@ export function StyleEditor() {
             <span
               className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                 style.enableWordHighlight
-                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                  ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
                   : 'bg-zinc-800 text-zinc-400'
               }`}
             >
@@ -301,7 +301,7 @@ export function StyleEditor() {
           </div>
 
           {style.enableWordHighlight && (
-            <div className="space-y-2 pt-2 border-t border-zinc-800">
+            <div className="space-y-2 pt-2 border-t border-zinc-700/80">
               <span className="text-xs text-zinc-200 font-medium block">
                 เลือกสีไฮไลท์ของคำที่กำลังพูด (Highlight Color):
               </span>
@@ -345,9 +345,9 @@ export function StyleEditor() {
       </div>
 
       {/* 📐 Tool Card 4: Letter & Line Spacing */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+      <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
-          <div className="w-6 h-6 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-orange-500 group-focus-within/card:text-zinc-950 transition-all">
             <Space className="w-3.5 h-3.5" />
           </div>
           <h4 className="text-sm font-bold text-white">
@@ -356,10 +356,10 @@ export function StyleEditor() {
         </div>
 
         {/* Letter Spacing (Tracking) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ระยะห่างระหว่างตัวอักษร (Letter Spacing):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
+            <span className="font-mono font-bold text-orange-300 bg-orange-500/15 px-2.5 py-0.5 rounded-lg border border-orange-500/40 text-sm shadow-sm">
               {style.letterSpacing ?? 0}px
             </span>
           </div>
@@ -382,57 +382,57 @@ export function StyleEditor() {
               onClick={() => setStyle({ letterSpacing: -1 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.letterSpacing ?? 0) === -1
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">แนบชิด</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(-1px)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(-1px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ letterSpacing: 0 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.letterSpacing ?? 0) === 0
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ปกติ</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(0px)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(0px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ letterSpacing: 1.5 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.letterSpacing ?? 0) === 1.5
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">กว้าง</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(1.5px)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(1.5px)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ letterSpacing: 3 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.letterSpacing ?? 0) === 3
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">กว้างมาก</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(3px)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(3px)</span>
             </button>
           </div>
         </div>
 
         {/* Line Height (Leading) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ระยะห่างระหว่างบรรทัด (Line Spacing / Height):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
+            <span className="font-mono font-bold text-orange-300 bg-orange-500/15 px-2.5 py-0.5 rounded-lg border border-orange-500/40 text-sm shadow-sm">
               {style.lineHeight ?? 1.4}x
             </span>
           </div>
@@ -455,57 +455,57 @@ export function StyleEditor() {
               onClick={() => setStyle({ lineHeight: 1.2 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.lineHeight ?? 1.4) === 1.2
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">แคบ</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(1.2x)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(1.2x)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ lineHeight: 1.4 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.lineHeight ?? 1.4) === 1.4
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ปกติ</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(1.4x)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(1.4x)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ lineHeight: 1.6 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.lineHeight ?? 1.4) === 1.6
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">สบายตา</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(1.6x)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(1.6x)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ lineHeight: 1.9 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.lineHeight ?? 1.4) === 1.9
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">โปร่ง</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(1.9x)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(1.9x)</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* 🧭 Tool Card 5: Placement, Alignment & Width */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+      <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
-          <div className="w-6 h-6 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-500/40 text-purple-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-purple-500 group-focus-within/card:text-zinc-950 transition-all">
             <MoveVertical className="w-3.5 h-3.5" />
           </div>
           <h4 className="text-sm font-bold text-white">
@@ -514,16 +514,16 @@ export function StyleEditor() {
         </div>
 
         {/* Text Alignment (Left / Center / Right) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <span className="text-zinc-200 font-medium">การจัดแนวข้อความ (Text Alignment):</span>
-          <div className="flex items-center gap-1 bg-zinc-900 p-1 rounded-xl border border-zinc-700/80">
+          <div className="flex items-center gap-1 bg-[#14141e] p-1 rounded-xl border border-zinc-700">
             <button
               type="button"
               onClick={() => setStyle({ textAlign: 'left' })}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 style.textAlign === 'left'
-                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-md'
+                  : 'text-zinc-300 hover:text-white hover:bg-[#242434]'
               }`}
               title="จัดข้อความชิดซ้าย"
             >
@@ -535,8 +535,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ textAlign: 'center' })}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 !style.textAlign || style.textAlign === 'center'
-                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-md'
+                  : 'text-zinc-300 hover:text-white hover:bg-[#242434]'
               }`}
               title="จัดข้อความกึ่งกลาง"
             >
@@ -548,8 +548,8 @@ export function StyleEditor() {
               onClick={() => setStyle({ textAlign: 'right' })}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
                 style.textAlign === 'right'
-                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-sm'
-                  : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+                  ? 'bg-orange-500 text-zinc-950 font-bold shadow-md'
+                  : 'text-zinc-300 hover:text-white hover:bg-[#242434]'
               }`}
               title="จัดข้อความชิดขวา"
             >
@@ -560,13 +560,13 @@ export function StyleEditor() {
         </div>
 
         {/* Subtitle Max Width & Side Margins */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium flex items-center gap-1.5">
               <Maximize2 className="w-4 h-4 text-orange-400" />
               <span>ความกว้างสูงสุด / ระยะขอบข้าง (Width & Margins):</span>
             </span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
+            <span className="font-mono font-bold text-orange-300 bg-orange-500/15 px-2.5 py-0.5 rounded-lg border border-orange-500/40 text-sm shadow-sm">
               {style.maxWidth ?? 92}%
             </span>
           </div>
@@ -589,48 +589,48 @@ export function StyleEditor() {
               onClick={() => setStyle({ maxWidth: 70 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.maxWidth ?? 92) === 70
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">แคบ</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(70%)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(70%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 85 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.maxWidth ?? 92) === 85
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">มาตรฐาน</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(85%)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(85%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 92 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.maxWidth ?? 92) === 92
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">กว้าง</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(92%)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(92%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 98 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 (style.maxWidth ?? 92) === 98
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">เต็มจอ</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(98%)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(98%)</span>
             </button>
           </div>
           <p className="text-xs text-zinc-300 pt-0.5">
@@ -639,10 +639,10 @@ export function StyleEditor() {
         </div>
 
         {/* Position Y (Up-Down) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ตำแหน่งแนวตั้ง (ขึ้น - ลง จากขอบล่าง):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
+            <span className="font-mono font-bold text-orange-300 bg-orange-500/15 px-2.5 py-0.5 rounded-lg border border-orange-500/40 text-sm shadow-sm">
               {style.positionY}%
             </span>
           </div>
@@ -665,45 +665,45 @@ export function StyleEditor() {
               onClick={() => setStyle({ positionY: 10 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionY === 10
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ล่างสุด</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(10%)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(10%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionY: 18 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionY === 18
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">TikTok ฮิต</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(18%)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(18%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionY: 50 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionY === 50
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">กึ่งกลาง</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(50%)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(50%)</span>
             </button>
           </div>
         </div>
 
         {/* Position X (Left-Right) */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-200 font-medium">ตำแหน่งแนวนอน (ซ้าย - ขวา):</span>
-            <span className="font-mono font-bold text-orange-400 bg-zinc-900 px-2.5 py-0.5 rounded-lg border border-zinc-700 text-sm">
+            <span className="font-mono font-bold text-orange-300 bg-orange-500/15 px-2.5 py-0.5 rounded-lg border border-orange-500/40 text-sm shadow-sm">
               {style.positionX}%
             </span>
           </div>
@@ -726,45 +726,45 @@ export function StyleEditor() {
               onClick={() => setStyle({ positionX: 20 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionX === 20
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ชิดซ้าย</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(20%)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(20%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionX: 50 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionX === 50
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ตรงกลาง</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(50%)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(50%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ positionX: 80 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                 style.positionX === 80
-                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                  : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
               <span className="block text-xs font-semibold leading-tight">ชิดขวา</span>
-              <span className="block text-[11px] opacity-75 font-mono leading-tight">(80%)</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(80%)</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* 🔲 Tool Card 6: Shadow & Outline */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+      <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
-          <div className="w-6 h-6 rounded-lg bg-teal-500/15 border border-teal-500/30 text-teal-400 flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-lg bg-teal-500/20 border border-teal-500/40 text-teal-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-teal-500 group-focus-within/card:text-zinc-950 transition-all">
             <Sun className="w-3.5 h-3.5" />
           </div>
           <h4 className="text-sm font-bold text-white">
@@ -773,7 +773,7 @@ export function StyleEditor() {
         </div>
 
         {/* Drop Shadow Section */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
@@ -800,10 +800,10 @@ export function StyleEditor() {
           </div>
 
           {style.hasShadow && (
-            <div className="space-y-2 pt-1 border-t border-zinc-800 text-sm">
+            <div className="space-y-2 pt-1 border-t border-zinc-700/80 text-sm">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-zinc-300">ความฟุ้งของเงา (Blur):</span>
-                <span className="font-mono text-orange-400 font-bold">{style.shadowBlur}px</span>
+                <span className="font-mono text-orange-300 font-bold bg-orange-500/15 px-2 py-0.5 rounded border border-orange-500/40 text-xs">{style.shadowBlur}px</span>
               </div>
               <input
                 type="range"
@@ -819,7 +819,7 @@ export function StyleEditor() {
         </div>
 
         {/* Outline Section */}
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
@@ -846,10 +846,10 @@ export function StyleEditor() {
           </div>
 
           {style.hasOutline && (
-            <div className="space-y-2 pt-1 border-t border-zinc-800 text-sm">
+            <div className="space-y-2 pt-1 border-t border-zinc-700/80 text-sm">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-zinc-300">ความหนาเส้นขอบ (Width):</span>
-                <span className="font-mono text-orange-400 font-bold">{style.outlineWidth}px</span>
+                <span className="font-mono text-orange-300 font-bold bg-orange-500/15 px-2 py-0.5 rounded border border-orange-500/40 text-xs">{style.outlineWidth}px</span>
               </div>
               <input
                 type="range"
@@ -866,9 +866,9 @@ export function StyleEditor() {
       </div>
 
       {/* 📦 Tool Card 7: Background Box & Opacity */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-4 transition-all duration-200">
+      <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
         <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
-          <div className="w-6 h-6 rounded-lg bg-sky-500/15 border border-sky-500/30 text-sky-400 flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-lg bg-sky-500/20 border border-sky-500/40 text-sky-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-sky-500 group-focus-within/card:text-zinc-950 transition-all">
             <Layers className="w-3.5 h-3.5" />
           </div>
           <h4 className="text-sm font-bold text-white">
@@ -876,7 +876,7 @@ export function StyleEditor() {
           </h4>
         </div>
 
-        <div className="p-3.5 rounded-2xl bg-zinc-950/75 border border-zinc-700/60 space-y-3 hover:border-zinc-500/70 hover:bg-zinc-950 transition-all duration-200">
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between">
             <label className="text-sm font-bold text-zinc-100 flex items-center gap-2 cursor-pointer">
               <input
@@ -889,14 +889,14 @@ export function StyleEditor() {
             </label>
 
             {style.hasBackground && (
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-500/20 text-orange-300 border border-orange-500/30">
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-500/20 text-orange-300 border border-orange-500/40 shadow-sm">
                 ทึบ {style.backgroundOpacity ?? 70}%
               </span>
             )}
           </div>
 
           {style.hasBackground && (
-            <div className="space-y-3 pt-2 border-t border-zinc-800 text-sm">
+            <div className="space-y-3 pt-2 border-t border-zinc-700/80 text-sm">
               {/* Background Color Swatches */}
               <div className="space-y-1.5">
                 <span className="text-xs text-zinc-200 font-medium block">
@@ -945,8 +945,8 @@ export function StyleEditor() {
               {/* Background Opacity Slider */}
               <div className="space-y-2 pt-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-200">ความทึบแสง (Opacity):</span>
-                  <span className="font-mono text-orange-400 font-bold bg-zinc-900 px-2 py-0.5 rounded border border-zinc-700 text-xs">
+                  <span className="text-zinc-200 font-medium">ความทึบแสง (Opacity):</span>
+                  <span className="font-mono text-orange-300 font-bold bg-orange-500/15 px-2 py-0.5 rounded border border-orange-500/40 text-xs shadow-sm">
                     {style.backgroundOpacity ?? 70}%
                   </span>
                 </div>
@@ -968,48 +968,48 @@ export function StyleEditor() {
                     onClick={() => setStyle({ backgroundOpacity: 40 })}
                     className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                       (style.backgroundOpacity ?? 70) === 40
-                        ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                        : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                        : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
                     }`}
                   >
                     <span className="block text-xs font-semibold leading-tight">โปร่งแสง</span>
-                    <span className="block text-[11px] opacity-75 font-mono leading-tight">(40%)</span>
+                    <span className="block text-[11px] opacity-85 font-mono leading-tight">(40%)</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setStyle({ backgroundOpacity: 65 })}
                     className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                       (style.backgroundOpacity ?? 70) === 65
-                        ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                        : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                        : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
                     }`}
                   >
                     <span className="block text-xs font-semibold leading-tight">ปานกลาง</span>
-                    <span className="block text-[11px] opacity-75 font-mono leading-tight">(65%)</span>
+                    <span className="block text-[11px] opacity-85 font-mono leading-tight">(65%)</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setStyle({ backgroundOpacity: 85 })}
                     className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                       (style.backgroundOpacity ?? 70) === 85
-                        ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                        : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                        : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
                     }`}
                   >
                     <span className="block text-xs font-semibold leading-tight">ทึบแสง</span>
-                    <span className="block text-[11px] opacity-75 font-mono leading-tight">(85%)</span>
+                    <span className="block text-[11px] opacity-85 font-mono leading-tight">(85%)</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setStyle({ backgroundOpacity: 100 })}
                     className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
                       (style.backgroundOpacity ?? 70) === 100
-                        ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/40 shadow-sm'
-                        : 'bg-zinc-900 border-zinc-700/80 hover:bg-zinc-800 hover:border-zinc-500 text-zinc-200 shadow-sm'
+                        ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                        : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
                     }`}
                   >
                     <span className="block text-xs font-semibold leading-tight">ทึบ 100%</span>
-                    <span className="block text-[11px] opacity-75 font-mono leading-tight">(100%)</span>
+                    <span className="block text-[11px] opacity-85 font-mono leading-tight">(100%)</span>
                   </button>
                 </div>
               </div>

@@ -69,11 +69,11 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
   const allFonts = [...customFonts, ...THAI_SYSTEM_FONTS];
 
   return (
-    <div className="p-4 sm:p-5 rounded-3xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] shadow-xl space-y-3.5 transition-all duration-200">
+    <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-3.5 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
       {/* Upload Custom Font Button */}
       <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-zinc-700/70">
         <label className="text-sm font-bold text-white flex items-center gap-2">
-          <div className="w-6 h-6 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center shrink-0">
+          <div className="w-6 h-6 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-orange-500 group-focus-within/card:text-zinc-950 transition-all">
             <Type className="w-3.5 h-3.5" />
           </div>
           <span>เลือกฟอนต์ภาษาไทย (Thai Fonts):</span>
@@ -83,7 +83,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="px-3 py-1.5 rounded-xl bg-zinc-950 hover:bg-zinc-800 border border-zinc-700/80 text-orange-400 hover:text-orange-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0"
+          className="px-3 py-1.5 rounded-xl bg-[#0e0e16] hover:bg-[#252536] border border-zinc-700 text-orange-400 hover:text-orange-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0"
           title="อัปโหลดไฟล์ฟอนต์ภาษาไทย .ttf / .otf"
         >
           {isUploading ? (
@@ -108,7 +108,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
       )}
 
       {/* Font Grid List */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-800">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-700">
         {allFonts.map((font) => {
           const isSelected = selectedFont === font.id;
 
@@ -123,7 +123,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
               className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
                 isSelected
                   ? 'bg-orange-500/20 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                  : 'bg-zinc-950/70 border-zinc-700/70 text-zinc-300 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
+                  : 'bg-[#0f0f18] border-zinc-700/80 text-zinc-200 hover:border-orange-400 hover:bg-[#28283a] shadow-sm'
               }`}
             >
               <div className="flex items-center justify-between w-full">

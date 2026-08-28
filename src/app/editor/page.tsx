@@ -119,9 +119,9 @@ export default function EditorPage() {
 
           {/* Quick Jump to Active Subtitle Card (Mobile & Desktop Thumb Ergonomics) */}
           {captions.length > 0 && (
-            <div className="p-3 sm:p-4 rounded-2xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500 hover:bg-[#1a1a20] flex items-center justify-between gap-2.5 shadow-xl shrink-0 transition-all duration-200">
+            <div className="p-3 sm:p-4 rounded-2xl bg-[#181824] border border-zinc-700/90 hover:border-orange-500/60 hover:bg-[#20202e] flex items-center justify-between gap-2.5 shadow-xl shrink-0 transition-all duration-200 group/jump">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center shrink-0 font-mono font-bold text-xs">
+                <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/40 flex items-center justify-center shrink-0 font-mono font-bold text-xs group-hover/jump:scale-110 group-hover/jump:bg-orange-500 group-hover/jump:text-zinc-950 transition-all">
                   {activeCaptionIndex !== null && activeCaptionIndex !== -1 ? `#${activeCaptionIndex + 1}` : '📝'}
                 </div>
                 <div className="min-w-0">
@@ -169,7 +169,7 @@ export default function EditorPage() {
         {/* Right Column: Studio Tabs & Independent Scrolling Tool Panel */}
         <div className="flex-1 min-w-0 w-full flex flex-col lg:h-full min-h-0 space-y-3 lg:overflow-hidden">
           {/* Segmented Tab Switcher */}
-          <div className="grid grid-cols-3 p-1.5 bg-zinc-900/95 border border-zinc-700/80 rounded-2xl shadow-xl gap-1 shrink-0">
+          <div className="grid grid-cols-3 p-1.5 bg-[#181824] border border-zinc-700/90 rounded-2xl shadow-xl gap-1 shrink-0">
             {/* Tab 1: Captions */}
             <button
               type="button"
@@ -177,7 +177,7 @@ export default function EditorPage() {
               className={`w-full min-w-0 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-h-[52px] sm:min-h-[42px] text-center ${
                 activeTab === 'captions'
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
-                  : 'text-zinc-300 hover:text-white hover:bg-zinc-800'
+                  : 'text-zinc-300 hover:text-white hover:bg-[#242434]'
               }`}
             >
               <span className="text-sm sm:text-base shrink-0">📝</span>
@@ -193,7 +193,7 @@ export default function EditorPage() {
               className={`w-full min-w-0 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-h-[52px] sm:min-h-[42px] text-center ${
                 activeTab === 'style'
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
-                  : 'text-zinc-300 hover:text-white hover:bg-zinc-800'
+                  : 'text-zinc-300 hover:text-white hover:bg-[#242434]'
               }`}
             >
               <span className="text-sm sm:text-base shrink-0">🎨</span>
@@ -207,7 +207,7 @@ export default function EditorPage() {
               className={`w-full min-w-0 py-2 sm:py-2.5 px-1.5 sm:px-3 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 min-h-[52px] sm:min-h-[42px] text-center ${
                 activeTab === 'presets'
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
-                  : 'text-zinc-300 hover:text-white hover:bg-zinc-800'
+                  : 'text-zinc-300 hover:text-white hover:bg-[#242434]'
               }`}
             >
               <span className="text-sm sm:text-base shrink-0">⚡</span>
@@ -216,7 +216,7 @@ export default function EditorPage() {
           </div>
 
           {/* Tab Content Panels (Scrolls independently inside this box on Desktop) */}
-          <div className="flex-1 min-h-0 bg-zinc-950/75 rounded-3xl border border-zinc-700/80 lg:overflow-hidden shadow-2xl flex flex-col">
+          <div className="flex-1 min-h-0 bg-[#0c0c14] rounded-3xl border border-zinc-700/90 lg:overflow-hidden shadow-2xl flex flex-col">
             {activeTab === 'captions' ? (
               <CaptionTable />
             ) : activeTab === 'style' ? (
