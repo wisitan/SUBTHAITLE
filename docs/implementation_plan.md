@@ -915,7 +915,11 @@ graph TB
 ```
 
 - [ ] `app/editor/page.tsx` — 2-column layout (Responsive Desktop/Tablet)
+  - **[IMPLEMENTED] Desktop Web Independent Scroll:** ใช้ Flexbox (`flex-col lg:flex-row`) ล็อกฝั่งซ้าย (`shrink-0 lg:h-full lg:overflow-y-auto`) ทำให้ฝั่งขวา (Studio) เลื่อนอิสระโดยไม่กวนวิดีโอ
+  - **[IMPLEMENTED] Fixed Column Equalization:** ล็อกความกว้างฝั่งซ้าย (`lg:w-[460px] xl:w-[500px]`) ให้คงที่เสมอทุก Aspect Ratio ป้องกัน Layout ขยับ
 - [ ] `components/video-player.tsx` — HTML5 video + Play/Pause (Spacebar), Scrubber, Speed Control
+  - **[IMPLEMENTED] Smart Max-Height Bounds:** ใช้ `max-h-[70vh]` กับวิดีโอเพื่อยอมให้มีขอบดำ (Pillarbox/Letterbox) ได้ ป้องกันวิดีโอ 9:16 ล้นขอบจอ
+  - **[IMPLEMENTED] 100% WYSIWYG Scaling Parity:** แก้สมการขนาดฟอนต์ `scale = Math.min(width, height) / 360` เพื่อให้ฟอนต์ที่แสดงใน Preview (9:16 และ 16:9) มีความสูงทางกายภาพเท่ากันเป๊ะกับ Canvas Renderer ส่งผลให้การทำงานแม่นยำสูง
 - [ ] `components/video-player.tsx` — Subtitle overlay พร้อม **Real-time Word Highlight** ตามเสียงพูด
 - [ ] `components/caption-table.tsx` — Editable table, highlight active row, auto-scroll, click → seek
 - [ ] `components/caption-table.tsx` — Toolbar: Add, Split (✂️), Merge (🔗), Delete (🗑️), Time Shift, Find & Replace
@@ -997,19 +1001,19 @@ graph TB
 
 ```
 สั่ง AI: "สร้างระบบ Burn Subtitle ด้วย @ffmpeg/ffmpeg (ffmpeg.wasm):
-         1. แปลง caption + style → ASS subtitle (รองรับ word highlight ด้วย \k tag)
-         2. ใช้ ffmpeg.wasm burn ASS ลงวิดีโอบน browser
+         1. ใช้ HTML5 Canvas Subtitle Engine เรนเดอร์ text/style/highlight เป็น PNG Sequence (100% WYSIWYG)
+         2. ใช้ ffmpeg.wasm concat overlay รูปภาพทับลงบนวิดีโอบน browser
          3. แสดง progress dialog ระหว่าง render
          4. เสร็จแล้ว auto download MP4
          ไม่ต้องมี server — ทุกอย่างรันบน browser"
 ```
 
-- [ ] `lib/ass.ts` — ASS subtitle generation (style mapping + `\k` karaoke tag สำหรับ word highlight)
-- [ ] `lib/burn.ts` — ffmpeg.wasm: load WASM → input video + ASS → output MP4
-- [ ] `components/burn-video.tsx` — Burn dialog: progress bar + cancel + auto download
-- [ ] Lazy load ffmpeg.wasm (~25MB) เฉพาะตอน user กด Burn (ไม่โหลดตอนแรก)
-- [ ] Error handling: memory limit, file too large, unsupported codec
-- [ ] ทดสอบ: Burn MP4 ได้ตรงตาม preview + word highlight ติดมาในวิดีโอ
+- [x] `lib/canvas-subtitle.ts` — HTML5 Canvas Subtitle Engine (คำนวณ bounds, scale และเรนเดอร์ PNG)
+- [x] `lib/burn.ts` — ffmpeg.wasm: load WASM → input video + image concat → output MP4
+- [x] `components/burn-video.tsx` — Burn dialog: progress bar + cancel + auto download
+- [x] Lazy load ffmpeg.wasm (~25MB) เฉพาะตอน user กด Burn
+- [x] ทดสอบ: Burn MP4 ได้ตรงตาม preview แบบ WYSIWYG 100% ไม่มีปัญหา Font เพี้ยน
+
 
 ---
 
