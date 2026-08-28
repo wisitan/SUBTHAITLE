@@ -49,7 +49,9 @@ export function VideoPlayer({ className = '' }: Props) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9' | '1:1'>('9:16');
   const [hoverTime, setHoverTime] = useState<number | null>(null);
-  const [renderedWidth, setRenderedWidth] = useState(360);
+  
+  // Track the exact pixel dimensions of the video container for perfect WYSIWYG scaling
+  const [containerSize, setContainerSize] = useState({ w: 360, h: 640 });
 
   const videoDisplayRef = useRef<HTMLDivElement>(null);
 
@@ -66,21 +68,25 @@ export function VideoPlayer({ className = '' }: Props) {
     };
   }, []);
 
-  // Measure actual rendered canvas width dynamically for 100% WYSIWYG parity with Export Canvas
+  // Measure actual rendered canvas size dynamically
   useEffect(() => {
     if (!videoDisplayRef.current) return;
     const updateSize = () => {
       if (videoDisplayRef.current) {
         const w = videoDisplayRef.current.clientWidth;
-        if (w > 0) setRenderedWidth(w);
+        const h = videoDisplayRef.current.clientHeight;
+        if (w > 0 && h > 0) setContainerSize({ w, h });
       }
     };
     updateSize();
 
     const ro = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        if (entry.contentRect.width > 0) {
-          setRenderedWidth(entry.contentRect.width);
+        if (entry.contentRect.width > 0 && entry.contentRect.height > 0) {
+          setContainerSize({
+            w: entry.contentRect.width,
+            h: entry.contentRect.height,
+          });
         }
       }
     });
@@ -233,10 +239,34 @@ export function VideoPlayer({ className = '' }: Props) {
     return `rgba(${r}, ${g}, ${b}, ${a})`;
   };
 
+  // Calculate the exact visual dimensions of the object-contain video area
+  const visualBounds = useMemo(() => {
+    let targetRatio = 9 / 16;
+    if (aspectRatio === '16:9') targetRatio = 16 / 9;
+    else if (aspectRatio === '1:1') targetRatio = 1;
+
+    const containerRatio = containerSize.w / containerSize.h;
+    let actualWidth = containerSize.w;
+    let actualHeight = containerSize.h;
+
+    // object-contain logic: fit within bounds while preserving target aspect ratio
+    if (containerRatio > targetRatio) {
+      // Container is wider than the target aspect ratio (pillarboxing)
+      actualWidth = containerSize.h * targetRatio;
+    } else {
+      // Container is taller than the target aspect ratio (letterboxing)
+      actualHeight = containerSize.w / targetRatio;
+    }
+
+    return { w: actualWidth, h: actualHeight };
+  }, [containerSize, aspectRatio]);
+
   // Build dynamic text-shadow & outline CSS with 100% WYSIWYG Proportional Scaling
   const subtitleOverlayStyle: React.CSSProperties = useMemo(() => {
-    // Proportional scale factor matching Canvas Render (base: 360px)
-    const scale = (renderedWidth || 360) / 360;
+    // Proportional scale factor matching Canvas Render (base width: 360px for 9:16)
+    // We scale against the EXACT visual width of the object-contain area.
+    const scale = (visualBounds.w || 360) / 360;
+    
     const scaledFontSize = (style.fontSize || 24) * scale;
     const scaledLetterSpacing = (style.letterSpacing ?? 0) * scale;
     const scaledOutline = (style.outlineWidth ?? 0) * scale;
@@ -312,7 +342,7 @@ export function VideoPlayer({ className = '' }: Props) {
       borderRadius: `${scaledBorderRadius}px`,
       boxSizing: 'border-box' as const,
     };
-  }, [style, renderedWidth]);
+  }, [style, visualBounds]);
 
   // Aspect ratio wrapper styling - Full-width and natural proportions without dark sidebars
   const aspectClass = useMemo(() => {
@@ -453,12 +483,19 @@ export function VideoPlayer({ className = '' }: Props) {
               </div>
             )}
 
-            {/* Subtitle Overlay Display Layer */}
+            {/* Subtitle Overlay Display Layer - Confined to exact visual bounds of the object-contain video */}
             {activeCaption && (
-              <div
-                style={subtitleOverlayStyle}
-                className="absolute z-20 pointer-events-none select-none transition-all duration-75"
+              <div 
+                className="absolute inset-0 m-auto pointer-events-none"
+                style={{
+                  width: `${visualBounds.w}px`,
+                  height: `${visualBounds.h}px`,
+                }}
               >
+                <div
+                  style={subtitleOverlayStyle}
+                  className="absolute z-20 pointer-events-none select-none transition-all duration-75"
+                >
                 <p
                   className="w-full inline-block m-0 p-0"
                   style={{
@@ -512,6 +549,7 @@ export function VideoPlayer({ className = '' }: Props) {
                     <span>{activeCaption.text}</span>
                   )}
                 </p>
+                </div>
               </div>
             )}
           </>
