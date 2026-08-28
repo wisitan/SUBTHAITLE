@@ -364,7 +364,7 @@ export function VideoPlayer({ className = '' }: Props) {
   return (
     <div
       ref={containerRef}
-      className={`relative flex flex-col bg-zinc-950 rounded-3xl border border-zinc-700 overflow-hidden shadow-2xl group ${className}`}
+      className={`relative shrink-0 flex flex-col bg-zinc-950 rounded-3xl border border-zinc-700 overflow-hidden shadow-2xl group ${className}`}
     >
       {/* Top Floating Toolbar (Aspect Ratio & Highlight Badge) */}
       <div className="absolute top-3 left-2.5 right-2.5 sm:left-3 sm:right-3 z-30 flex items-center justify-between pointer-events-none gap-2">
@@ -434,7 +434,7 @@ export function VideoPlayer({ className = '' }: Props) {
       <div
         ref={videoDisplayRef}
         onClick={togglePlay}
-        className={`relative flex items-center justify-center bg-black cursor-pointer overflow-hidden min-h-[280px] ${aspectClass}`}
+        className={`relative shrink-0 flex items-center justify-center bg-black cursor-pointer overflow-hidden min-h-[280px] ${aspectClass}`}
       >
         {videoUrl ? (
           <>

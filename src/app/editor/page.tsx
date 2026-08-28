@@ -118,7 +118,7 @@ export default function EditorPage() {
 
           {/* Quick Jump to Active Subtitle Card (Mobile & Desktop Thumb Ergonomics) */}
           {captions.length > 0 && (
-            <div className="p-3 sm:p-4 rounded-2xl bg-zinc-900 border border-zinc-700 flex items-center justify-between gap-2.5 shadow-xl">
+            <div className="p-3 sm:p-4 rounded-2xl bg-zinc-900 border border-zinc-700 flex items-center justify-between gap-2.5 shadow-xl shrink-0">
               <div className="flex items-center gap-2.5 min-w-0">
                 <div className="w-8 h-8 rounded-xl bg-orange-500/20 text-orange-400 border border-orange-500/30 flex items-center justify-center shrink-0 font-mono font-bold text-xs">
                   {activeCaptionIndex !== null && activeCaptionIndex !== -1 ? `#${activeCaptionIndex + 1}` : '📝'}
@@ -165,7 +165,7 @@ export default function EditorPage() {
           )}
 
           {/* Quick tips card below video */}
-          <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-300 space-y-2 shadow-lg">
+          <div className="p-4 rounded-2xl bg-zinc-900 border border-zinc-700 text-xs text-zinc-300 space-y-2 shadow-lg shrink-0">
             <div className="flex items-center gap-1.5 text-zinc-200 font-semibold text-xs">
               <Sparkles className="w-4 h-4 text-orange-400" />
               <span>คีย์ลัดสำหรับ Video Player:</span>
