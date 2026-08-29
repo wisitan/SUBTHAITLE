@@ -252,7 +252,8 @@ export async function renderSubtitleCanvas(
     ctx.restore();
   }
 
-  // 2. Draw Text (Shadow + Outline + Fill)
+  // 2. Draw Text with Sticker Pop-up Layering:
+  // (1) Inactive Words Shadows, Outlines & Fills -> (2) Active Pop-up Word Shadow, Outline & Fill on Top!
   const textAlign = style.textAlign || 'center';
   let startY = boxTopY + boxPaddingY + lineHeight / 2;
 
@@ -265,56 +266,118 @@ export async function renderSubtitleCanvas(
     }
 
     let cursorX = startX;
-
-    line.words.forEach((w) => {
-      ctx.font = `${w.weight} ${fontSize}px "${fontName}", sans-serif`;
-
+    const positionedWords = line.words.map((w) => {
+      const x = cursorX;
+      cursorX += w.width;
       const shouldScale = w.isActive && style.enableWordHighlight && (style.highlightScale ?? 1.15) > 1.0;
       const wordScale = shouldScale ? (style.highlightScale ?? 1.15) : 1.0;
+      const wordCenterX = x + w.width / 2;
+      const wordCenterY = startY;
+      return {
+        ...w,
+        x,
+        shouldScale,
+        wordScale,
+        wordCenterX,
+        wordCenterY,
+      };
+    });
 
-      if (shouldScale) {
-        ctx.save();
-        const wordCenterX = cursorX + w.width / 2;
-        const wordCenterY = startY;
-        ctx.translate(wordCenterX, wordCenterY);
-        ctx.scale(wordScale, wordScale);
-        ctx.translate(-wordCenterX, -wordCenterY);
-      }
+    const inactiveWords = positionedWords.filter((pw) => !pw.isActive || !style.enableWordHighlight);
+    const activeWords = positionedWords.filter((pw) => pw.isActive && style.enableWordHighlight);
 
-      // A. Shadow
-      if (style.hasShadow) {
+    // --- PHASE 1: Base Layer (Inactive Words) ---
+    // A. Inactive Shadows
+    if (style.hasShadow) {
+      inactiveWords.forEach((pw) => {
+        ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
         ctx.save();
         ctx.shadowColor = hexToRgba(style.shadowColor || '#000000', (style.shadowOpacity ?? 0.8) * 100);
         ctx.shadowBlur = (style.shadowBlur || 8) * scale;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 4 * scale;
-        ctx.fillStyle = w.color;
-        ctx.fillText(w.text, cursorX, startY);
+        ctx.fillStyle = pw.color;
+        ctx.fillText(pw.text, pw.x, startY);
         ctx.restore();
-      }
+      });
+    }
 
-      // B. Multi-angle Outline (Continuous stroke)
-      if (style.hasOutline && style.outlineWidth > 0) {
+    // B. Inactive Outlines
+    if (style.hasOutline && style.outlineWidth > 0) {
+      inactiveWords.forEach((pw) => {
+        ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
         ctx.save();
         ctx.strokeStyle = style.outlineColor || '#000000';
         ctx.lineWidth = style.outlineWidth * scale * 2.2;
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
-        ctx.strokeText(w.text, cursorX, startY);
+        ctx.strokeText(pw.text, pw.x, startY);
         ctx.restore();
-      }
+      });
+    }
 
-      // C. Fill Text
+    // C. Inactive Text Fills
+    inactiveWords.forEach((pw) => {
+      ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
       ctx.save();
-      ctx.fillStyle = w.color;
-      ctx.fillText(w.text, cursorX, startY);
+      ctx.fillStyle = pw.color;
+      ctx.fillText(pw.text, pw.x, startY);
       ctx.restore();
+    });
 
-      if (shouldScale) {
+    // --- PHASE 2: Sticker Pop-up Layer (Active Highlighted Words on Top) ---
+    activeWords.forEach((pw) => {
+      ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
+
+      const applyScaleTransform = () => {
+        if (pw.shouldScale) {
+          ctx.save();
+          ctx.translate(pw.wordCenterX, pw.wordCenterY);
+          ctx.scale(pw.wordScale, pw.wordScale);
+          ctx.translate(-pw.wordCenterX, -pw.wordCenterY);
+        }
+      };
+
+      const restoreScaleTransform = () => {
+        if (pw.shouldScale) {
+          ctx.restore();
+        }
+      };
+
+      // 1. Active Word Shadow
+      if (style.hasShadow) {
+        applyScaleTransform();
+        ctx.save();
+        ctx.shadowColor = hexToRgba(style.shadowColor || '#000000', (style.shadowOpacity ?? 0.8) * 100);
+        ctx.shadowBlur = (style.shadowBlur || 8) * scale;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 4 * scale;
+        ctx.fillStyle = pw.color;
+        ctx.fillText(pw.text, pw.x, startY);
         ctx.restore();
+        restoreScaleTransform();
       }
 
-      cursorX += w.width;
+      // 2. Active Word Outline (Framing the pop-up above inactive words)
+      if (style.hasOutline && style.outlineWidth > 0) {
+        applyScaleTransform();
+        ctx.save();
+        ctx.strokeStyle = style.outlineColor || '#000000';
+        ctx.lineWidth = style.outlineWidth * scale * 2.2;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.strokeText(pw.text, pw.x, startY);
+        ctx.restore();
+        restoreScaleTransform();
+      }
+
+      // 3. Active Word Text Fill
+      applyScaleTransform();
+      ctx.save();
+      ctx.fillStyle = pw.color;
+      ctx.fillText(pw.text, pw.x, startY);
+      ctx.restore();
+      restoreScaleTransform();
     });
 
     startY += lineHeight;

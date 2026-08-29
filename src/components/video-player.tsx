@@ -218,7 +218,7 @@ export function VideoPlayer({ className = '' }: Props) {
   }, [containerSize, aspectRatio]);
 
   // Build dynamic text-shadow & outline CSS with 100% WYSIWYG Proportional Scaling
-  const subtitleOverlayStyle: React.CSSProperties = useMemo(() => {
+  const { subtitleOverlayStyle, shadowsCss } = useMemo(() => {
     // Proportional scale factor matching Canvas Render (base width: 360px for 9:16)
     // We scale against the EXACT visual dimensions of the object-contain area.
     // Use the shortest dimension to ensure consistent text size across landscape and portrait modes.
@@ -275,8 +275,9 @@ export function VideoPlayer({ className = '' }: Props) {
 
     const maxWidthPct = style.maxWidth ?? 92;
     const textAlign = style.textAlign || 'center';
+    const computedShadows = shadows.length > 0 ? shadows.join(', ') : 'none';
 
-    return {
+    const overlayStyle: React.CSSProperties = {
       fontFamily: `"${style.fontFamily}", sans-serif`,
       fontSize: `${scaledFontSize}px`,
       color: style.textColor || '#FFFFFF',
@@ -294,11 +295,15 @@ export function VideoPlayer({ className = '' }: Props) {
       bottom: `${style.positionY}%`,
       left: `${style.positionX}%`,
       transform: 'translateX(-50%)',
-      textShadow: shadows.length > 0 ? shadows.join(', ') : 'none',
       backgroundColor: bgColor,
       padding: `${scaledBoxPaddingY}px ${scaledBoxPaddingX}px`,
       borderRadius: `${scaledBorderRadius}px`,
       boxSizing: 'border-box' as const,
+    };
+
+    return {
+      subtitleOverlayStyle: overlayStyle,
+      shadowsCss: computedShadows,
     };
   }, [style, visualBounds]);
 
@@ -454,63 +459,135 @@ export function VideoPlayer({ className = '' }: Props) {
                   style={subtitleOverlayStyle}
                   className="absolute z-20 pointer-events-none select-none transition-all duration-75"
                 >
-                <p
-                  className="w-full inline-block m-0 p-0"
-                  style={{
-                    textAlign: style.textAlign || 'center',
-                    wordBreak: 'break-word',
-                    whiteSpace: 'pre-wrap',
-                    letterSpacing: `${style.letterSpacing ?? 0}px`,
-                    lineHeight: style.lineHeight ?? 1.4,
-                  }}
-                >
                   {style.enableWordHighlight && activeCaption.words && activeCaption.words.length > 0 ? (
-                    /* Word-level Highlight with 100% natural inline rendering (No Flexbox, No Blur) */
-                    activeCaption.words.map((w: CaptionWord, idx: number) => {
-                      const isWordActive =
-                        w.start <= currentTime && currentTime <= w.end + 0.08;
+                    /* Sticker Pop-up Architecture: Layer 1 (Base Outlines) + Layer 2 (Foreground Words & Pop-up Active Word) */
+                    <div className="relative w-full">
+                      {/* Layer 1: Continuous Background Outline & Shadow (Base Layer) */}
+                      <p
+                        className="w-full inline-block m-0 p-0 select-none"
+                        style={{
+                          textAlign: style.textAlign || 'center',
+                          wordBreak: 'break-word',
+                          whiteSpace: 'pre-wrap',
+                          letterSpacing: `${style.letterSpacing ?? 0}px`,
+                          lineHeight: style.lineHeight ?? 1.4,
+                          color: 'transparent',
+                          textShadow: shadowsCss,
+                        }}
+                        aria-hidden="true"
+                      >
+                        {activeCaption.words.map((w: CaptionWord, idx: number) => {
+                          const isWordActive =
+                            w.start <= currentTime && currentTime <= w.end + 0.08;
 
-                      // Smart Spacing Logic: Check if we need to prepend a space before this word
-                      let prefixSpace = '';
-                      if (idx > 0) {
-                        const prevW = activeCaption.words![idx - 1];
-                        const testJoin = formatCaptionWordsText([prevW, w]);
-                        // If formatCaptionWordsText decided to insert a space between them, we render it
-                        if (testJoin.includes(' ')) {
-                          prefixSpace = ' ';
-                        }
-                      }
+                          let prefixSpace = '';
+                          if (idx > 0) {
+                            const prevW = activeCaption.words![idx - 1];
+                            const testJoin = formatCaptionWordsText([prevW, w]);
+                            if (testJoin.includes(' ')) {
+                              prefixSpace = ' ';
+                            }
+                          }
 
-                      const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
-                      const isScaled = isWordActive && scaleMultiplier > 1;
+                          const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
+                          const isScaled = isWordActive && scaleMultiplier > 1;
 
-                      return (
-                        <React.Fragment key={idx}>
-                          {prefixSpace && <span>{prefixSpace}</span>}
-                          <span
-                            className="inline-block origin-center transition-all duration-150 ease-out"
-                            style={{
-                              color: isWordActive ? style.highlightColor || '#FACC15' : style.textColor || '#FFFFFF',
-                              fontWeight: isWordActive
-                                ? 800
-                                : style.fontWeight === 'bold' || style.fontWeight === '700'
-                                ? 700
-                                : style.fontWeight === '800'
-                                ? 800
-                                : 500,
-                              transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
-                            }}
-                          >
-                            {w.word}
-                          </span>
-                        </React.Fragment>
-                      );
-                    })
+                          return (
+                            <React.Fragment key={idx}>
+                              {prefixSpace && <span>{prefixSpace}</span>}
+                              <span
+                                className="inline-block origin-center transition-all duration-150 ease-out"
+                                style={{
+                                  fontWeight: isWordActive
+                                    ? 800
+                                    : style.fontWeight === 'bold' || style.fontWeight === '700'
+                                    ? 700
+                                    : style.fontWeight === '800'
+                                    ? 800
+                                    : 500,
+                                  transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
+                                }}
+                              >
+                                {w.word}
+                              </span>
+                            </React.Fragment>
+                          );
+                        })}
+                      </p>
+
+                      {/* Layer 2: Foreground Words (Active word with z-20 & crisp textShadow stickers over inactive z-10 words) */}
+                      <p
+                        className="w-full inline-block m-0 p-0 absolute inset-0 select-none"
+                        style={{
+                          textAlign: style.textAlign || 'center',
+                          wordBreak: 'break-word',
+                          whiteSpace: 'pre-wrap',
+                          letterSpacing: `${style.letterSpacing ?? 0}px`,
+                          lineHeight: style.lineHeight ?? 1.4,
+                          textShadow: 'none',
+                        }}
+                      >
+                        {activeCaption.words.map((w: CaptionWord, idx: number) => {
+                          const isWordActive =
+                            w.start <= currentTime && currentTime <= w.end + 0.08;
+
+                          let prefixSpace = '';
+                          if (idx > 0) {
+                            const prevW = activeCaption.words![idx - 1];
+                            const testJoin = formatCaptionWordsText([prevW, w]);
+                            if (testJoin.includes(' ')) {
+                              prefixSpace = ' ';
+                            }
+                          }
+
+                          const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
+                          const isScaled = isWordActive && scaleMultiplier > 1;
+
+                          return (
+                            <React.Fragment key={idx}>
+                              {prefixSpace && <span>{prefixSpace}</span>}
+                              <span
+                                className={`inline-block origin-center transition-all duration-150 ease-out ${
+                                  isWordActive ? 'relative z-20' : 'relative z-10'
+                                }`}
+                                style={{
+                                  color: isWordActive ? style.highlightColor || '#FACC15' : style.textColor || '#FFFFFF',
+                                  fontWeight: isWordActive
+                                    ? 800
+                                    : style.fontWeight === 'bold' || style.fontWeight === '700'
+                                    ? 700
+                                    : style.fontWeight === '800'
+                                    ? 800
+                                    : 500,
+                                  transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
+                                  // The active pop-up word carries its own crisp shadow/outline sticker over everything!
+                                  textShadow: isWordActive && shadowsCss !== 'none' ? shadowsCss : 'none',
+                                }}
+                              >
+                                {w.word}
+                              </span>
+                            </React.Fragment>
+                          );
+                        })}
+                      </p>
+                    </div>
                   ) : (
-                    /* Whole Caption Text Rendering */
-                    <span>{activeCaption.text}</span>
+                    /* Whole Caption Text Rendering (Single clean layer) */
+                    <p
+                      className="w-full inline-block m-0 p-0"
+                      style={{
+                        textAlign: style.textAlign || 'center',
+                        wordBreak: 'break-word',
+                        whiteSpace: 'pre-wrap',
+                        letterSpacing: `${style.letterSpacing ?? 0}px`,
+                        lineHeight: style.lineHeight ?? 1.4,
+                        color: style.textColor || '#FFFFFF',
+                        textShadow: shadowsCss,
+                      }}
+                    >
+                      <span>{activeCaption.text}</span>
+                    </p>
                   )}
-                </p>
                 </div>
               </div>
             )}
