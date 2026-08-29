@@ -113,6 +113,11 @@ export async function renderSubtitleCanvas(
       ? '800'
       : '500';
 
+  const highlightScaleValue = style.highlightScale ?? 1.15;
+  const scaleBufferPx = style.enableWordHighlight && highlightScaleValue > 1
+    ? ((highlightScaleValue - 1) / 2) * fontSize
+    : 0;
+
   const fontName = style.fontFamily || 'Noto Sans Thai';
   ctx.font = `${baseWeight} ${fontSize}px "${fontName}", sans-serif`;
   ctx.textBaseline = 'middle';
@@ -135,6 +140,7 @@ export async function renderSubtitleCanvas(
     color: string;
     weight: string;
     width: number;
+    textWidth: number;
   }
 
   const renderWords: RenderWord[] = [];
@@ -156,34 +162,40 @@ export async function renderSubtitleCanvas(
 
       if (prefixSpace) {
         ctx.font = `${baseWeight} ${fontSize}px "${fontName}", sans-serif`;
+        const sw = ctx.measureText(prefixSpace).width;
         renderWords.push({
           text: prefixSpace,
           isActive: false,
           color: wordColor,
           weight: baseWeight,
-          width: ctx.measureText(prefixSpace).width,
+          width: sw,
+          textWidth: sw,
         });
       }
 
       ctx.font = `${wordWeight} ${fontSize}px "${fontName}", sans-serif`;
+      const rawWidth = ctx.measureText(w.word).width;
       renderWords.push({
         text: w.word,
         isActive,
         color: wordColor,
         weight: wordWeight,
-        width: ctx.measureText(w.word).width,
+        width: rawWidth + scaleBufferPx * 2,
+        textWidth: rawWidth,
       });
     });
   } else {
     // Static text
     const text = caption.text;
     ctx.font = `${baseWeight} ${fontSize}px "${fontName}", sans-serif`;
+    const sw = ctx.measureText(text).width;
     renderWords.push({
       text,
       isActive: false,
       color: style.textColor || '#FFFFFF',
       weight: baseWeight,
-      width: ctx.measureText(text).width,
+      width: sw,
+      textWidth: sw,
     });
   }
 
@@ -267,15 +279,19 @@ export async function renderSubtitleCanvas(
 
     let cursorX = startX;
     const positionedWords = line.words.map((w) => {
-      const x = cursorX;
+      const slotStart = cursorX;
+      // จัดตัวหนังสือจริงให้อยู่กึ่งกลางของ "ช่อง" ที่จองไว้ (ช่อง = ตัวหนังสือ + buffer 2 ข้าง)
+      const glyphX = slotStart + (w.width - w.textWidth) / 2;
       cursorX += w.width;
+
       const shouldScale = w.isActive && style.enableWordHighlight && (style.highlightScale ?? 1.15) > 1.0;
       const wordScale = shouldScale ? (style.highlightScale ?? 1.15) : 1.0;
-      const wordCenterX = x + w.width / 2;
+      const wordCenterX = glyphX + w.textWidth / 2;
       const wordCenterY = startY;
+
       return {
         ...w,
-        x,
+        x: glyphX,
         shouldScale,
         wordScale,
         wordCenterX,

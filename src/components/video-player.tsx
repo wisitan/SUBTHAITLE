@@ -217,6 +217,16 @@ export function VideoPlayer({ className = '' }: Props) {
     return { w: actualWidth, h: actualHeight };
   }, [containerSize, aspectRatio]);
 
+  // Calculate buffer margin needed around each word to prevent overlapping when scale transforms
+  const wordBufferPx = useMemo(() => {
+    const baseDim = Math.min(visualBounds.w, visualBounds.h);
+    const domScale = (baseDim || 360) / 360;
+    const scaledFontSize = (style.fontSize || 24) * domScale;
+    const highlightScale = style.highlightScale ?? 1.15;
+    if (!style.enableWordHighlight || highlightScale <= 1) return 0;
+    return ((highlightScale - 1) / 2) * scaledFontSize;
+  }, [visualBounds, style]);
+
   // Build dynamic text-shadow & outline CSS with 100% WYSIWYG Proportional Scaling
   const { subtitleOverlayStyle, shadowsCss } = useMemo(() => {
     // Proportional scale factor matching Canvas Render (base width: 360px for 9:16)
@@ -506,6 +516,8 @@ export function VideoPlayer({ className = '' }: Props) {
                                     ? 800
                                     : 500,
                                   transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
+                                  marginLeft: `${wordBufferPx}px`,
+                                  marginRight: `${wordBufferPx}px`,
                                 }}
                               >
                                 {w.word}
@@ -560,6 +572,8 @@ export function VideoPlayer({ className = '' }: Props) {
                                     ? 800
                                     : 500,
                                   transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
+                                  marginLeft: `${wordBufferPx}px`,
+                                  marginRight: `${wordBufferPx}px`,
                                   // The active pop-up word carries its own crisp shadow/outline sticker over everything!
                                   textShadow: isWordActive && shadowsCss !== 'none' ? shadowsCss : 'none',
                                 }}
