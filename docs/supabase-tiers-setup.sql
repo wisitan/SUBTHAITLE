@@ -30,7 +30,7 @@ CREATE POLICY "Users can read their own profile"
 
 -- Trigger to prevent authenticated users from modifying their own tier or stripe customer ID
 CREATE OR REPLACE FUNCTION public.protect_profile_tier()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $func$
 BEGIN
   IF (auth.role() = 'authenticated') THEN
     IF (NEW.tier IS DISTINCT FROM OLD.tier) THEN
@@ -42,7 +42,7 @@ BEGIN
   END IF;
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$func$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS tr_protect_profile_tier ON public.profiles;
 CREATE TRIGGER tr_protect_profile_tier
@@ -51,7 +51,7 @@ CREATE TRIGGER tr_protect_profile_tier
 
 -- 2. Trigger to automatically create a profile when a user signs up with Google OAuth
 CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $func$
 BEGIN
   INSERT INTO public.profiles (id, email, full_name, avatar_url, tier)
   VALUES (
@@ -68,7 +68,7 @@ BEGIN
     updated_at = timezone('utc'::text, now());
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$func$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Drop trigger if exists and recreate
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
@@ -118,7 +118,7 @@ CREATE POLICY "Users can delete their own presets"
 
 -- Trigger to enforce preset count limits strictly on the database level (Free: 0, 99฿: 5, 299฿: 20)
 CREATE OR REPLACE FUNCTION public.enforce_preset_limits()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER AS $func$
 DECLARE
   user_tier TEXT;
   current_count INT;
@@ -148,7 +148,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$func$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS tr_enforce_preset_limits ON public.custom_presets;
 CREATE TRIGGER tr_enforce_preset_limits
