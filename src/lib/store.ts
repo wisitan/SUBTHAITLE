@@ -45,6 +45,7 @@ export interface CaptionStyle {
   outlineWidth: number;
   enableWordHighlight: boolean;
   highlightColor: string;
+  highlightScale?: number; // scale multiplier for active word, e.g. 1.15 (115%)
   hasBackground?: boolean;
   backgroundColor?: string;     // Hex color e.g. "#000000"
   backgroundOpacity?: number;   // 0 to 100 (percentage)
@@ -146,6 +147,7 @@ export const defaultCaptionStyle: CaptionStyle = {
   outlineWidth: 1,
   enableWordHighlight: true,
   highlightColor: '#FACC15',
+  highlightScale: 1.15,
   hasBackground: false,
   backgroundColor: '#000000',
   backgroundOpacity: 60,

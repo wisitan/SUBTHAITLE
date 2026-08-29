@@ -481,11 +481,14 @@ export function VideoPlayer({ className = '' }: Props) {
                         }
                       }
 
+                      const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
+                      const isScaled = isWordActive && scaleMultiplier > 1;
+
                       return (
                         <React.Fragment key={idx}>
                           {prefixSpace && <span>{prefixSpace}</span>}
                           <span
-                            className="transition-colors duration-75 inline"
+                            className="inline-block origin-center transition-all duration-150 ease-out"
                             style={{
                               color: isWordActive ? style.highlightColor || '#FACC15' : style.textColor || '#FFFFFF',
                               fontWeight: isWordActive
@@ -495,6 +498,7 @@ export function VideoPlayer({ className = '' }: Props) {
                                 : style.fontWeight === '800'
                                 ? 800
                                 : 500,
+                              transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
                             }}
                           >
                             {w.word}

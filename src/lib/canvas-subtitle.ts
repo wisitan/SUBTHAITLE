@@ -269,6 +269,18 @@ export async function renderSubtitleCanvas(
     line.words.forEach((w) => {
       ctx.font = `${w.weight} ${fontSize}px "${fontName}", sans-serif`;
 
+      const shouldScale = w.isActive && style.enableWordHighlight && (style.highlightScale ?? 1.15) > 1.0;
+      const wordScale = shouldScale ? (style.highlightScale ?? 1.15) : 1.0;
+
+      if (shouldScale) {
+        ctx.save();
+        const wordCenterX = cursorX + w.width / 2;
+        const wordCenterY = startY;
+        ctx.translate(wordCenterX, wordCenterY);
+        ctx.scale(wordScale, wordScale);
+        ctx.translate(-wordCenterX, -wordCenterY);
+      }
+
       // A. Shadow
       if (style.hasShadow) {
         ctx.save();
@@ -297,6 +309,10 @@ export async function renderSubtitleCanvas(
       ctx.fillStyle = w.color;
       ctx.fillText(w.text, cursorX, startY);
       ctx.restore();
+
+      if (shouldScale) {
+        ctx.restore();
+      }
 
       cursorX += w.width;
     });

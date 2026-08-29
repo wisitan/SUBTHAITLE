@@ -301,42 +301,97 @@ export function StyleEditor() {
           </div>
 
           {style.enableWordHighlight && (
-            <div className="space-y-2 pt-2 border-t border-zinc-700/80">
-              <span className="text-xs text-zinc-200 font-medium block">
-                เลือกสีไฮไลท์ของคำที่กำลังพูด (Highlight Color):
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
-                {HIGHLIGHT_PALETTE.map((c) => (
-                  <button
-                    key={c.hex}
-                    type="button"
-                    onClick={() => setStyle({ highlightColor: c.hex })}
-                    className={`w-7 h-7 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
-                      style.highlightColor.toLowerCase() === c.hex.toLowerCase()
-                        ? 'ring-2 ring-orange-500 scale-110 border-white shadow-md'
-                        : 'border-zinc-600 hover:border-zinc-400 hover:scale-105'
-                    }`}
-                    style={{ backgroundColor: c.hex }}
-                    title={c.name}
-                  >
-                    {style.highlightColor.toLowerCase() === c.hex.toLowerCase() && (
-                      <Check className="w-3.5 h-3.5 text-black stroke-[3]" />
-                    )}
-                  </button>
-                ))}
+            <div className="space-y-4 pt-3 border-t border-zinc-700/80">
+              <div className="space-y-2">
+                <span className="text-xs text-zinc-200 font-medium block">
+                  เลือกสีไฮไลท์ของคำที่กำลังพูด (Highlight Color):
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {HIGHLIGHT_PALETTE.map((c) => (
+                    <button
+                      key={c.hex}
+                      type="button"
+                      onClick={() => setStyle({ highlightColor: c.hex })}
+                      className={`w-7 h-7 rounded-xl border transition-all cursor-pointer flex items-center justify-center ${
+                        style.highlightColor.toLowerCase() === c.hex.toLowerCase()
+                          ? 'ring-2 ring-orange-500 scale-110 border-white shadow-md'
+                          : 'border-zinc-600 hover:border-zinc-400 hover:scale-105'
+                      }`}
+                      style={{ backgroundColor: c.hex }}
+                      title={c.name}
+                    >
+                      {style.highlightColor.toLowerCase() === c.hex.toLowerCase() && (
+                        <Check className="w-3.5 h-3.5 text-black stroke-[3]" />
+                      )}
+                    </button>
+                  ))}
 
-                {/* Custom Color Input */}
-                <div className="flex items-center gap-1.5 ml-auto">
-                  <input
-                    type="color"
-                    value={style.highlightColor}
-                    onChange={(e) => setStyle({ highlightColor: e.target.value })}
-                    aria-label="เลือกสีไฮไลท์ของคำที่กำลังพูด"
-                    className="w-7 h-7 rounded-xl bg-transparent border border-zinc-600 cursor-pointer overflow-hidden"
-                  />
-                  <span className="text-xs font-mono text-zinc-300 uppercase">
-                    {style.highlightColor}
+                  {/* Custom Color Input */}
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    <input
+                      type="color"
+                      value={style.highlightColor}
+                      onChange={(e) => setStyle({ highlightColor: e.target.value })}
+                      aria-label="เลือกสีไฮไลท์ของคำที่กำลังพูด"
+                      className="w-7 h-7 rounded-xl bg-transparent border border-zinc-600 cursor-pointer overflow-hidden"
+                    />
+                    <span className="text-xs font-mono text-zinc-300 uppercase">
+                      {style.highlightColor}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dynamic Pop-up Scale Control */}
+              <div className="space-y-2 pt-2 border-t border-zinc-800/80">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-zinc-200 font-medium flex items-center gap-1.5">
+                    <span>ขยายขนาดคำไฮไลท์ (Pop-up Scale):</span>
+                    {(style.highlightScale ?? 1.15) > 1.0 && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                        Dynamic
+                      </span>
+                    )}
                   </span>
+                  <span className="font-mono text-orange-400 font-bold">
+                    {Math.round(((style.highlightScale ?? 1.15) - 1) * 100) === 0
+                      ? 'ปกติ (1.0x)'
+                      : `+${Math.round(((style.highlightScale ?? 1.15) - 1) * 100)}% (${(style.highlightScale ?? 1.15).toFixed(2)}x)`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="1.0"
+                    max="1.35"
+                    step="0.05"
+                    value={style.highlightScale ?? 1.15}
+                    onChange={(e) => setStyle({ highlightScale: parseFloat(e.target.value) })}
+                    className="flex-1 accent-orange-500 bg-zinc-800 h-1.5 rounded-lg appearance-none cursor-pointer"
+                  />
+                </div>
+
+                {/* Quick Scale Presets */}
+                <div className="flex items-center gap-1.5 pt-1">
+                  {[
+                    { label: 'ปกติ (1.0x)', val: 1.0 },
+                    { label: 'กำลังสวย (+15%)', val: 1.15 },
+                    { label: 'ป๊อปชัด (+25%)', val: 1.25 },
+                  ].map((p) => (
+                    <button
+                      key={p.val}
+                      type="button"
+                      onClick={() => setStyle({ highlightScale: p.val })}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all cursor-pointer ${
+                        (style.highlightScale ?? 1.15) === p.val
+                          ? 'bg-orange-500/20 text-orange-300 border-orange-500/50 shadow-sm'
+                          : 'bg-zinc-800/80 text-zinc-400 border-zinc-700/60 hover:bg-zinc-800 hover:text-zinc-200'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
