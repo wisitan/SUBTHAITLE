@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAppStore, TranscriptionProvider } from '@/lib/store';
+import { useAuth } from '@/context/auth-context';
 import {
   Cloud,
   Key,
@@ -11,18 +12,19 @@ import {
   Lock,
   Heart,
   ShieldCheck,
-  FlaskConical,
   Zap,
+  Crown,
+  Sparkles,
 } from 'lucide-react';
 import { LocalServerModal } from './local-server-modal';
 
 export function ProviderSelector() {
-  const { provider, setProvider, tier, setTier, groqApiKey, setGroqApiKey } = useAppStore();
+  const { provider, setProvider, groqApiKey, setGroqApiKey } = useAppStore();
+  const { isPaid, isPro } = useAuth();
+
   const [showKeyInput, setShowKeyInput] = useState(Boolean(groqApiKey));
   const [isLocalServerOnline, setIsLocalServerOnline] = useState<boolean | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const isPaid = tier === 'coffee' || tier === 'meal';
 
   // Live healthcheck polling for Local Whisper Server (http://127.0.0.1:8765/health)
   useEffect(() => {
@@ -77,58 +79,23 @@ export function ProviderSelector() {
           </p>
         </div>
 
-        {/* Tier Status & Quick Dev Testing Bar */}
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          {/* Quick Tier Switcher for Testing */}
-          <div className="flex items-center gap-1 bg-zinc-950/80 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-xl border border-zinc-700/80 text-xs">
-            <FlaskConical className="w-3.5 h-3.5 text-amber-400 mr-0.5 shrink-0" />
-            <span className="text-zinc-400 hidden sm:inline mr-1 font-medium">โหมดทดสอบ:</span>
-            <button
-              type="button"
-              onClick={() => setTier('free')}
-              className={`px-2 py-0.5 rounded-md font-semibold transition-all cursor-pointer ${
-                tier === 'free'
-                  ? 'bg-zinc-800 text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-              title="ทดสอบ Free Tier"
-            >
-              Free
-            </button>
-            <button
-              type="button"
-              onClick={() => setTier('coffee')}
-              className={`px-2 py-0.5 rounded-md font-semibold transition-all cursor-pointer ${
-                tier === 'coffee'
-                  ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-              title="ทดสอบ Tier เลี้ยงกาแฟ (99฿)"
-            >
-              ☕ 99฿
-            </button>
-            <button
-              type="button"
-              onClick={() => setTier('meal')}
-              className={`px-2 py-0.5 rounded-md font-semibold transition-all cursor-pointer ${
-                tier === 'meal'
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
-              }`}
-              title="ทดสอบ Tier เลี้ยงข้าว (299฿)"
-            >
-              🍚 299฿
-            </button>
-          </div>
-
-          {/* Current Status Badge */}
-          {isPaid ? (
+        {/* Tier Status Badge */}
+        <div className="flex items-center gap-2">
+          {isPro ? (
             <Link
               href="/donate"
-              className="px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-colors"
+              className="px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs sm:text-sm font-semibold flex items-center gap-1.5 shadow-sm"
             >
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>{tier === 'coffee' ? 'สถานะ: เลี้ยงกาแฟ ☕' : 'สถานะ: เลี้ยงข้าว 🍚'}</span>
+              <Crown className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>Pro Creator 299฿</span>
+            </Link>
+          ) : isPaid ? (
+            <Link
+              href="/donate"
+              className="px-3 py-1.5 rounded-xl bg-orange-500/15 border border-orange-500/40 text-orange-300 text-xs sm:text-sm font-semibold flex items-center gap-1.5 shadow-sm"
+            >
+              <Sparkles className="w-4 h-4 text-orange-400 shrink-0" />
+              <span>Supporter 99฿</span>
             </Link>
           ) : (
             <Link
@@ -142,15 +109,15 @@ export function ProviderSelector() {
         </div>
       </div>
 
-      {/* Engine Options Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 items-stretch">
-        {/* 1. Groq Cloud (Free / Default) */}
+      {/* 3 Provider Options Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 items-stretch">
+        {/* 1. Groq Cloud (Free / Built-in API) */}
         <div
           onClick={() => {
-            setProvider('groq');
             setShowKeyInput(false);
+            setProvider('groq');
           }}
-          className={`cursor-pointer p-4 sm:p-5 rounded-2xl border transition-all flex flex-col justify-between h-full ${
+          className={`relative p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between h-full ${
             provider === 'groq' && !showKeyInput
               ? 'border-orange-500/80 bg-orange-500/15 ring-1 ring-orange-500/40 shadow-lg shadow-orange-500/5'
               : 'border-zinc-700/70 bg-zinc-950/70 hover:border-zinc-500 hover:bg-zinc-900 shadow-sm'
@@ -164,33 +131,39 @@ export function ProviderSelector() {
                 </div>
                 <div className="min-w-0">
                   <span className="font-bold text-sm text-zinc-100 block">
-                    Groq Cloud (Whisper v3)
+                    Groq Cloud (Whisper Large v3)
                   </span>
                 </div>
               </div>
-              {provider === 'groq' && !showKeyInput && (
-                <CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0 mt-0.5" />
-              )}
+
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-orange-500/15 text-orange-300 border border-orange-500/30 whitespace-nowrap">
+                  {isPaid ? 'โควต้า 5 คลิป/วัน' : 'โควต้า 3 คลิป/วัน'}
+                </span>
+                {provider === 'groq' && !showKeyInput && (
+                  <CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" />
+                )}
+              </div>
             </div>
-            
+
             <div className="min-h-[2rem] flex items-center mt-2.5">
               <span className="text-xs text-orange-400 font-semibold leading-snug">
-                {tier === 'free' ? 'ฟรี 5 คลิป/วัน (≤2 นาที, ≤100MB)' : '⚡ พร้อมใช้งานผ่านระบบ'}
+                ⚡ รวดเร็ว 1-3 วินาที • ไม่ต้องตั้งค่า
               </span>
             </div>
           </div>
 
           <p className="text-xs text-zinc-300 mt-3 leading-relaxed border-t border-zinc-800/80 pt-2.5 min-h-[3.75rem] flex items-start">
-            ถอดเสียงภาษาไทยอัตโนมัติความเร็วสูง สำหรับคลิปความยาวไม่เกิน 2 นาที และขนาดไฟล์ไม่เกิน 100 MB
+            ใช้ API ของระบบ ถอดเสียงภาษาไทยอัตโนมัติความเร็วสูง ไม่ต้องสมัครหรือตั้งค่าใดๆ
           </p>
         </div>
 
-        {/* 2. BYOK (Groq API Key) */}
+        {/* 2. Custom API Key (BYOK Mode) */}
         <div
           onClick={() => {
-            if (!isPaid) return; // Locked on Free tier
-            setProvider('groq');
+            if (!isPaid) return;
             setShowKeyInput(true);
+            setProvider('groq');
           }}
           className={`relative p-4 sm:p-5 rounded-2xl border transition-all flex flex-col justify-between h-full ${
             !isPaid
@@ -208,7 +181,7 @@ export function ProviderSelector() {
                 </div>
                 <div className="min-w-0">
                   <span className="font-bold text-sm text-zinc-100 block">
-                    API Key ตัวเอง (BYOK)
+                    Custom API Key (BYOK)
                   </span>
                 </div>
               </div>
@@ -219,10 +192,10 @@ export function ProviderSelector() {
                   className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25 hover:text-white transition-all whitespace-nowrap shrink-0"
                 >
                   <Lock className="w-3 h-3 text-rose-400" />
-                  <span>ดูวิธีปลดล็อก</span>
+                  <span>ปลดล็อก 99฿</span>
                 </Link>
               ) : provider === 'groq' && showKeyInput ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               ) : null}
             </div>
 
@@ -235,8 +208,8 @@ export function ProviderSelector() {
 
           <p className="text-xs text-zinc-300 mt-3 leading-relaxed border-t border-zinc-800/80 pt-2.5 min-h-[3.75rem] flex items-start">
             {isPaid
-              ? 'ใส่ Groq API Key ส่วนตัว ถอดเสียงไม่จำกัดขนาดไฟล์ ไม่จำกัดความยาวคลิป และไม่จำกัดจำนวน ฟรีไม่มีค่าใช้จ่ายเพิ่ม'
-              : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงได้ไม่จำกัดขนาดไฟล์ ไม่จำกัดความยาว และไม่จำกัดจำนวนคลิป พร้อมใส่ API Key ตัวเอง'}
+              ? 'ใส่ Groq API Key ส่วนตัว ยิงตรงจากเครื่องของคุณ ไม่จำกัดขนาดไฟล์และไม่จำกัดจำนวนคลิป ฟรีไม่มีค่าใช้จ่ายเพิ่ม'
+              : 'ปลดล็อกเมื่อร่วมสนับสนุน 99฿: ถอดเสียงได้ไม่จำกัดขนาดไฟล์ ไม่จำกัดความยาว และไม่จำกัดจำนวนคลิป'}
           </p>
         </div>
 
@@ -273,7 +246,7 @@ export function ProviderSelector() {
                   className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-lg bg-rose-500/15 text-rose-300 border border-rose-500/30 hover:bg-rose-500/25 hover:text-white transition-all whitespace-nowrap shrink-0"
                 >
                   <Lock className="w-3 h-3 text-rose-400" />
-                  <span>ดูวิธีปลดล็อก</span>
+                  <span>ปลดล็อก 99฿</span>
                 </Link>
               ) : (
                 <div className="flex items-center gap-1 shrink-0">
@@ -321,7 +294,7 @@ export function ProviderSelector() {
           <p className="text-xs text-zinc-300 mt-3 leading-relaxed border-t border-zinc-800/80 pt-2.5 min-h-[3.75rem] flex items-start">
             {isPaid
               ? 'ประมวลผลบนเครื่องของคุณ 100% (Apple Silicon / NVIDIA GPU) ไม่จำกัดขนาดและความยาวคลิป ข้อมูลปลอดภัยไม่หลุดออกนอกเครื่อง'
-              : 'ปลดล็อกเมื่อร่วมสนับสนุน: ถอดเสียงในเครื่อง Mac/PC ออฟไลน์ 100% ไม่จำกัดขนาดและความยาวคลิป ข้อมูลปลอดภัย'}
+              : 'ปลดล็อกเมื่อร่วมสนับสนุน 99฿: ถอดเสียงในเครื่อง Mac/PC ออฟไลน์ 100% ไม่จำกัดขนาดและความยาวคลิป'}
           </p>
         </div>
       </div>

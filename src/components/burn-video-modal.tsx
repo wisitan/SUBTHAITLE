@@ -16,6 +16,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { useAuth } from '@/context/auth-context';
 import { burnSubtitlesToVideo, cancelBurn, VideoResolution, BurnProgress } from '@/lib/burn';
 
 interface Props {
@@ -27,7 +28,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
   const file = useAppStore((s) => s.file);
   const captions = useAppStore((s) => s.captions);
   const style = useAppStore((s) => s.style);
-  const tier = useAppStore((s) => s.tier);
+  const { isPro } = useAuth();
 
   const [mounted, setMounted] = useState(false);
   const [resolution, setResolution] = useState<VideoResolution>('1080p');
@@ -72,8 +73,8 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
       return;
     }
 
-    if (resolution === '4k' && tier !== 'meal') {
-      setErrorMsg('ความละเอียด 4K Ultra HD ปลดล็อกเฉพาะสถานะเลี้ยงข้าว (299฿) ค่ะ');
+    if (resolution === '4k' && !isPro) {
+      setErrorMsg('ความละเอียด 4K Ultra HD ปลดล็อกเฉพาะระดับ Pro Creator (299฿) ค่ะ');
       return;
     }
 
@@ -209,12 +210,14 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
               <button
                 type="button"
                 onClick={() => {
-                  if (tier === 'meal') {
+                  if (isPro) {
                     setResolution('4k');
+                  } else {
+                    setErrorMsg('ความละเอียด 4K Ultra HD ปลดล็อกเฉพาะระดับ Pro Creator (299฿) ค่ะ');
                   }
                 }}
                 className={`p-3.5 rounded-2xl border text-left transition-all relative flex flex-col justify-between gap-1.5 ${
-                  tier !== 'meal'
+                  !isPro
                     ? 'bg-zinc-900/30 border-zinc-800/60 text-zinc-500 cursor-not-allowed opacity-80'
                     : resolution === '4k'
                     ? 'bg-rose-500/15 border-rose-500 text-white shadow-md shadow-rose-500/10 ring-1 ring-rose-500/40 cursor-pointer'
@@ -226,12 +229,12 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                     <Film className="w-4 h-4 text-rose-400" />
                     4K Ultra HD
                   </span>
-                  {tier !== 'meal' && (
+                  {!isPro && (
                     <Lock className="w-3.5 h-3.5 text-rose-400" />
                   )}
                 </div>
                 <p className="text-xs text-zinc-300 mt-1">
-                  {tier === 'meal' ? 'คมชัดสูงสุดสำหรับโปรดักชั่น' : 'ปลดล็อกเฉพาะ Tier 299฿'}
+                  {isPro ? 'คมชัดสูงสุดสำหรับโปรดักชั่น' : 'ปลดล็อกเฉพาะ Pro Creator (299฿)'}
                 </p>
               </button>
             </div>

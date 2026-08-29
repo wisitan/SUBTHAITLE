@@ -16,6 +16,7 @@ import { CaptionTable } from '@/components/caption-table';
 import { StyleEditor } from '@/components/style-editor';
 import { PresetManager } from '@/components/preset-manager';
 import { ExportMenu } from '@/components/export-menu';
+import { UserProfileButton } from '@/components/user-profile-button';
 
 export default function EditorPage() {
   const file = useAppStore((s) => s.file);
@@ -104,8 +105,9 @@ export default function EditorPage() {
             </div>
           </div>
 
-          {/* Right: Export Menu */}
+          {/* Right: Export Menu & User Profile */}
           <div className="flex items-center gap-2">
+            <UserProfileButton />
             <ExportMenu onShowToast={showToast} />
           </div>
         </div>

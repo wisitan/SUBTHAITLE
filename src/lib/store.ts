@@ -7,7 +7,7 @@ import { fetchCustomDictionaryFromCloud } from './supabase';
 import { distributeTextToWords } from './thai-text';
 
 export type TranscriptionProvider = 'groq' | 'elevenlabs' | 'local';
-export type UserTier = 'free' | 'coffee' | 'meal';
+export type UserTier = 'free' | 'tier_99' | 'tier_299';
 
 export interface CaptionWord {
   word: string;
@@ -125,6 +125,7 @@ export interface AppState {
   setActivePresetId: (id: string) => void;
   saveCustomPreset: (name: string) => void;
   deleteCustomPreset: (id: string) => void;
+  setCustomPresets: (presets: Array<{ id: string; name: string; style: CaptionStyle; createdAt: string }>) => void;
   reset: () => void;
 }
 
@@ -171,7 +172,7 @@ export const useAppStore = create<AppState>()(
       tier: 'free',
       groqApiKey: '',
       dailyUsageCount: 0,
-      maxDailyFreeQuota: 5,
+      maxDailyFreeQuota: 3,
       isAdmin: false,
       adminToken: null,
       
@@ -487,6 +488,8 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           customPresets: state.customPresets.filter((p) => p.id !== id),
         })),
+
+      setCustomPresets: (customPresets) => set({ customPresets }),
       
       reset: () =>
         set({

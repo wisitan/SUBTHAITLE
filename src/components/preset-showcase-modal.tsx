@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
+import { useAuth } from '@/context/auth-context';
 import { SUBTITLE_PRESETS, StylePreset } from '@/lib/presets';
 
 interface Props {
@@ -23,31 +24,23 @@ interface Props {
 
 export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) {
   const [mounted, setMounted] = useState(false);
-  const tier = useAppStore((s) => s.tier);
   const activePresetId = useAppStore((s) => s.activePresetId);
   const setStyle = useAppStore((s) => s.setStyle);
   const setActivePresetId = useAppStore((s) => s.setActivePresetId);
+  const { isPro } = useAuth();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  const handleApply = (preset: StylePreset) => {
+    setStyle(preset.style);
+    setActivePresetId(preset.id);
+    onSelectPreset?.(preset);
+    onClose();
+  };
+
   if (!isOpen || !mounted) return null;
-
-  const isUnlocked = (presetIndex: number) => {
-    if (tier === 'meal') return true; // 299฿ unlocks all 10
-    if (tier === 'coffee') return presetIndex < 3; // 99฿ unlocks top 3
-    return presetIndex < 1; // Free tier gets 1
-  };
-
-  const handleApply = (preset: StylePreset, index: number) => {
-    if (isUnlocked(index)) {
-      setStyle(preset.style);
-      setActivePresetId(preset.id);
-      onSelectPreset?.(preset);
-      onClose();
-    }
-  };
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
@@ -88,7 +81,7 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
           
           {/* Banner CTA for Non-Paid Users */}
-          {tier !== 'meal' && (
+          {!isPro && (
             <div className="p-4.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/5 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
@@ -117,8 +110,8 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
 
           {/* Grid of 10 Presets */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {SUBTITLE_PRESETS.map((preset, index) => {
-              const unlocked = isUnlocked(index);
+            {SUBTITLE_PRESETS.map((preset) => {
+              const unlocked = true;
               const isActive = activePresetId === preset.id;
 
               return (
@@ -234,7 +227,7 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
                     {unlocked ? (
                       <button
                         type="button"
-                        onClick={() => handleApply(preset, index)}
+                        onClick={() => handleApply(preset)}
                         className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                           isActive
                             ? 'bg-amber-500 text-zinc-950'

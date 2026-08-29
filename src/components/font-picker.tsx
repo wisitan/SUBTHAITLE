@@ -6,6 +6,7 @@ import {
   Upload,
   Check,
   Loader2,
+  Crown,
 } from 'lucide-react';
 import { THAI_SYSTEM_FONTS, FontOption, loadGoogleFont, loadCustomFontFile } from '@/lib/fonts';
 
@@ -126,10 +127,18 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
                   : 'bg-[#0f0f18] border-zinc-700/80 text-zinc-200 hover:border-orange-400 hover:bg-[#28283a] shadow-sm'
               }`}
             >
-              <div className="flex items-center justify-between w-full">
-                <span className="text-sm font-bold truncate max-w-[140px] text-zinc-200">
-                  {font.name}
-                </span>
+              <div className="flex items-center justify-between w-full gap-2">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-sm font-bold truncate max-w-[130px] text-zinc-200">
+                    {font.name}
+                  </span>
+                  {font.isPremium && (
+                    <span className="flex items-center gap-0.5 text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 shrink-0">
+                      <Crown className="w-2.5 h-2.5 text-amber-400" />
+                      PRO
+                    </span>
+                  )}
+                </div>
                 {isSelected && (
                   <span className="w-4 h-4 rounded-full bg-orange-500 text-zinc-950 flex items-center justify-center shrink-0">
                     <Check className="w-2.5 h-2.5 stroke-[3]" />

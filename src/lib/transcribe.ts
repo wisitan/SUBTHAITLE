@@ -27,21 +27,24 @@ export interface TranscribeResponse {
  */
 export async function transcribeAudio(
   audioBlob: Blob,
-  onProgress?: (stage: string) => void
+  onProgress?: (stage: string) => void,
+  authInfo?: { userId?: string; tier?: string }
 ): Promise<CaptionItem[]> {
   const store = useAppStore.getState();
-  const { provider, tier, groqApiKey, dailyUsageCount, maxDailyFreeQuota } = store;
+  const { provider, groqApiKey, dailyUsageCount, maxDailyFreeQuota } = store;
+  const effectiveTier = authInfo?.tier || store.tier;
 
-  // 1. Quota Check for Free Tier
-  const isPaid = tier === 'coffee' || tier === 'meal';
+  // 1. Quota Check
+  const isPaid = effectiveTier === 'tier_99' || effectiveTier === 'tier_299';
   const isBYOK = provider === 'groq' && Boolean(groqApiKey);
+  const quotaLimit = isPaid ? 5 : maxDailyFreeQuota;
 
-  if (!isPaid && !isBYOK) {
-    if (dailyUsageCount >= maxDailyFreeQuota) {
-      throw new Error(
-        `โควต้าฟรีประจำวันของคุณครบ ${maxDailyFreeQuota} คลิปแล้วค่ะ กรุณาร่วมสนับสนุนเพื่อปลดล็อกไม่จำกัด หรือใส่ Groq API Key ของตัวเอง (BYOK)`
-      );
-    }
+  if (!isBYOK && dailyUsageCount >= quotaLimit) {
+    throw new Error(
+      isPaid
+        ? `โควต้าประจำวันของคุณครบ ${quotaLimit} คลิปแล้วค่ะ กรุณาใส่ Groq API Key ของคุณ (BYOK) เพื่อถอดเสียงต่อได้ไม่จำกัด`
+        : `โควต้าฟรีประจำวันของคุณครบ ${quotaLimit} คลิปแล้วค่ะ ร่วมสนับสนุน 99฿ เพื่อเพิ่มโควต้าและปลดล็อก BYOK ไม่จำกัด`
+    );
   }
 
   if (onProgress) {
@@ -136,6 +139,10 @@ export async function transcribeAudio(
     formData.append('file', audioBlob, 'audio.mp3');
     formData.append('language', 'th');
     formData.append('model', 'whisper-large-v3');
+    if (authInfo?.userId) {
+      formData.append('userId', authInfo.userId);
+    }
+    formData.append('tier', effectiveTier);
 
     const res = await fetch('/api/transcribe', {
       method: 'POST',

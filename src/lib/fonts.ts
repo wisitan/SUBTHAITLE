@@ -5,6 +5,7 @@ export interface FontOption {
   googleFontName?: string;
   previewText?: string;
   weights?: string[];
+  isPremium?: boolean;
 }
 
 export const THAI_SYSTEM_FONTS: FontOption[] = [
@@ -47,6 +48,33 @@ export const THAI_SYSTEM_FONTS: FontOption[] = [
     googleFontName: 'Mitr:wght@400;600;700',
     previewText: 'น่ารัก เป็นกันเอง เหมาะกับ Vlog',
     weights: ['400', '600', '700'],
+  },
+  {
+    id: 'Mali',
+    name: 'Mali (มะลิ ลายมือน่ารัก)',
+    category: 'handwriting',
+    googleFontName: 'Mali:wght@500;700',
+    previewText: 'ลายมือน่ารัก คอนเทนต์ท่องเที่ยว',
+    weights: ['500', '700'],
+    isPremium: true,
+  },
+  {
+    id: 'Pridi',
+    name: 'Pridi (ปรีดี พรีเมียมโมเดิร์น)',
+    category: 'serif',
+    googleFontName: 'Pridi:wght@500;700',
+    previewText: 'หรูหรา น่าเชื่อถือ สไตล์สารคดี',
+    weights: ['500', '700'],
+    isPremium: true,
+  },
+  {
+    id: 'Sriracha',
+    name: 'Sriracha (ศรีราชา สตรีทฟู้ด)',
+    category: 'display',
+    googleFontName: 'Sriracha',
+    previewText: 'สายสตรีท อาหาร รีวิวของกิน',
+    weights: ['400'],
+    isPremium: true,
   },
   {
     id: 'Chonburi',

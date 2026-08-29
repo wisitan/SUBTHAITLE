@@ -3,6 +3,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
+import { useAuth } from '@/context/auth-context';
 import { extractAudioFromMedia, AudioExtractProgress } from '@/lib/audio-extract';
 import { transcribeAudio } from '@/lib/transcribe';
 import { generateSrt, generateVtt } from '@/lib/srt';
@@ -27,6 +28,7 @@ import {
 
 export function UploadZone() {
   const router = useRouter();
+  const { user, tier } = useAuth();
   const {
     file,
     setFile,
@@ -39,7 +41,6 @@ export function UploadZone() {
     errorMessage,
     setErrorMessage,
     provider,
-    tier,
     groqApiKey,
     pacingMode,
     customMaxWords,
@@ -56,7 +57,7 @@ export function UploadZone() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isBYOK = provider === 'groq' && Boolean(groqApiKey);
-  const isPaid = tier === 'coffee' || tier === 'meal';
+  const isPaid = tier === 'tier_99' || tier === 'tier_299';
   const isUnlimitedSize = isBYOK || isPaid;
 
   const handleFile = useCallback(
@@ -173,9 +174,13 @@ export function UploadZone() {
     setStatus('transcribing', 20, 'กำลังเตรียมส่งไฟล์เสียง...');
 
     try {
-      const results = await transcribeAudio(audioBlob, (msg) => {
-        setTranscribeMessage(msg);
-      });
+      const results = await transcribeAudio(
+        audioBlob,
+        (msg) => {
+          setTranscribeMessage(msg);
+        },
+        { userId: user?.id, tier }
+      );
 
       setCaptions(results);
       setStatus('ready', 100, 'ถอดเสียงภาษาไทยสำเร็จ!');

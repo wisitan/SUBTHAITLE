@@ -1,33 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
-
-import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { Ratelimit } from '@upstash/ratelimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const MAX_REQUESTS_PER_IP_PER_DAY = 5; // 5 transcriptions per IP/day max
+// Quota Rules: Free = 3/day, Paid (Supporter/Pro) = 5/day, Global = 200/day
+const MAX_REQUESTS_FREE_PER_DAY = 3;
+const MAX_REQUESTS_PAID_PER_DAY = 5;
 const MAX_GLOBAL_REQUESTS_PER_DAY = 200;
 
 // Initialize Upstash Redis if environment variables are provided
-let ipLimiter: Ratelimit | null = null;
+let redisClient: Redis | null = null;
+let freeLimiter: Ratelimit | null = null;
+let paidLimiter: Ratelimit | null = null;
 let globalLimiter: Ratelimit | null = null;
 
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
   try {
-    const redis = new Redis({
+    redisClient = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL,
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
     });
 
-    ipLimiter = new Ratelimit({
-      redis,
-      limiter: Ratelimit.slidingWindow(MAX_REQUESTS_PER_IP_PER_DAY, '1 d'),
-      prefix: 'subthaitle:ip',
+    freeLimiter = new Ratelimit({
+      redis: redisClient,
+      limiter: Ratelimit.slidingWindow(MAX_REQUESTS_FREE_PER_DAY, '1 d'),
+      prefix: 'subthaitle:free',
+    });
+
+    paidLimiter = new Ratelimit({
+      redis: redisClient,
+      limiter: Ratelimit.slidingWindow(MAX_REQUESTS_PAID_PER_DAY, '1 d'),
+      prefix: 'subthaitle:paid',
     });
 
     globalLimiter = new Ratelimit({
-      redis,
+      redis: redisClient,
       limiter: Ratelimit.slidingWindow(MAX_GLOBAL_REQUESTS_PER_DAY, '1 d'),
       prefix: 'subthaitle:global',
     });
@@ -36,18 +45,24 @@ if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) 
   }
 }
 
-// In-memory fallback sliding rate limiter for local dev / environments without Redis
-const ipRequestCounts = new Map<string, { count: number; resetAt: number }>();
+// In-memory fallback sliding rate limiter for local dev
+const memoryRequestCounts = new Map<string, { count: number; resetAt: number }>();
 let globalRequestCount = 0;
 let globalResetAt = Date.now() + 24 * 60 * 60 * 1000;
 
-async function checkRateLimits(ip: string): Promise<{ allowed: boolean; reason?: string }> {
-  // If Redis is configured, use Upstash sliding window rate limiting
-  if (globalLimiter && ipLimiter) {
+async function checkRateLimits(
+  identifier: string,
+  isPaidUser: boolean
+): Promise<{ allowed: boolean; reason?: string }> {
+  const maxLimit = isPaidUser ? MAX_REQUESTS_PAID_PER_DAY : MAX_REQUESTS_FREE_PER_DAY;
+
+  // 1. If Redis is configured, use Upstash sliding window rate limiting
+  if (globalLimiter && freeLimiter && paidLimiter) {
     try {
-      const [globalResult, ipResult] = await Promise.all([
+      const activeLimiter = isPaidUser ? paidLimiter : freeLimiter;
+      const [globalResult, tierResult] = await Promise.all([
         globalLimiter.limit('global_transcribe_usage'),
-        ipLimiter.limit(ip),
+        activeLimiter.limit(identifier),
       ]);
 
       if (!globalResult.success) {
@@ -57,10 +72,12 @@ async function checkRateLimits(ip: string): Promise<{ allowed: boolean; reason?:
         };
       }
 
-      if (!ipResult.success) {
+      if (!tierResult.success) {
         return {
           allowed: false,
-          reason: `โควต้าการใช้งานฟรีประจำวันของคุณครบ ${MAX_REQUESTS_PER_IP_PER_DAY} คลิปแล้วค่ะ กรุณาร่วมสนับสนุน หรือใส่ Groq API Key ของตัวเอง (BYOK) เพื่อใช้งานแบบไม่จำกัด`,
+          reason: isPaidUser
+            ? `โควต้าประจำวันของคุณครบ ${MAX_REQUESTS_PAID_PER_DAY} คลิปแล้วค่ะ กรุณาใส่ Groq API Key ของคุณ (BYOK) เพื่อถอดเสียงต่อได้ไม่จำกัด`
+            : `โควต้าฟรีประจำวันของคุณครบ ${MAX_REQUESTS_FREE_PER_DAY} คลิปแล้วค่ะ เข้าสู่ระบบหรือร่วมสนับสนุน 99฿ เพื่อรับโควต้า 5 คลิป/วัน และปลดล็อก BYOK ไม่จำกัด`,
         };
       }
 
@@ -70,28 +87,25 @@ async function checkRateLimits(ip: string): Promise<{ allowed: boolean; reason?:
     }
   }
 
-  // In-memory fallback
+  // 2. In-memory fallback for local development
   const now = Date.now();
 
-  // Reset global counter if 24h passed
   if (now > globalResetAt) {
     globalRequestCount = 0;
     globalResetAt = now + 24 * 60 * 60 * 1000;
-    ipRequestCounts.clear();
+    memoryRequestCounts.clear();
   }
 
-  // Check global budget first
   if (globalRequestCount >= MAX_GLOBAL_REQUESTS_PER_DAY) {
     return {
       allowed: false,
-      reason: 'โควต้าฟรีรวมของเซิร์ฟเวอร์ประจำวันเต็มแล้วค่ะ เพื่อป้องกันค่าใช้จ่ายเกินลิมิต กรุณาใส่ Groq API Key ของตัวเอง (BYOK) หรือรัน Local Whisper เพื่อใช้งานต่อ',
+      reason: 'โควต้าฟรีรวมของเซิร์ฟเวอร์ประจำวันเต็มแล้วค่ะ กรุณาใส่ Groq API Key ของตัวเอง (BYOK) เพื่อใช้งานต่อ',
     };
   }
 
-  // Check IP specific limit
-  const record = ipRequestCounts.get(ip);
+  const record = memoryRequestCounts.get(identifier);
   if (!record || now > record.resetAt) {
-    ipRequestCounts.set(ip, {
+    memoryRequestCounts.set(identifier, {
       count: 1,
       resetAt: now + 24 * 60 * 60 * 1000,
     });
@@ -99,10 +113,12 @@ async function checkRateLimits(ip: string): Promise<{ allowed: boolean; reason?:
     return { allowed: true };
   }
 
-  if (record.count >= MAX_REQUESTS_PER_IP_PER_DAY) {
+  if (record.count >= maxLimit) {
     return {
       allowed: false,
-      reason: `โควต้าการใช้งานฟรีประจำวันของคุณครบ ${MAX_REQUESTS_PER_IP_PER_DAY} คลิปแล้วค่ะ กรุณาร่วมสนับสนุน หรือใส่ Groq API Key ของตัวเอง (BYOK) เพื่อใช้งานแบบไม่จำกัด`,
+      reason: isPaidUser
+        ? `โควต้าประจำวันของคุณครบ ${maxLimit} คลิปแล้วค่ะ ใส่ API Key ตัวเอง (BYOK) เพื่อใช้งานต่อได้ไม่จำกัด`
+        : `โควต้าฟรีประจำวันของคุณครบ ${maxLimit} คลิปแล้วค่ะ ร่วมสนับสนุน 99฿ เพื่อเพิ่มโควต้าและปลดล็อก BYOK ไม่จำกัด`,
     };
   }
 
@@ -113,23 +129,28 @@ async function checkRateLimits(ip: string): Promise<{ allowed: boolean; reason?:
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. Check IP and Global rate limits for abuse prevention
+    const formData = await request.formData();
+    const audioFile = formData.get('file') as Blob | null;
+    const language = (formData.get('language') as string) || 'th';
+    const model = (formData.get('model') as string) || 'whisper-large-v3';
+    const userId = (formData.get('userId') as string) || null;
+    const userTier = (formData.get('tier') as string) || 'free';
+
+    const isPaidUser = userTier === 'tier_99' || userTier === 'tier_299';
+
+    // Identifier: Use userId if logged in, otherwise client IP
     const forwardedFor = request.headers.get('x-forwarded-for');
     const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : '127.0.0.1';
+    const rateLimitIdentifier = userId ? `user:${userId}` : `ip:${clientIp}`;
 
-    const limitCheck = await checkRateLimits(clientIp);
+    // 1. Check Rate Limits
+    const limitCheck = await checkRateLimits(rateLimitIdentifier, isPaidUser);
     if (!limitCheck.allowed) {
-      return NextResponse.json(
-        {
-          error: limitCheck.reason,
-        },
-        { status: 429 }
-      );
+      return NextResponse.json({ error: limitCheck.reason }, { status: 429 });
     }
 
     // 2. Check Server API Key
     const groqApiKey = process.env.GROQ_API_KEY;
-
     if (!groqApiKey) {
       return NextResponse.json(
         {
@@ -139,11 +160,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    const formData = await request.formData();
-    const audioFile = formData.get('file') as Blob | null;
-    const language = (formData.get('language') as string) || 'th';
-    const model = (formData.get('model') as string) || 'whisper-large-v3';
 
     if (!audioFile) {
       return NextResponse.json(

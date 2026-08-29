@@ -11,10 +11,13 @@ import {
   Layers,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { useAuth } from '@/context/auth-context';
+import { THAI_SYSTEM_FONTS } from '@/lib/fonts';
 import { downloadFcpxml } from '@/lib/fcpxml';
 import { downloadPremiereXml } from '@/lib/xml';
 import { downloadAss } from '@/lib/ass';
 import { BurnVideoModal } from './burn-video-modal';
+import { PremiumFontModal } from './premium-font-modal';
 
 interface Props {
   onShowToast?: (message: string) => void;
@@ -24,10 +27,23 @@ export function ExportMenu({ onShowToast }: Props) {
   const file = useAppStore((s) => s.file);
   const captions = useAppStore((s) => s.captions);
   const style = useAppStore((s) => s.style);
+  const { isPro } = useAuth();
 
   const [isOpen, setIsOpen] = useState(false);
   const [burnModalOpen, setBurnModalOpen] = useState(false);
+  const [premiumModalOpen, setPremiumModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Guard check: Returns false and opens modal if using a premium font without Tier 299
+  const checkPremiumFontGuard = (): boolean => {
+    const fontInfo = THAI_SYSTEM_FONTS.find((f) => f.id === style.fontFamily);
+    if (fontInfo?.isPremium && !isPro) {
+      setIsOpen(false);
+      setPremiumModalOpen(true);
+      return false;
+    }
+    return true;
+  };
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -46,6 +62,8 @@ export function ExportMenu({ onShowToast }: Props) {
 
   const handleExportFcpxml = () => {
     setIsOpen(false);
+    if (!checkPremiumFontGuard()) return;
+
     if (!captions.length) {
       onShowToast?.('ไม่มีข้อมูลซับไตเติลสำหรับส่งออก');
       return;
@@ -57,6 +75,7 @@ export function ExportMenu({ onShowToast }: Props) {
 
   const handleExportPremiereXml = () => {
     setIsOpen(false);
+    if (!checkPremiumFontGuard()) return;
     if (!captions.length) {
       onShowToast?.('ไม่มีข้อมูลซับไตเติลสำหรับส่งออก');
       return;
@@ -68,6 +87,8 @@ export function ExportMenu({ onShowToast }: Props) {
 
   const handleExportAss = () => {
     setIsOpen(false);
+    if (!checkPremiumFontGuard()) return;
+
     if (!captions.length) {
       onShowToast?.('ไม่มีข้อมูลซับไตเติลสำหรับส่งออก');
       return;
@@ -79,6 +100,8 @@ export function ExportMenu({ onShowToast }: Props) {
 
   const handleExportSrt = () => {
     setIsOpen(false);
+    if (!checkPremiumFontGuard()) return;
+
     if (!captions.length) {
       onShowToast?.('ไม่มีข้อมูลซับไตเติลสำหรับส่งออก');
       return;
@@ -112,6 +135,8 @@ export function ExportMenu({ onShowToast }: Props) {
 
   const handleExportVtt = () => {
     setIsOpen(false);
+    if (!checkPremiumFontGuard()) return;
+
     if (!captions.length) {
       onShowToast?.('ไม่มีข้อมูลซับไตเติลสำหรับส่งออก');
       return;
@@ -169,6 +194,7 @@ export function ExportMenu({ onShowToast }: Props) {
             type="button"
             onClick={() => {
               setIsOpen(false);
+              if (!checkPremiumFontGuard()) return;
               setBurnModalOpen(true);
             }}
             className="w-full text-left p-3 rounded-2xl hover:bg-orange-500/10 border border-transparent hover:border-orange-500/30 transition-all flex items-start gap-3 cursor-pointer group"
@@ -277,6 +303,13 @@ export function ExportMenu({ onShowToast }: Props) {
       <BurnVideoModal
         isOpen={burnModalOpen}
         onClose={() => setBurnModalOpen(false)}
+      />
+
+      {/* Premium Font Export Guard Modal */}
+      <PremiumFontModal
+        isOpen={premiumModalOpen}
+        onClose={() => setPremiumModalOpen(false)}
+        fontName={style.fontFamily}
       />
     </div>
   );
