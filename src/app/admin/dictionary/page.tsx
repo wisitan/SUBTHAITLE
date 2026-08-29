@@ -640,7 +640,7 @@ using (true);
 
               <div>
                 <label className="block text-sm font-bold text-zinc-200 mb-1.5">
-                  คำที่ Whisper มักสะกดผิด (Wrong Word / Typo)
+                  คำที่ Whisper มักสะกดผิด <span className="text-zinc-500 font-normal">(ใส่หลายคำคั่นด้วย , ได้)</span>
                 </label>
                 <input
                   type="text"

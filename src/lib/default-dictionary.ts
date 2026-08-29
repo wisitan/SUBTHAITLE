@@ -143,7 +143,11 @@ export function getMergedDictionary(customDictionary: DictionaryEntry[] = []): D
   // 2. Override/add custom words
   customDictionary.forEach((entry) => {
     if (entry.wrong_word && entry.correct_word) {
-      map.set(entry.wrong_word.trim().toLowerCase(), entry);
+      // Split by comma in case Admin puts multiple typos for a single correct word
+      const wrongs = entry.wrong_word.split(',').map((w) => w.trim()).filter(Boolean);
+      wrongs.forEach((w) => {
+        map.set(w.toLowerCase(), { ...entry, wrong_word: w });
+      });
     }
   });
 
