@@ -305,7 +305,46 @@ export function formatCaptionWordsText<T extends CaptionWordLike | string>(
     prevItem = currentItem;
   }
 
-  return result;
+  return result.trim();
+}
+
+/**
+ * Distributes a string of text into an array of words with proportional timestamps.
+ * Used to regenerate word tokens when a user manually edits a caption block.
+ */
+export function distributeTextToWords(text: string, start: number, end: number): { word: string; start: number; end: number }[] {
+  if (!text.trim()) return [];
+
+  const segmenter = getThaiSegmenter();
+  let tokens: string[] = [];
+
+  if (segmenter) {
+    const segments = Array.from(segmenter.segment(text));
+    tokens = segments.map((s) => s.segment);
+  } else {
+    // Fallback: split by space, though this is poor for Thai
+    tokens = text.split(/\s+/).filter(Boolean);
+  }
+
+  const duration = end - start;
+  const totalLength = text.length || 1;
+
+  let currentStart = start;
+
+  return tokens.map((token) => {
+    // Proportional duration based on string length
+    const tokenDuration = (token.length / totalLength) * duration;
+    const tokenEnd = currentStart + tokenDuration;
+
+    const result = {
+      word: token,
+      start: Number(currentStart.toFixed(3)),
+      end: Number(tokenEnd.toFixed(3)),
+    };
+
+    currentStart = tokenEnd;
+    return result;
+  });
 }
 
 /**

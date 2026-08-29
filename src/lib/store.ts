@@ -4,6 +4,7 @@ import { persist } from 'zustand/middleware';
 import { PacingMode, groupWordsIntoCaptions } from './caption-grouping';
 import { DictionaryEntry, DEFAULT_THAI_DICTIONARY } from './default-dictionary';
 import { fetchCustomDictionaryFromCloud } from './supabase';
+import { distributeTextToWords } from './thai-text';
 
 export type TranscriptionProvider = 'groq' | 'elevenlabs' | 'local';
 export type UserTier = 'free' | 'coffee' | 'meal';
@@ -258,14 +259,25 @@ export const useAppStore = create<AppState>()(
       
       updateCaptionText: (id, text) =>
         set((state) => ({
-          captions: state.captions.map((c) => (c.id === id ? { ...c, text } : c)),
+          captions: state.captions.map((c) => {
+            if (c.id === id) {
+              const newWords = distributeTextToWords(text, c.start, c.end);
+              return { ...c, text, words: newWords };
+            }
+            return c;
+          }),
         })),
         
       updateCaptionTiming: (id, start, end) =>
         set((state) => ({
-          captions: state.captions.map((c) =>
-            c.id === id ? { ...c, start, end } : c
-          ),
+          captions: state.captions.map((c) => {
+            if (c.id === id) {
+              // If timing changes, regenerate proportional words timing
+              const newWords = c.text ? distributeTextToWords(c.text, start, end) : c.words;
+              return { ...c, start, end, words: newWords };
+            }
+            return c;
+          }),
         })),
 
       addCaption: (afterId) =>
@@ -368,6 +380,7 @@ export const useAppStore = create<AppState>()(
               end: midTime,
               text: text1,
               originalText: text1,
+              words: distributeTextToWords(text1, cue.start, midTime),
             };
 
             cue2 = {
@@ -376,6 +389,7 @@ export const useAppStore = create<AppState>()(
               end: cue.end,
               text: text2,
               originalText: text2,
+              words: distributeTextToWords(text2, midTime, cue.end),
             };
           }
 
@@ -399,7 +413,9 @@ export const useAppStore = create<AppState>()(
           const cueB = state.captions[secondIndex];
 
           const mergedWords =
-            cueA.words && cueB.words ? [...cueA.words, ...cueB.words] : undefined;
+            cueA.words && cueB.words 
+              ? [...cueA.words, ...cueB.words] 
+              : distributeTextToWords(`${cueA.text} ${cueB.text}`.trim(), cueA.start, cueB.end);
 
           const mergedCue: CaptionItem = {
             id: cueA.id,
