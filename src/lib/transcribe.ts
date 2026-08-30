@@ -1,4 +1,11 @@
-import { CaptionItem, CaptionWord, useAppStore } from './store';
+import {
+  CaptionItem,
+  CaptionWord,
+  useAppStore,
+  calculateCreditUsage,
+  getGoogleMonthlyUsageFromStorage,
+  getGroqDailyUsageFromStorage,
+} from './store';
 import { cleanThaiText, resegmentThaiWords } from './thai-text';
 import { groupWordsIntoCaptions, splitLongCaptions } from './caption-grouping';
 import { applyDictionaryToWords, applyDictionaryReplacements } from './default-dictionary';
@@ -23,7 +30,7 @@ export interface TranscribeResponse {
 }
 
 /**
- * Transcribes audio blob using the configured provider (Groq Cloud, BYOK, or Local)
+ * Transcribes audio blob using the configured provider mode (Google Free, Groq Free, Credits, BYOK, or Local)
  */
 export async function transcribeAudio(
   audioBlob: Blob,
@@ -31,21 +38,47 @@ export async function transcribeAudio(
   authInfo?: { userId?: string; tier?: string }
 ): Promise<CaptionItem[]> {
   const store = useAppStore.getState();
-  const { provider, groqApiKey, maxDailyFreeQuota } = store;
+  const { providerMode, groqApiKey, creditsMinutes, mediaDuration } = store;
   const effectiveTier = authInfo?.tier || store.tier;
 
-  // 1. Quota Check based on this specific user
-  const isPaid = effectiveTier === 'tier_99' || effectiveTier === 'tier_299';
-  const isBYOK = provider === 'groq' && Boolean(groqApiKey);
-  const quotaLimit = isPaid ? 5 : maxDailyFreeQuota;
-  const userUsage = store.getDailyUsage(authInfo?.userId);
+  // 1. Quota & Credit Validation based on providerMode
+  let requiredCredits = 0;
 
-  if (!isBYOK && userUsage >= quotaLimit) {
-    throw new Error(
-      isPaid
-        ? `โควต้าประจำวันของบัญชีคุณครบ ${quotaLimit} คลิปแล้วค่ะ กรุณาใส่ Groq API Key ของคุณ (BYOK) เพื่อถอดเสียงต่อได้ไม่จำกัด`
-        : `โควต้าฟรีประจำวันของบัญชีคุณครบ ${quotaLimit} คลิปแล้วค่ะ ร่วมสนับสนุน 99฿ เพื่อเพิ่มโควต้าและปลดล็อก BYOK ไม่จำกัด`
-    );
+  if (providerMode === 'google_free') {
+    const googleMonthlyUsage = getGoogleMonthlyUsageFromStorage(authInfo?.userId);
+    if (googleMonthlyUsage >= store.maxGoogleMonthlyQuota) {
+      throw new Error(
+        `โควต้าฟรี Google AI ของคุณครบ ${store.maxGoogleMonthlyQuota} คลิปในเดือนนี้แล้วค่ะ กรุณาสลับไปใช้ Groq AI หรือใช้เครดิตที่เติมไว้เพื่อถอดเสียงต่อได้ทันที`
+      );
+    }
+    if (mediaDuration > 125) {
+      throw new Error(
+        'โหมดฟรีรองรับคลิปยาวไม่เกิน 2 นาที กรุณาเลือกโหมด "Credit ที่มี" เพื่อถอดเสียงคลิปยาว หรือตัดแบ่งคลิปก่อนค่ะ'
+      );
+    }
+  } else if (providerMode === 'groq_free') {
+    const groqDailyUsage = getGroqDailyUsageFromStorage(authInfo?.userId);
+    if (groqDailyUsage >= store.maxGroqDailyQuota) {
+      throw new Error(
+        `โควต้าฟรี Groq AI ของคุณครบ ${store.maxGroqDailyQuota} คลิปในวันนี้แล้วค่ะ กรุณาสลับไปใช้ Google AI หรือใช้เครดิตที่เติมไว้เพื่อถอดเสียงต่อได้ทันที`
+      );
+    }
+    if (mediaDuration > 125) {
+      throw new Error(
+        'โหมดฟรีรองรับคลิปยาวไม่เกิน 2 นาที กรุณาเลือกโหมด "Credit ที่มี" เพื่อถอดเสียงคลิปยาว หรือตัดแบ่งคลิปก่อนค่ะ'
+      );
+    }
+  } else if (providerMode === 'credits') {
+    requiredCredits = calculateCreditUsage(mediaDuration);
+    if (creditsMinutes < requiredCredits) {
+      throw new Error(
+        `เครดิตของคุณคงเหลือ ${creditsMinutes} นาที (คลิปนี้ต้องใช้ ${requiredCredits} นาที) กรุณาเติมเครดิตเพิ่มก่อนกดถอดเสียงค่ะ`
+      );
+    }
+  } else if (providerMode === 'byok') {
+    if (!groqApiKey.trim()) {
+      throw new Error('กรุณากรอก API Key ของคุณในโหมด BYOK ก่อนเริ่มถอดเสียงค่ะ');
+    }
   }
 
   if (onProgress) {
@@ -55,6 +88,8 @@ export async function transcribeAudio(
   let data: TranscribeResponse;
 
   // 2. Execution path based on Provider / Mode
+  const isBYOK = providerMode === 'byok' && Boolean(groqApiKey.trim());
+
   if (isBYOK) {
     const trimmedKey = groqApiKey.trim();
     const isGoogle = trimmedKey.startsWith('AIza');
@@ -194,7 +229,7 @@ export async function transcribeAudio(
 
       data = await res.json();
     }
-  } else if (provider === 'local') {
+  } else if (providerMode === 'local') {
     // Local Whisper Mode (Offline Mac MLX)
     if (onProgress) {
       onProgress('กำลังเชื่อมต่อไปยัง Local Whisper Server ในเครื่อง...');
@@ -226,22 +261,28 @@ export async function transcribeAudio(
       );
     }
   } else {
-    // Default Free Cloud Mode (Next.js Server API route)
+    // Server API route for Cloud Free & Credit Modes
     if (onProgress) {
-      onProgress('กำลังส่งไฟล์เสียงไปที่เซิร์ฟเวอร์ระบบ...');
+      onProgress(
+        providerMode === 'groq_free'
+          ? 'กำลังถอดเสียงผ่าน Groq AI Cloud...'
+          : 'กำลังถอดเสียงผ่าน Google Cloud AI...'
+      );
     }
 
     // Safety check for Vercel 4.5MB payload limit
     if (audioBlob.size > 4.2 * 1024 * 1024) {
       throw new Error(
-        'ขนาดไฟล์เสียงเกิน 4MB สำหรับเซิร์ฟเวอร์ฟรี กรุณาใส่ Groq API Key ของคุณเอง (BYOK) เพื่อถอดเสียงไฟล์ขนาดใหญ่ได้ทันที'
+        'ขนาดไฟล์เสียงเกิน 4MB สำหรับเซิร์ฟเวอร์ กรุณาใช้โหมด BYOK เพื่อถอดเสียงไฟล์ขนาดใหญ่ได้ทันที'
       );
     }
 
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.mp3');
     formData.append('language', 'th');
-    formData.append('model', 'whisper-large-v3');
+    formData.append('provider', providerMode === 'groq_free' ? 'groq' : 'google');
+    formData.append('mode', providerMode);
+    formData.append('duration', mediaDuration.toString());
     if (authInfo?.userId) {
       formData.append('userId', authInfo.userId);
     }
@@ -258,7 +299,14 @@ export async function transcribeAudio(
       throw new Error(data.error || 'เกิดข้อผิดพลาดในการถอดเสียงจากเซิร์ฟเวอร์');
     }
 
-    // Increment daily usage for this user
+    // Update Quota / Credits on successful transcription
+    if (providerMode === 'credits' && requiredCredits > 0) {
+      store.deductCredits(requiredCredits);
+    } else if (providerMode === 'google_free') {
+      store.incrementGoogleMonthlyUsage(authInfo?.userId);
+    } else if (providerMode === 'groq_free') {
+      store.incrementGroqDailyUsage(authInfo?.userId);
+    }
     store.incrementDailyUsage(authInfo?.userId);
   }
 

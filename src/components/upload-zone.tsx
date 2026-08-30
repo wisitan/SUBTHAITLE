@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAppStore } from '@/lib/store';
+import { useAppStore, calculateCreditUsage } from '@/lib/store';
 import { useAuth } from '@/context/auth-context';
 import { extractAudioFromMedia, AudioExtractProgress } from '@/lib/audio-extract';
 import { transcribeAudio } from '@/lib/transcribe';
@@ -25,7 +25,9 @@ import {
   AlignLeft,
   Settings2,
   LogIn,
+  Coins,
 } from 'lucide-react';
+import Link from 'next/link';
 
 export function UploadZone() {
   const router = useRouter();
@@ -37,12 +39,14 @@ export function UploadZone() {
     setVideoUrl,
     audioBlob,
     setAudioBlob,
+    mediaDuration,
     setMediaDuration,
     setStatus,
     errorMessage,
     setErrorMessage,
-    provider,
+    providerMode,
     groqApiKey,
+    creditsMinutes,
     pacingMode,
     customMaxWords,
     setPacingMode,
@@ -57,9 +61,8 @@ export function UploadZone() {
   const [transcribeMessage, setTranscribeMessage] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isBYOK = provider === 'groq' && Boolean(groqApiKey);
-  const isPaid = tier === 'tier_99' || tier === 'tier_299';
-  const isUnlimitedSize = isBYOK || isPaid;
+  const isBYOK = (providerMode === 'byok' || providerMode === 'local') && Boolean(groqApiKey);
+  const isUnlimitedSize = isBYOK || providerMode === 'credits';
 
   const handleFile = useCallback(
     async (selectedFile: File) => {
@@ -166,7 +169,7 @@ export function UploadZone() {
   };
 
   const handleStartTranscribe = async () => {
-    if (!user && !isBYOK && provider !== 'local') {
+    if (!user && !isBYOK && providerMode !== 'local') {
       signInWithGoogle();
       return;
     }
@@ -371,44 +374,108 @@ export function UploadZone() {
           )}
 
           {/* Video Preview thumbnail & Duration */}
-          {videoUrl && !captions.length && (
-            <div className="my-5 flex flex-col sm:flex-row items-center gap-4 p-4 bg-zinc-950/80 rounded-2xl border border-zinc-700/70">
-              <video
-                src={videoUrl}
-                controls
-                onLoadedMetadata={(e) => {
-                  setMediaDuration(e.currentTarget.duration);
-                }}
-                className="w-full sm:w-48 max-h-36 rounded-xl bg-black object-contain border border-zinc-700/80 shadow-md"
-              />
-              <div className="flex-1 text-sm text-zinc-300 space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold text-zinc-100">สถานะ:</span>
-                  <span className="text-emerald-400 font-semibold flex items-center gap-1">
-                    <CheckCircle2 className="w-4 h-4" />
-                    พร้อมเริ่มถอดเสียงด้วย AI
-                  </span>
+          {videoUrl && !captions.length && (() => {
+            const isFreeMode = providerMode === 'google_free' || providerMode === 'groq_free';
+            const isOverFreeLimit = isFreeMode && mediaDuration > 125;
+            const requiredCredits = calculateCreditUsage(mediaDuration);
+            const isNotEnoughCredits = providerMode === 'credits' && creditsMinutes < requiredCredits;
+
+            const formatSecs = (s: number) => {
+              const m = Math.floor(s / 60);
+              const sec = Math.floor(s % 60);
+              return `${m}:${sec.toString().padStart(2, '0')}`;
+            };
+
+            return (
+              <div className="my-5 space-y-3">
+                <div className="flex flex-col sm:flex-row items-center gap-4 p-4 bg-zinc-950/80 rounded-2xl border border-zinc-700/70">
+                  <video
+                    src={videoUrl}
+                    controls
+                    onLoadedMetadata={(e) => {
+                      setMediaDuration(e.currentTarget.duration);
+                    }}
+                    className="w-full sm:w-48 max-h-36 rounded-xl bg-black object-contain border border-zinc-700/80 shadow-md"
+                  />
+                  <div className="flex-1 text-sm text-zinc-300 space-y-1.5 w-full">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <span className="font-semibold text-zinc-100 flex items-center gap-1.5">
+                        ความยาววิดีโอ: <strong className="text-amber-400 font-mono text-base">{mediaDuration ? formatSecs(mediaDuration) : 'กำลังโหลด...'}</strong>
+                      </span>
+                      <span className="text-emerald-400 font-semibold flex items-center gap-1 text-xs">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        พร้อมเริ่มถอดเสียง
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-zinc-300">
+                      โหมดที่เลือก:{' '}
+                      <span className="text-zinc-100 font-bold">
+                        {providerMode === 'google_free'
+                          ? 'Google AI (Free 5 คลิป/เดือน • สูงสุด 2 นาที)'
+                          : providerMode === 'groq_free'
+                          ? 'Groq AI (Free 3 คลิป/วัน • สูงสุด 2 นาที)'
+                          : providerMode === 'credits'
+                          ? `Credit ที่มี (ใช้ ${requiredCredits} นาที / คงเหลือ ${creditsMinutes} นาที)`
+                          : isBYOK
+                          ? groqApiKey.trim().startsWith('AIza')
+                            ? 'Google Cloud STT (BYOK Mode)'
+                            : groqApiKey.trim().startsWith('sk-')
+                            ? 'OpenAI Whisper-1 (BYOK Mode)'
+                            : 'Groq Whisper V3 (BYOK Mode)'
+                          : 'BYOK / Local AI'}
+                      </span>
+                    </p>
+
+                    {/* Credit Calculation Details */}
+                    {providerMode === 'credits' && mediaDuration > 0 && (
+                      <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-xs text-emerald-300 flex items-center justify-between">
+                        <span>
+                          💎 คลิปนี้ใช้ <strong>{requiredCredits} เครดิต (นาที)</strong> (เศษ $\le$ 40 วิ ปัดลงให้ฟรี)
+                        </span>
+                        <span className="font-bold text-white">คงเหลือ {creditsMinutes} นาที</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <p>
-                  เครื่องยนต์ที่ใช้:{' '}
-                  <span className="text-zinc-100 font-medium">
-                    {provider === 'groq'
-                      ? isBYOK
-                        ? groqApiKey.trim().startsWith('AIza')
-                          ? 'Google Cloud STT (BYOK Mode)'
-                          : groqApiKey.trim().startsWith('sk-')
-                          ? 'OpenAI Whisper-1 (BYOK Mode)'
-                          : 'Groq Whisper V3 (BYOK Mode)'
-                        : 'Google Cloud AI (ความแม่นยำภาษาไทยสูงสุด)'
-                      : 'Local Whisper (Offline Mac)'}
-                  </span>
-                </p>
-                <p className="text-xs text-zinc-400">
-                  ระบบจะถอดเสียงภาษาไทยพร้อมระบุเวลาทีละคำ (Word-level timestamps) เพื่อทำซับคาราโอเกะ
-                </p>
+
+                {/* Warning: Over Free Limit */}
+                {isOverFreeLimit && (
+                  <div className="p-4 rounded-2xl bg-amber-950/60 border border-amber-500/50 text-amber-200 text-xs sm:text-sm flex items-start gap-3 animate-in fade-in duration-200 shadow-md">
+                    <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="flex-1 space-y-1">
+                      <span className="font-bold block text-white">⚠️ คลิปวิดีโอยาวเกิน 2 นาทีสำหรับโหมด Free</span>
+                      <p>
+                        คลิปนี้ยาว {formatSecs(mediaDuration)} ซึ่งเกินโควต้า 2 นาทีของโหมดฟรี กรุณาสลับไปใช้โหมด <strong>&ldquo;Credit ที่มี&rdquo;</strong> เพื่อถอดเสียงคลิปยาว หรือตัดแบ่งคลิปก่อนค่ะ
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Warning: Not Enough Credits */}
+                {isNotEnoughCredits && (
+                  <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-xs sm:text-sm flex items-start justify-between gap-3 animate-in fade-in duration-200 shadow-md">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <span className="font-bold block text-white">เครดิตของคุณไม่เพียงพอ</span>
+                        <p>
+                          คลิปนี้ต้องใช้ <strong>{requiredCredits} นาที</strong> แต่คุณมีเครดิตคงเหลือ <strong>{creditsMinutes} นาที</strong>
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href="/donate"
+                      className="px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-zinc-950 font-bold text-xs flex items-center gap-1.5 shrink-0 transition-colors"
+                    >
+                      <Coins className="w-3.5 h-3.5" />
+                      <span>เติมเครดิต</span>
+                    </Link>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Transcription Results & Pacing Card (Phase 3) */}
           {captions.length > 0 && (
@@ -597,7 +664,7 @@ export function UploadZone() {
           {/* Action Trigger Button */}
           <div className="mt-5 flex justify-end gap-3">
             {!captions.length ? (
-              !user && !isBYOK && provider !== 'local' ? (
+              !user && !isBYOK && providerMode !== 'local' ? (
                 <button
                   type="button"
                   disabled={isExtracting}
@@ -605,13 +672,18 @@ export function UploadZone() {
                   className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-black text-base flex items-center justify-center gap-2.5 shadow-lg shadow-orange-500/25 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <LogIn className="w-5 h-5 text-zinc-950" />
-                  <span>เข้าสู่ระบบด้วย Google เพื่อเริ่มถอดเสียงฟรี (3 คลิป/วัน)</span>
+                  <span>เข้าสู่ระบบด้วย Google เพื่อเริ่มถอดเสียง</span>
                   <ArrowRight className="w-5 h-5" />
                 </button>
               ) : (
                 <button
                   type="button"
-                  disabled={isExtracting || isTranscribing}
+                  disabled={
+                    isExtracting ||
+                    isTranscribing ||
+                    ((providerMode === 'google_free' || providerMode === 'groq_free') && mediaDuration > 125) ||
+                    (providerMode === 'credits' && creditsMinutes < calculateCreditUsage(mediaDuration))
+                  }
                   onClick={handleStartTranscribe}
                   className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
@@ -623,7 +695,15 @@ export function UploadZone() {
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      <span>เริ่มถอดเสียงภาษาไทย (Start Transcription)</span>
+                      <span>
+                        {providerMode === 'google_free'
+                          ? 'เริ่มถอดเสียงด้วย Google AI'
+                          : providerMode === 'groq_free'
+                          ? 'เริ่มถอดเสียงด้วย Groq AI'
+                          : providerMode === 'credits'
+                          ? `เริ่มถอดเสียงด้วย Credit (หัก ${calculateCreditUsage(mediaDuration)} นาที)`
+                          : 'เริ่มถอดเสียงด้วย AI'}
+                      </span>
                       <ArrowRight className="w-5 h-5" />
                     </>
                   )}

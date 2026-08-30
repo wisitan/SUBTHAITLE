@@ -213,8 +213,11 @@ export async function POST(request: NextRequest) {
     const language = (formData.get('language') as string) || 'th';
     const userId = (formData.get('userId') as string) || null;
     const userTier = (formData.get('tier') as string) || 'free';
+    const provider = (formData.get('provider') as string) || 'google';
+    const mode = (formData.get('mode') as string) || 'google_free';
+    const clientDuration = parseFloat((formData.get('duration') as string) || '0');
 
-    const isPaidUser = userTier === 'tier_99' || userTier === 'tier_299';
+    const isPaidUser = userTier === 'tier_99' || userTier === 'tier_299' || mode === 'credits';
 
     // Identifier: Use userId if logged in, otherwise client IP
     const forwardedFor = request.headers.get('x-forwarded-for');
@@ -234,6 +237,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Free Mode 2-Minute Length Check (120s + 5s tolerance)
+    if ((mode === 'google_free' || mode === 'groq_free') && clientDuration > 125) {
+      return NextResponse.json(
+        {
+          error:
+            'คลิปวิดีโอมีความยาวเกิน 2 นาทีสำหรับโหมดใช้งานฟรี กรุณาใช้เครดิตที่เติมไว้ หรือใช้โหมด BYOK เพื่อถอดเสียงคลิปยาวค่ะ',
+        },
+        { status: 400 }
+      );
+    }
+
     // Payload size check (Vercel Serverless Function limit = 4.5MB)
     const MAX_SERVER_AUDIO_BYTES = 4.2 * 1024 * 1024;
     if (audioFile.size > MAX_SERVER_AUDIO_BYTES) {
@@ -246,7 +260,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Google Cloud Speech-to-Text (The Exclusive High-Accuracy Engine)
+    // Route 1: Groq Cloud Whisper Engine
+    if (provider === 'groq') {
+      const groqApiKey = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
+      if (!groqApiKey) {
+        return NextResponse.json(
+          { error: 'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า GROQ_API_KEY กรุณาตั้งค่าบน Vercel หรือใช้โหมด BYOK' },
+          { status: 500 }
+        );
+      }
+
+      const groqForm = new FormData();
+      groqForm.append('file', audioFile, 'audio.mp3');
+      groqForm.append('model', 'whisper-large-v3');
+      groqForm.append('response_format', 'verbose_json');
+      groqForm.append('language', language === 'th' ? 'th' : language);
+      groqForm.append('temperature', '0.2');
+      groqForm.append('timestamp_granularities[]', 'word');
+
+      const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${groqApiKey}`,
+        },
+        body: groqForm,
+      });
+
+      if (!groqRes.ok) {
+        const errText = await groqRes.text();
+        return NextResponse.json({ error: `Groq Whisper Error: ${errText}` }, { status: groqRes.status });
+      }
+
+      const groqData = await groqRes.json();
+      const words: TranscribedWord[] = (groqData.words || []).map((w: { word: string; start: number; end: number }) => ({
+        word: w.word,
+        start: w.start,
+        end: w.end,
+        confidence: 0.95,
+      }));
+
+      return NextResponse.json({
+        success: true,
+        text: groqData.text || '',
+        duration: groqData.duration || (words.length > 0 ? words[words.length - 1].end : 0),
+        language: groqData.language || 'th',
+        segments: groqData.segments || [],
+        words,
+      });
+    }
+
+    // Route 2: Google Cloud Speech-to-Text (+ AI Auto-Correction with GPT-4o-mini)
     const googleApiKey =
       process.env.GOOGLE_STT_API_KEY ||
       process.env.GOOGLE_API_KEY ||
@@ -261,7 +324,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า GOOGLE_STT_API_KEY กรุณาตั้งค่าบน Vercel (เลือกทั้ง Production และ Preview) หรือใส่ API Key ในโหมด BYOK เพื่อใช้งาน',
+            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า Google API Key บน Vercel หรือใส่ API Key ในโหมด BYOK เพื่อใช้งาน',
         },
         { status: 500 }
       );

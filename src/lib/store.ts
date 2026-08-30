@@ -8,6 +8,7 @@ import { distributeTextToWords } from './thai-text';
 
 export type TranscriptionProvider = 'groq' | 'elevenlabs' | 'local';
 export type UserTier = 'free' | 'tier_99' | 'tier_299';
+export type ProviderMode = 'google_free' | 'groq_free' | 'credits' | 'byok' | 'local';
 
 export interface CaptionWord {
   word: string;
@@ -65,10 +66,19 @@ export interface AppState {
   statusMessage: string;
   errorMessage: string | null;
   
-  // Settings & Tier
+  // Settings, Quotas & Credits Model
+  providerMode: ProviderMode;
   provider: TranscriptionProvider;
   tier: UserTier;
   groqApiKey: string;
+  creditsMinutes: number;
+  isLifetimeUnlocked: boolean;
+  
+  googleMonthlyUsageCount: number;
+  maxGoogleMonthlyQuota: number; // 5 clips / month
+  groqDailyUsageCount: number;
+  maxGroqDailyQuota: number;     // 3 clips / day
+  
   dailyUsageCount: number;
   maxDailyFreeQuota: number;
   isAdmin: boolean;
@@ -100,9 +110,13 @@ export interface AppState {
   setMediaDuration: (duration: number) => void;
   setStatus: (status: AppState['status'], progress?: number, message?: string) => void;
   setErrorMessage: (msg: string | null) => void;
+  setProviderMode: (mode: ProviderMode) => void;
   setProvider: (provider: TranscriptionProvider) => void;
   setTier: (tier: UserTier) => void;
   setGroqApiKey: (key: string) => void;
+  addCredits: (minutes: number) => void;
+  deductCredits: (minutes: number) => boolean;
+  setLifetimeUnlocked: (unlocked: boolean) => void;
   setIsAdmin: (isAdmin: boolean) => void;
   setAdminToken: (token: string | null) => void;
   setCustomDictionary: (entries: DictionaryEntry[]) => void;
@@ -132,6 +146,9 @@ export interface AppState {
   getDailyUsage: (userId?: string) => number;
   syncDailyUsage: (userId?: string) => void;
   incrementDailyUsage: (userId?: string) => void;
+  syncQuotas: (userId?: string) => void;
+  incrementGoogleMonthlyUsage: (userId?: string) => void;
+  incrementGroqDailyUsage: (userId?: string) => void;
   reset: () => void;
 }
 
@@ -144,6 +161,21 @@ export function getUserTodayUsageKey(userId?: string): string {
   return `subthaitle_usage_${userId || 'anon'}_${today}`;
 }
 
+export function getUserGoogleMonthKey(userId?: string): string {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  return `subthaitle_google_${userId || 'anon'}_${year}-${month}`;
+}
+
+export function getUserGroqDayKey(userId?: string): string {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `subthaitle_groq_${userId || 'anon'}_${year}-${month}-${day}`;
+}
+
 export function getDailyUsageFromStorage(userId?: string): number {
   if (typeof window === 'undefined') return 0;
   try {
@@ -151,6 +183,44 @@ export function getDailyUsageFromStorage(userId?: string): number {
     return val ? parseInt(val, 10) || 0 : 0;
   } catch {
     return 0;
+  }
+}
+
+export function getGoogleMonthlyUsageFromStorage(userId?: string): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const val = localStorage.getItem(getUserGoogleMonthKey(userId));
+    return val ? parseInt(val, 10) || 0 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+export function getGroqDailyUsageFromStorage(userId?: string): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const val = localStorage.getItem(getUserGroqDayKey(userId));
+    return val ? parseInt(val, 10) || 0 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+// 40-second rounding rule: if remaining seconds <= 40, round down (no extra credit); otherwise round up 1 min
+export function calculateCreditUsage(durationSeconds: number): number {
+  const roundedSecs = Math.round(durationSeconds);
+  if (roundedSecs <= 0) return 0;
+  const fullMinutes = Math.floor(roundedSecs / 60);
+  const remainingSeconds = roundedSecs % 60;
+  
+  if (fullMinutes === 0) {
+    return 1; // Minimum 1 minute
+  }
+  
+  if (remainingSeconds > 40) {
+    return fullMinutes + 1; // Round up
+  } else {
+    return fullMinutes; // Round down (free extra seconds)
   }
 }
 
@@ -193,9 +263,16 @@ export const useAppStore = create<AppState>()(
       statusMessage: '',
       errorMessage: null,
       
+      providerMode: 'google_free',
       provider: 'groq',
       tier: 'free',
       groqApiKey: '',
+      creditsMinutes: 0,
+      isLifetimeUnlocked: false,
+      googleMonthlyUsageCount: 0,
+      maxGoogleMonthlyQuota: 5,
+      groqDailyUsageCount: 0,
+      maxGroqDailyQuota: 3,
       dailyUsageCount: 0,
       maxDailyFreeQuota: 3,
       isAdmin: false,
@@ -235,9 +312,27 @@ export const useAppStore = create<AppState>()(
         
       setErrorMessage: (errorMessage) => set({ errorMessage, status: errorMessage ? 'error' : 'idle' }),
       
+      setProviderMode: (providerMode) => set({ providerMode }),
       setProvider: (provider) => set({ provider }),
       setTier: (tier) => set({ tier }),
       setGroqApiKey: (groqApiKey) => set({ groqApiKey }),
+      
+      addCredits: (minutes) =>
+        set((state) => ({ creditsMinutes: Math.max(0, state.creditsMinutes + minutes) })),
+        
+      deductCredits: (minutes) => {
+        let success = false;
+        set((state) => {
+          if (state.creditsMinutes >= minutes) {
+            success = true;
+            return { creditsMinutes: state.creditsMinutes - minutes };
+          }
+          return state;
+        });
+        return success;
+      },
+      
+      setLifetimeUnlocked: (isLifetimeUnlocked) => set({ isLifetimeUnlocked }),
       setIsAdmin: (isAdmin) => set({ isAdmin }),
       setAdminToken: (adminToken) => set({ adminToken }),
       setCustomDictionary: (customDictionary) => set({ customDictionary }),
@@ -270,6 +365,39 @@ export const useAppStore = create<AppState>()(
           }
         }
         set({ dailyUsageCount: next });
+      },
+      
+      syncQuotas: (userId) => {
+        const googleCount = getGoogleMonthlyUsageFromStorage(userId);
+        const groqCount = getGroqDailyUsageFromStorage(userId);
+        set({
+          googleMonthlyUsageCount: googleCount,
+          groqDailyUsageCount: groqCount,
+        });
+      },
+      
+      incrementGoogleMonthlyUsage: (userId) => {
+        const next = getGoogleMonthlyUsageFromStorage(userId) + 1;
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(getUserGoogleMonthKey(userId), next.toString());
+          } catch (e) {
+            console.warn('Failed to save google monthly usage', e);
+          }
+        }
+        set({ googleMonthlyUsageCount: next });
+      },
+      
+      incrementGroqDailyUsage: (userId) => {
+        const next = getGroqDailyUsageFromStorage(userId) + 1;
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(getUserGroqDayKey(userId), next.toString());
+          } catch (e) {
+            console.warn('Failed to save groq daily usage', e);
+          }
+        }
+        set({ groqDailyUsageCount: next });
       },
         
       setRawWords: (rawWords) => set({ rawWords }),
@@ -559,9 +687,12 @@ export const useAppStore = create<AppState>()(
     {
       name: 'subthaitle_user_settings',
       partialize: (state) => ({
+        providerMode: state.providerMode,
         provider: state.provider,
         tier: state.tier,
         groqApiKey: state.groqApiKey,
+        creditsMinutes: state.creditsMinutes,
+        isLifetimeUnlocked: state.isLifetimeUnlocked,
         isAdmin: state.isAdmin,
         style: state.style,
         activePresetId: state.activePresetId,
