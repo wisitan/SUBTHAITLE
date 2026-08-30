@@ -106,7 +106,6 @@ export interface AppState {
   setCustomDictionary: (entries: DictionaryEntry[]) => void;
   loadDictionary: () => Promise<void>;
   setAspectRatio: (ratio: '9:16' | '16:9' | '1:1') => void;
-  incrementDailyUsage: () => void;
   setRawWords: (words: CaptionWord[]) => void;
   setPacingMode: (mode: PacingMode, customWords?: number) => void;
   regroupCaptions: (mode?: PacingMode, customWords?: number) => void;
@@ -126,7 +125,25 @@ export interface AppState {
   saveCustomPreset: (name: string) => void;
   deleteCustomPreset: (id: string) => void;
   setCustomPresets: (presets: Array<{ id: string; name: string; style: CaptionStyle; createdAt: string }>) => void;
+  getDailyUsage: (userId?: string) => number;
+  syncDailyUsage: (userId?: string) => void;
+  incrementDailyUsage: (userId?: string) => void;
   reset: () => void;
+}
+
+export function getUserTodayUsageKey(userId?: string): string {
+  const today = new Date().toISOString().slice(0, 10);
+  return `subthaitle_usage_${userId || 'anon'}_${today}`;
+}
+
+export function getDailyUsageFromStorage(userId?: string): number {
+  if (typeof window === 'undefined') return 0;
+  try {
+    const val = localStorage.getItem(getUserTodayUsageKey(userId));
+    return val ? parseInt(val, 10) || 0 : 0;
+  } catch {
+    return 0;
+  }
 }
 
 export const defaultCaptionStyle: CaptionStyle = {
@@ -220,8 +237,24 @@ export const useAppStore = create<AppState>()(
         }
       },
       
-      incrementDailyUsage: () =>
-        set((state) => ({ dailyUsageCount: state.dailyUsageCount + 1 })),
+      getDailyUsage: (userId) => getDailyUsageFromStorage(userId),
+      
+      syncDailyUsage: (userId) => {
+        const count = getDailyUsageFromStorage(userId);
+        set({ dailyUsageCount: count });
+      },
+      
+      incrementDailyUsage: (userId) => {
+        const next = getDailyUsageFromStorage(userId) + 1;
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.setItem(getUserTodayUsageKey(userId), next.toString());
+          } catch (e) {
+            console.warn('Failed to save usage count to localStorage', e);
+          }
+        }
+        set({ dailyUsageCount: next });
+      },
         
       setRawWords: (rawWords) => set({ rawWords }),
       
@@ -513,7 +546,6 @@ export const useAppStore = create<AppState>()(
         provider: state.provider,
         tier: state.tier,
         groqApiKey: state.groqApiKey,
-        dailyUsageCount: state.dailyUsageCount,
         isAdmin: state.isAdmin,
         style: state.style,
         activePresetId: state.activePresetId,

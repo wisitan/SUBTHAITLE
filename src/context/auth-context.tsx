@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { User } from '@supabase/supabase-js';
 import { getSupabase } from '@/lib/supabase';
+import { useAppStore } from '@/lib/store';
 
 export type UserTier = 'free' | 'tier_99' | 'tier_299';
 
@@ -143,6 +144,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user]);
 
+  // 4. Synchronize user-scoped daily quota
+  useEffect(() => {
+    useAppStore.getState().syncDailyUsage(user?.id);
+  }, [user]);
+
   const signInWithGoogle = async () => {
     const supabase = getSupabase();
     if (!supabase) {
@@ -165,6 +171,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
     setUser(null);
     setProfile(null);
+    useAppStore.getState().syncDailyUsage(undefined);
   };
 
   const tier: UserTier = profile?.tier || 'free';

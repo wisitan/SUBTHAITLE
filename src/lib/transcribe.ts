@@ -31,19 +31,20 @@ export async function transcribeAudio(
   authInfo?: { userId?: string; tier?: string }
 ): Promise<CaptionItem[]> {
   const store = useAppStore.getState();
-  const { provider, groqApiKey, dailyUsageCount, maxDailyFreeQuota } = store;
+  const { provider, groqApiKey, maxDailyFreeQuota } = store;
   const effectiveTier = authInfo?.tier || store.tier;
 
-  // 1. Quota Check
+  // 1. Quota Check based on this specific user
   const isPaid = effectiveTier === 'tier_99' || effectiveTier === 'tier_299';
   const isBYOK = provider === 'groq' && Boolean(groqApiKey);
   const quotaLimit = isPaid ? 5 : maxDailyFreeQuota;
+  const userUsage = store.getDailyUsage(authInfo?.userId);
 
-  if (!isBYOK && dailyUsageCount >= quotaLimit) {
+  if (!isBYOK && userUsage >= quotaLimit) {
     throw new Error(
       isPaid
-        ? `โควต้าประจำวันของคุณครบ ${quotaLimit} คลิปแล้วค่ะ กรุณาใส่ Groq API Key ของคุณ (BYOK) เพื่อถอดเสียงต่อได้ไม่จำกัด`
-        : `โควต้าฟรีประจำวันของคุณครบ ${quotaLimit} คลิปแล้วค่ะ ร่วมสนับสนุน 99฿ เพื่อเพิ่มโควต้าและปลดล็อก BYOK ไม่จำกัด`
+        ? `โควต้าประจำวันของบัญชีคุณครบ ${quotaLimit} คลิปแล้วค่ะ กรุณาใส่ Groq API Key ของคุณ (BYOK) เพื่อถอดเสียงต่อได้ไม่จำกัด`
+        : `โควต้าฟรีประจำวันของบัญชีคุณครบ ${quotaLimit} คลิปแล้วค่ะ ร่วมสนับสนุน 99฿ เพื่อเพิ่มโควต้าและปลดล็อก BYOK ไม่จำกัด`
     );
   }
 
@@ -155,8 +156,8 @@ export async function transcribeAudio(
       throw new Error(data.error || 'เกิดข้อผิดพลาดในการถอดเสียงจากเซิร์ฟเวอร์');
     }
 
-    // Increment daily usage for Free tier
-    store.incrementDailyUsage();
+    // Increment daily usage for this user
+    store.incrementDailyUsage(authInfo?.userId);
   }
 
   if (onProgress) {
