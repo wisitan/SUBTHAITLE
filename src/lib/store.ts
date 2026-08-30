@@ -132,7 +132,11 @@ export interface AppState {
 }
 
 export function getUserTodayUsageKey(userId?: string): string {
-  const today = new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const today = `${year}-${month}-${day}`;
   return `subthaitle_usage_${userId || 'anon'}_${today}`;
 }
 
