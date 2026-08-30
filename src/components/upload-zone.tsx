@@ -431,7 +431,7 @@ export function UploadZone() {
                     {providerMode === 'credits' && mediaDuration > 0 && (
                       <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-xs text-emerald-300 flex items-center justify-between">
                         <span>
-                          💎 คลิปนี้ใช้ <strong>{requiredCredits} เครดิต (นาที)</strong> (เศษ $\le$ 40 วิ ปัดลงให้ฟรี)
+                          💎 คลิปนี้ใช้ <strong>{requiredCredits} เครดิต (นาที)</strong>
                         </span>
                         <span className="font-bold text-white">คงเหลือ {creditsMinutes} นาที</span>
                       </div>

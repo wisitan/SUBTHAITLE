@@ -231,7 +231,7 @@ export function ProviderSelector() {
                 💎 คลิปยาวเท่าไหร่ก็ได้
               </p>
               <p className="text-[11px] text-zinc-400">
-                หักตามจริง (เศษ $\le$ 40 วิ ปัดลง)
+                หักเครดิตตามความยาวจริง
               </p>
             </div>
           </div>

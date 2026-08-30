@@ -262,7 +262,7 @@ export function DonatePage() {
                       </li>
                       <li className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span><strong>คลิปยาวเท่าไหร่ก็ได้</strong> (เศษ $\le$ 40 วิ ปัดลงให้ฟรี)</span>
+                        <span><strong>คลิปยาวเท่าไหร่ก็ได้</strong> หักตามเวลาจริง</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-400 shrink-0" />
