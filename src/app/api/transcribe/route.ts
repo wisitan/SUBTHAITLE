@@ -252,6 +252,9 @@ export async function POST(request: NextRequest) {
       process.env.GOOGLE_API_KEY ||
       process.env.GOOGLE_SPEECH_API_KEY ||
       process.env.GOOGLE_CLOUD_API_KEY ||
+      process.env.Google ||
+      process.env.GOOGLE ||
+      process.env.google ||
       process.env.NEXT_PUBLIC_GOOGLE_STT_API_KEY;
 
     if (!googleApiKey) {
