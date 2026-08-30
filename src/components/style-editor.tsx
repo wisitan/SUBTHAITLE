@@ -15,6 +15,7 @@ import {
   Maximize2,
   Palette,
   Layers,
+  Smartphone,
 } from 'lucide-react';
 import { useAppStore, defaultCaptionStyle } from '@/lib/store';
 import { FontPicker } from './font-picker';
@@ -52,6 +53,8 @@ export function StyleEditor() {
   const style = useAppStore((s) => s.style);
   const setStyle = useAppStore((s) => s.setStyle);
   const setActivePresetId = useAppStore((s) => s.setActivePresetId);
+  const showTikTokSafeZone = useAppStore((s) => s.showTikTokSafeZone);
+  const setShowTikTokSafeZone = useAppStore((s) => s.setShowTikTokSafeZone);
 
   const handleResetDefault = () => {
     setStyle(defaultCaptionStyle);
@@ -750,6 +753,22 @@ export function StyleEditor() {
             >
               <span className="block text-xs font-semibold leading-tight">กึ่งกลาง</span>
               <span className="block text-[11px] opacity-85 font-mono leading-tight">(50%)</span>
+            </button>
+          </div>
+
+          {/* TikTok Safe Zone Guide Quick Toggle */}
+          <div className="pt-2">
+            <button
+              type="button"
+              onClick={() => setShowTikTokSafeZone(!showTikTokSafeZone)}
+              className={`w-full py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm ${
+                showTikTokSafeZone
+                  ? 'bg-orange-500/20 border-orange-500/60 text-orange-300 ring-1 ring-orange-500/30'
+                  : 'bg-[#181824] border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600'
+              }`}
+            >
+              <Smartphone className={`w-3.5 h-3.5 ${showTikTokSafeZone ? 'text-orange-400' : 'text-zinc-400'}`} />
+              <span>แสดงขอบเขต TikTok Safe Zone: {showTikTokSafeZone ? 'เปิดอยู่ (ON)' : 'ปิดอยู่ (OFF)'}</span>
             </button>
           </div>
         </div>

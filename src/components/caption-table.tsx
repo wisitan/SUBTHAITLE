@@ -26,7 +26,8 @@ export function CaptionTable({ onPlayCue }: Props) {
   const pacingMode = useAppStore((s) => s.pacingMode);
   const customMaxWords = useAppStore((s) => s.customMaxWords);
   const setPacingMode = useAppStore((s) => s.setPacingMode);
-  const setCurrentTime = useAppStore((s) => s.setCurrentTime);
+  const setActiveCaptionIndex = useAppStore((s) => s.setActiveCaptionIndex);
+  const requestSeek = useAppStore((s) => s.requestSeek);
   const updateCaptionText = useAppStore((s) => s.updateCaptionText);
   const updateCaptionTiming = useAppStore((s) => s.updateCaptionTiming);
   const addCaption = useAppStore((s) => s.addCaption);
@@ -371,8 +372,13 @@ export function CaptionTable({ onPlayCue }: Props) {
                 isLast={actualIndex === captions.length - 1}
                 cardRef={isActive ? activeCardRef : null}
                 onPlayCue={(start) => {
-                  setCurrentTime(start);
+                  setActiveCaptionIndex(actualIndex);
+                  requestSeek(start, true);
                   if (onPlayCue) onPlayCue(start);
+                }}
+                onSelectCue={(start) => {
+                  setActiveCaptionIndex(actualIndex);
+                  requestSeek(start, false);
                 }}
                 onTimingChange={(id, start, end) => updateCaptionTiming(id, start, end)}
                 onTextChange={(id, text) => updateCaptionText(id, text)}

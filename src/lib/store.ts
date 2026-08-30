@@ -90,6 +90,8 @@ export interface AppState {
   
   // Player Settings
   aspectRatio: '9:16' | '16:9' | '1:1';
+  showTikTokSafeZone: boolean;
+  seekTarget: { time: number; autoPlay?: boolean; timestamp: number } | null;
   
   // Actions
   setFile: (file: File | null) => void;
@@ -106,6 +108,8 @@ export interface AppState {
   setCustomDictionary: (entries: DictionaryEntry[]) => void;
   loadDictionary: () => Promise<void>;
   setAspectRatio: (ratio: '9:16' | '16:9' | '1:1') => void;
+  setShowTikTokSafeZone: (show: boolean) => void;
+  requestSeek: (time: number, autoPlay?: boolean) => void;
   setRawWords: (words: CaptionWord[]) => void;
   setPacingMode: (mode: PacingMode, customWords?: number) => void;
   regroupCaptions: (mode?: PacingMode, customWords?: number) => void;
@@ -210,6 +214,8 @@ export const useAppStore = create<AppState>()(
       customPresets: [],
       
       aspectRatio: '9:16',
+      showTikTokSafeZone: false,
+      seekTarget: null,
       
       setFile: (file) => set({ file }),
       setVideoUrl: (videoUrl) => set({ videoUrl }),
@@ -217,6 +223,12 @@ export const useAppStore = create<AppState>()(
       setMediaDuration: (mediaDuration) => set({ mediaDuration }),
       
       setAspectRatio: (aspectRatio) => set({ aspectRatio }),
+      setShowTikTokSafeZone: (showTikTokSafeZone) => set({ showTikTokSafeZone }),
+      requestSeek: (time, autoPlay = false) =>
+        set({
+          seekTarget: { time, autoPlay, timestamp: Date.now() },
+          currentTime: time,
+        }),
       
       setStatus: (status, progress = 0, statusMessage = '') =>
         set({ status, progress, statusMessage }),

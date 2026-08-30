@@ -20,6 +20,7 @@ import {
 import { loadGoogleFont } from '@/lib/fonts';
 import { formatCaptionWordsText } from '@/lib/thai-text';
 import { useCaptionSync } from '@/hooks/use-caption-sync';
+import { TikTokSafeZone } from './tiktok-safe-zone';
 
 interface Props {
   className?: string;
@@ -38,6 +39,9 @@ export function VideoPlayer({ className = '' }: Props) {
   const setMediaDuration = useAppStore((s) => s.setMediaDuration);
   const aspectRatio = useAppStore((s) => s.aspectRatio);
   const setAspectRatio = useAppStore((s) => s.setAspectRatio);
+  const showTikTokSafeZone = useAppStore((s) => s.showTikTokSafeZone);
+  const setShowTikTokSafeZone = useAppStore((s) => s.setShowTikTokSafeZone);
+  const seekTarget = useAppStore((s) => s.seekTarget);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -122,12 +126,32 @@ export function VideoPlayer({ className = '' }: Props) {
   const seekTo = useCallback(
     (time: number) => {
       if (!videoRef.current) return;
-      const clampedTime = Math.max(0, Math.min(time, duration));
+      const clampedTime = Math.max(0, Math.min(time, duration || mediaDuration || 99999));
       videoRef.current.currentTime = clampedTime;
       setCurrentTime(clampedTime);
     },
-    [duration, setCurrentTime]
+    [duration, mediaDuration, setCurrentTime]
   );
+
+  // Synchronize external seek requests from store (e.g. caption table play cue / row click)
+  useEffect(() => {
+    if (!seekTarget || !videoRef.current) return;
+    const targetTime = Math.max(0, Math.min(seekTarget.time, duration || mediaDuration || 99999));
+    videoRef.current.currentTime = targetTime;
+    setCurrentTime(targetTime);
+
+    if (seekTarget.autoPlay) {
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsPlaying(true))
+          .catch((err) => console.warn('Play interrupted/failed:', err));
+      }
+    } else {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    }
+  }, [seekTarget, duration, mediaDuration, setCurrentTime]);
 
   // Global Spacebar & Arrow keys shortcuts
   useEffect(() => {
@@ -384,23 +408,43 @@ export function VideoPlayer({ className = '' }: Props) {
           </button>
         </div>
 
-        {/* Word Highlight Interactive Toggle Button */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setStyle({ enableWordHighlight: !style.enableWordHighlight });
-          }}
-          className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all cursor-pointer shadow-lg pointer-events-auto shrink-0 ${
-            style.enableWordHighlight
-              ? 'bg-amber-500/25 border border-amber-500/60 text-amber-300 hover:bg-amber-500/35 ring-1 ring-amber-500/30'
-              : 'bg-zinc-900/90 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600'
-          }`}
-          title="คลิกเพื่อ เปิด/ปิด การไฮไลท์คำตามเสียงพูดแบบ Real-time"
-        >
-          <Sparkles className={`w-3.5 h-3.5 ${style.enableWordHighlight ? 'text-amber-400' : 'text-zinc-500'}`} />
-          <span><span className="hidden sm:inline">Word </span>Highlight: {style.enableWordHighlight ? 'ON' : 'OFF'}</span>
-        </button>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {/* TikTok Safe Zone Toggle (Useful for 9:16 TikTok/Reels) */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowTikTokSafeZone(!showTikTokSafeZone);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all cursor-pointer shadow-lg pointer-events-auto shrink-0 ${
+              showTikTokSafeZone
+                ? 'bg-orange-500/25 border border-orange-500/60 text-orange-300 hover:bg-orange-500/35 ring-1 ring-orange-500/30'
+                : 'bg-zinc-900/90 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600'
+            }`}
+            title="เปิด/ปิด TikTok Safe Zone เพื่อดูพื้นที่ปลอดภัยไม่ให้ปุ่ม TikTok บังซับ"
+          >
+            <Smartphone className={`w-3.5 h-3.5 ${showTikTokSafeZone ? 'text-orange-400' : 'text-zinc-500'}`} />
+            <span>TikTok Safe Zone: {showTikTokSafeZone ? 'ON' : 'OFF'}</span>
+          </button>
+
+          {/* Word Highlight Interactive Toggle Button */}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setStyle({ enableWordHighlight: !style.enableWordHighlight });
+            }}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs font-bold backdrop-blur-md transition-all cursor-pointer shadow-lg pointer-events-auto shrink-0 ${
+              style.enableWordHighlight
+                ? 'bg-amber-500/25 border border-amber-500/60 text-amber-300 hover:bg-amber-500/35 ring-1 ring-amber-500/30'
+                : 'bg-zinc-900/90 border border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-600'
+            }`}
+            title="คลิกเพื่อ เปิด/ปิด การไฮไลท์คำตามเสียงพูดแบบ Real-time"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${style.enableWordHighlight ? 'text-amber-400' : 'text-zinc-500'}`} />
+            <span><span className="hidden sm:inline">Word </span>Highlight: {style.enableWordHighlight ? 'ON' : 'OFF'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Video / Audio Display Area */}
@@ -605,6 +649,9 @@ export function VideoPlayer({ className = '' }: Props) {
                 </div>
               </div>
             )}
+            
+            {/* TikTok Safe Zone Overlay */}
+            <TikTokSafeZone visible={showTikTokSafeZone && aspectRatio === '9:16'} />
           </>
         ) : (
           <div className="text-center p-8 space-y-2">

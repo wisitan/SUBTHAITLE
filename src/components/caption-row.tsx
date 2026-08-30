@@ -18,6 +18,7 @@ interface CaptionRowProps {
   isLast: boolean;
   cardRef?: React.Ref<HTMLDivElement>;
   onPlayCue?: (start: number) => void;
+  onSelectCue?: (start: number) => void;
   onTimingChange: (id: string, start: number, end: number) => void;
   onTextChange: (id: string, text: string) => void;
   onSplit: (id: string) => void;
@@ -33,6 +34,7 @@ export const CaptionRow = memo(function CaptionRow({
   isLast,
   cardRef,
   onPlayCue,
+  onSelectCue,
   onTimingChange,
   onTextChange,
   onSplit,
@@ -46,7 +48,10 @@ export const CaptionRow = memo(function CaptionRow({
     <div
       id={`caption-card-${actualIndex}`}
       ref={cardRef}
-      className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 relative group/card max-w-full overflow-hidden ${
+      onClick={() => {
+        if (onSelectCue) onSelectCue(caption.start);
+      }}
+      className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 relative group/card max-w-full overflow-hidden cursor-pointer ${
         isActive
           ? 'bg-[#24202e] border-orange-500 shadow-xl shadow-orange-500/10 ring-2 ring-orange-500/50'
           : 'bg-[#181824] border border-zinc-700/90 hover:border-orange-500/60 hover:bg-[#20202e] focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30 shadow-md'
@@ -69,7 +74,8 @@ export const CaptionRow = memo(function CaptionRow({
           {/* Play this cue button */}
           <button
             type="button"
-            onClick={() => {
+            onClick={(e) => {
+              e.stopPropagation();
               if (onPlayCue) onPlayCue(caption.start);
             }}
             className="p-1.5 rounded-lg bg-[#242434] hover:bg-orange-500 hover:text-zinc-950 text-zinc-200 border border-zinc-700 transition-colors cursor-pointer shrink-0"
