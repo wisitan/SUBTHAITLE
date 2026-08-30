@@ -301,10 +301,16 @@ export function ProviderSelector() {
               รับ API Key ฟรีที่นี่
             </a>
           </div>
-          <p className="text-xs text-zinc-300 mt-2.5 flex items-center gap-1.5">
-            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-            API Key จะถูกเก็บในเบราว์เซอร์ของคุณเท่านั้น (ไม่ส่งไปบันทึกบนเซิร์ฟเวอร์ของเรา)
-          </p>
+          <div className="mt-2.5 flex flex-col gap-1.5">
+            <p className="text-xs text-zinc-300 flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+              API Key จะถูกเก็บในเบราว์เซอร์ของคุณเท่านั้น (ไม่ส่งไปบันทึกบนเซิร์ฟเวอร์ของเรา)
+            </p>
+            <p className="text-xs text-zinc-400 flex items-start gap-1.5 ml-1">
+              <span className="text-zinc-500 mt-0.5">•</span>
+              <span>ถ้าไม่มั่นใจในการใช้ BYOK หรือกลัว Key รั่วไหล คุณสามารถเลือกใช้ <strong>ระบบเติมเครดิต</strong> แทนได้ค่ะ ปลอดภัย 100% เพราะจะใช้ Key ฝั่งเซิร์ฟเวอร์ของเราเอง</span>
+            </p>
+          </div>
         </div>
       )}
 
