@@ -98,8 +98,9 @@ export function UploadZone() {
       const objUrl = URL.createObjectURL(selectedFile);
       setVideoUrl(objUrl);
 
-      // Automatically extract audio if it's a video file
-      if (selectedFile.type.startsWith('video/') || selectedFile.name.match(/\.(mp4|mov|webm|mkv)$/i)) {
+      // Automatically extract audio if it's a video file or non-mp3 audio
+      const isCleanMp3 = selectedFile.type === 'audio/mpeg' || selectedFile.name.endsWith('.mp3');
+      if (!isCleanMp3 || selectedFile.type.startsWith('video/') || selectedFile.name.match(/\.(mp4|mov|webm|mkv|wav|m4a|aac|flac|ogg)$/i)) {
         setIsExtracting(true);
         setStatus('extracting_audio', 10, 'กำลังเตรียมเครื่องมือสกัดเสียง...');
 
@@ -120,7 +121,7 @@ export function UploadZone() {
           setStatus('idle', 0, 'พร้อมถอดเสียง');
         }
       } else {
-        // Direct audio file
+        // Direct clean MP3 audio file
         setAudioBlob(selectedFile);
         setStatus('idle', 0, 'พร้อมถอดเสียง');
       }
@@ -396,7 +397,7 @@ export function UploadZone() {
                         ? groqApiKey.trim().startsWith('sk-')
                           ? 'OpenAI Whisper-1 (BYOK Mode)'
                           : 'Groq Whisper V3 (BYOK Mode)'
-                        : 'OpenAI Whisper Cloud (ความแม่นยำสูง)'
+                        : 'Google Cloud Speech-to-Text (Standard)'
                       : 'Local Whisper (Offline Mac)'}
                   </span>
                 </p>

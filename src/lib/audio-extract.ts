@@ -61,13 +61,14 @@ export async function extractAudioFromMedia(
   file: File,
   onProgress?: (p: AudioExtractProgress) => void
 ): Promise<Blob> {
-  // If it's already an audio file, return it directly!
-  if (file.type.startsWith('audio/')) {
+  // If it's already an MP3 audio file, return it directly!
+  const isMp3 = file.type === 'audio/mpeg' || file.type === 'audio/mp3' || file.name.toLowerCase().endsWith('.mp3');
+  if (isMp3) {
     if (onProgress) {
       onProgress({
         ratio: 1,
         stage: 'completed',
-        message: 'ไฟล์เสียงพร้อมใช้งานทันที',
+        message: 'ไฟล์ MP3 พร้อมใช้งานทันที',
       });
     }
     return file;

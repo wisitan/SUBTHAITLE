@@ -148,7 +148,100 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: limitCheck.reason }, { status: 429 });
     }
 
-    // 2. Transcribe using OpenAI Whisper-1 (The Ultimate Accuracy for Thai)
+    if (!audioFile) {
+      return NextResponse.json(
+        { error: 'ไม่พบไฟล์เสียงในคำร้องขอ (No audio file provided)' },
+        { status: 400 }
+      );
+    }
+
+    // Payload size check (Vercel Serverless Function limit = 4.5MB)
+    const MAX_SERVER_AUDIO_BYTES = 4.2 * 1024 * 1024;
+    if (audioFile.size > MAX_SERVER_AUDIO_BYTES) {
+      return NextResponse.json(
+        {
+          error:
+            'ขนาดไฟล์เสียงเกิน 4MB สำหรับเซิร์ฟเวอร์ฟรี กรุณาใช้โหมด BYOK เพื่อถอดเสียงไฟล์ขนาดใหญ่',
+        },
+        { status: 413 }
+      );
+    }
+
+    // 2. Google Cloud Speech-to-Text (Priority 1 if key is configured)
+    if (process.env.GOOGLE_STT_API_KEY) {
+      try {
+        const buffer = Buffer.from(await audioFile.arrayBuffer());
+        const base64Audio = buffer.toString('base64');
+
+        const googleResponse = await fetch(
+          `https://speech.googleapis.com/v1/speech:recognize?key=${process.env.GOOGLE_STT_API_KEY}`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              config: {
+                encoding: 'MP3',
+                languageCode: 'th-TH',
+                enableWordTimeOffsets: true,
+                enableAutomaticPunctuation: true,
+                model: 'default',
+              },
+              audio: {
+                content: base64Audio,
+              },
+            }),
+          }
+        );
+
+        if (googleResponse.ok) {
+          const googleData = await googleResponse.json();
+          const words: Array<{ word: string; start: number; end: number; confidence: number }> = [];
+          let fullText = '';
+
+          for (const result of googleData.results || []) {
+            const alt = result.alternatives?.[0];
+            if (alt) {
+              fullText += (fullText ? ' ' : '') + (alt.transcript || '');
+              if (alt.words) {
+                for (const w of alt.words) {
+                  const startStr = w.startTime || '0s';
+                  const endStr = w.endTime || '0s';
+                  const startSec = parseFloat(startStr.replace('s', '')) || 0;
+                  const endSec = parseFloat(endStr.replace('s', '')) || 0;
+                  words.push({
+                    word: w.word,
+                    start: startSec,
+                    end: endSec,
+                    confidence: alt.confidence || 0.95,
+                  });
+                }
+              }
+            }
+          }
+
+          // If Google STT returned valid words/text, return it
+          if (words.length > 0 || fullText.trim()) {
+            return NextResponse.json({
+              success: true,
+              text: fullText,
+              duration: words.length > 0 ? words[words.length - 1].end : 0,
+              language: 'th',
+              segments: [],
+              words: words,
+            });
+          }
+        } else {
+          const errorText = await googleResponse.text();
+          console.warn('[Google STT Fallback Notice]: Google STT returned error, falling back to Whisper:', googleResponse.status, errorText);
+        }
+      } catch (err: unknown) {
+        console.warn('[Google STT Fallback Notice]: Exception in Google STT, falling back to Whisper:', err);
+      }
+    }
+
+    // 3. Fallback: OpenAI Whisper-1
     let apiUrl = 'https://api.openai.com/v1/audio/transcriptions';
     let apiKey = process.env.OPENAI_API_KEY;
     let targetModel = 'whisper-1';
@@ -164,33 +257,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error:
-            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า OPENAI_API_KEY กรุณาตั้งค่าบน Vercel หรือใส่ API Key ในโหมด BYOK เพื่อใช้งาน',
+            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า API Key (GOOGLE, OPENAI, หรือ GROQ) กรุณาตั้งค่าบน Vercel หรือใส่ API Key ในโหมด BYOK เพื่อใช้งาน',
         },
         { status: 500 }
       );
     }
 
-    if (!audioFile) {
-      return NextResponse.json(
-        { error: 'ไม่พบไฟล์เสียงในคำร้องขอ (No audio file provided)' },
-        { status: 400 }
-      );
-    }
-
-    // 3. Payload size check (Vercel Serverless Function limit = 4.5MB)
-    // Note: OpenAI limits to 25MB, Groq limits to 25MB, but Vercel limits HTTP payload to 4.5MB
-    const MAX_SERVER_AUDIO_BYTES = 4.2 * 1024 * 1024;
-    if (audioFile.size > MAX_SERVER_AUDIO_BYTES) {
-      return NextResponse.json(
-        {
-          error:
-            'ขนาดไฟล์เสียงเกิน 4MB สำหรับเซิร์ฟเวอร์ฟรี กรุณาใช้โหมด BYOK เพื่อถอดเสียงไฟล์ขนาดใหญ่',
-        },
-        { status: 413 }
-      );
-    }
-
-    // 4. Prepare FormData for API
+    // 4. Prepare FormData for OpenAI/Groq API
     const apiFormData = new FormData();
     apiFormData.append('file', audioFile, 'audio.mp3');
     apiFormData.append('model', targetModel);
