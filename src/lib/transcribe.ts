@@ -57,49 +57,143 @@ export async function transcribeAudio(
   // 2. Execution path based on Provider / Mode
   if (isBYOK) {
     const trimmedKey = groqApiKey.trim();
+    const isGoogle = trimmedKey.startsWith('AIza');
     const isOpenAI = trimmedKey.startsWith('sk-');
-    const providerLabel = isOpenAI ? 'OpenAI Whisper (BYOK)' : 'Groq Whisper (BYOK)';
-    const apiUrl = isOpenAI
-      ? '/api/proxy/openai/v1/audio/transcriptions'
-      : '/api/proxy/groq/openai/v1/audio/transcriptions';
-    const targetModel = isOpenAI ? 'whisper-1' : 'whisper-large-v3';
 
-    // BYOK Mode: Call API directly from client (Bypasses server payload and timeout limits)
-    if (onProgress) {
-      onProgress(`กำลังถอดเสียงผ่าน ${providerLabel}...`);
-    }
-
-    const formData = new FormData();
-    formData.append('file', audioBlob, 'audio.mp3');
-    formData.append('model', targetModel);
-    formData.append('response_format', 'verbose_json');
-    formData.append('language', 'th');
-    formData.append('temperature', '0.2');
-    formData.append('prompt', 'สวัสดีครับ นี่คือคำบรรยายวิดีโอภาษาไทย');
-    formData.append('timestamp_granularities[]', 'word');
-    formData.append('timestamp_granularities[]', 'segment');
-
-    const res = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${trimmedKey}`,
-      },
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      let msg = `${isOpenAI ? 'OpenAI' : 'Groq'} API Error (${res.status})`;
-      try {
-        const json = JSON.parse(errText);
-        msg = json.error?.message || msg;
-      } catch {
-        // use default
+    if (isGoogle) {
+      // BYOK Google Cloud STT
+      if (onProgress) {
+        onProgress('กำลังถอดเสียงผ่าน Google Cloud Speech-to-Text (BYOK)...');
       }
-      throw new Error(`การถอดเสียงล้มเหลว: ${msg}`);
-    }
 
-    data = await res.json();
+      const base64Audio = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === 'string') {
+            const base64 = reader.result.split(',')[1] || '';
+            resolve(base64);
+          } else {
+            reject(new Error('ไม่สามารถแปลงไฟล์เป็น Base64 ได้'));
+          }
+        };
+        reader.onerror = () => reject(new Error('เกิดข้อผิดพลาดในการอ่านไฟล์'));
+        reader.readAsDataURL(audioBlob);
+      });
+
+      const res = await fetch(`https://speech.googleapis.com/v1/speech:recognize?key=${trimmedKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          config: {
+            encoding: 'MP3',
+            languageCode: 'th-TH',
+            enableWordTimeOffsets: true,
+            enableAutomaticPunctuation: true,
+            useEnhanced: true,
+            speechContexts: [
+              {
+                phrases: [
+                  'สายชาร์จ', 'หัวชาร์จ', 'เก้าสิบองศา', 'เล่นเกม', 'จ่ายไฟ', 'วัตต์', 'แอมป์',
+                  'ฟาสต์ชาร์จ', 'พาวเวอร์แบงค์', 'แนะนำ', 'รีวิว', 'คลิปนี้', 'สวัสดีครับ', 'สวัสดีค่ะ',
+                  'ตัวนี้', 'อันนี้', 'แบบนี้', 'ราคา', 'โปรโมชั่น', 'ส่งฟรี', 'ของแท้', 'ประกัน',
+                  'สักเส้นนึง', 'ความยาว', 'ทนทาน', 'ชาร์จไว', 'ชาร์จเร็ว', 'ตัวเนี้ย', 'เล่นเกมไปด้วย'
+                ],
+                boost: 15.0,
+              },
+            ],
+            model: 'default',
+          },
+          audio: {
+            content: base64Audio,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        let msg = `Google Cloud STT Error (${res.status})`;
+        try {
+          const json = JSON.parse(errText);
+          msg = json.error?.message || msg;
+        } catch {}
+        throw new Error(`การถอดเสียงด้วย Google Cloud ล้มเหลว: ${msg}`);
+      }
+
+      const googleData = await res.json();
+      const words: Array<{ word: string; start: number; end: number; confidence: number }> = [];
+      let fullText = '';
+
+      for (const result of googleData.results || []) {
+        const alt = result.alternatives?.[0];
+        if (alt) {
+          fullText += (fullText ? ' ' : '') + (alt.transcript || '');
+          if (alt.words) {
+            for (const w of alt.words) {
+              const startStr = w.startTime || '0s';
+              const endStr = w.endTime || '0s';
+              const startSec = parseFloat(startStr.replace('s', '')) || 0;
+              const endSec = parseFloat(endStr.replace('s', '')) || 0;
+              words.push({
+                word: w.word,
+                start: startSec,
+                end: endSec,
+                confidence: alt.confidence || 0.95,
+              });
+            }
+          }
+        }
+      }
+
+      data = {
+        success: true,
+        text: fullText,
+        duration: words.length > 0 ? words[words.length - 1].end : 0,
+        words,
+      };
+    } else {
+      // BYOK OpenAI or Groq
+      const providerLabel = isOpenAI ? 'OpenAI Whisper (BYOK)' : 'Groq Whisper (BYOK)';
+      const apiUrl = isOpenAI
+        ? '/api/proxy/openai/v1/audio/transcriptions'
+        : '/api/proxy/groq/openai/v1/audio/transcriptions';
+      const targetModel = isOpenAI ? 'whisper-1' : 'whisper-large-v3';
+
+      if (onProgress) {
+        onProgress(`กำลังถอดเสียงผ่าน ${providerLabel}...`);
+      }
+
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'audio.mp3');
+      formData.append('model', targetModel);
+      formData.append('response_format', 'verbose_json');
+      formData.append('language', 'th');
+      formData.append('temperature', '0.2');
+      formData.append('prompt', 'สวัสดีครับ นี่คือคำบรรยายวิดีโอภาษาไทย');
+      formData.append('timestamp_granularities[]', 'word');
+      formData.append('timestamp_granularities[]', 'segment');
+
+      const res = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${trimmedKey}`,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        let msg = `${isOpenAI ? 'OpenAI' : 'Groq'} API Error (${res.status})`;
+        try {
+          const json = JSON.parse(errText);
+          msg = json.error?.message || msg;
+        } catch {}
+        throw new Error(`การถอดเสียงล้มเหลว: ${msg}`);
+      }
+
+      data = await res.json();
+    }
   } else if (provider === 'local') {
     // Local Whisper Mode (Offline Mac MLX)
     if (onProgress) {

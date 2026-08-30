@@ -394,10 +394,12 @@ export function UploadZone() {
                   <span className="text-zinc-100 font-medium">
                     {provider === 'groq'
                       ? isBYOK
-                        ? groqApiKey.trim().startsWith('sk-')
+                        ? groqApiKey.trim().startsWith('AIza')
+                          ? 'Google Cloud STT (BYOK Mode)'
+                          : groqApiKey.trim().startsWith('sk-')
                           ? 'OpenAI Whisper-1 (BYOK Mode)'
                           : 'Groq Whisper V3 (BYOK Mode)'
-                        : 'Google Cloud Speech-to-Text (Standard)'
+                        : 'Google Cloud AI (ความแม่นยำภาษาไทยสูงสุด)'
                       : 'Local Whisper (Offline Mac)'}
                   </span>
                 </p>

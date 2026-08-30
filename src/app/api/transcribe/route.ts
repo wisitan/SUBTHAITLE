@@ -246,181 +246,110 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Google Cloud Speech-to-Text (Priority 1 if key is configured)
-    if (process.env.GOOGLE_STT_API_KEY) {
-      try {
-        const buffer = Buffer.from(await audioFile.arrayBuffer());
-        const base64Audio = buffer.toString('base64');
-
-        const googleResponse = await fetch(
-          `https://speech.googleapis.com/v1/speech:recognize?key=${process.env.GOOGLE_STT_API_KEY}`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              config: {
-                encoding: 'MP3',
-                languageCode: 'th-TH',
-                enableWordTimeOffsets: true,
-                enableAutomaticPunctuation: true,
-                useEnhanced: true,
-                speechContexts: [
-                  {
-                    phrases: [
-                      'สายชาร์จ', 'หัวชาร์จ', 'เก้าสิบองศา', 'เล่นเกม', 'จ่ายไฟ', 'วัตต์', 'แอมป์',
-                      'ฟาสต์ชาร์จ', 'พาวเวอร์แบงค์', 'แนะนำ', 'รีวิว', 'คลิปนี้', 'สวัสดีครับ', 'สวัสดีค่ะ',
-                      'ตัวนี้', 'อันนี้', 'แบบนี้', 'ราคา', 'โปรโมชั่น', 'ส่งฟรี', 'ของแท้', 'ประกัน',
-                      'สักเส้นนึง', 'ความยาว', 'ทนทาน', 'ชาร์จไว', 'ชาร์จเร็ว', 'ตัวเนี้ย', 'เล่นเกมไปด้วย'
-                    ],
-                    boost: 15.0,
-                  },
-                ],
-                model: 'default',
-              },
-              audio: {
-                content: base64Audio,
-              },
-            }),
-          }
-        );
-
-        if (googleResponse.ok) {
-          const googleData = await googleResponse.json();
-          const words: TranscribedWord[] = [];
-          let fullText = '';
-
-          for (const result of googleData.results || []) {
-            const alt = result.alternatives?.[0];
-            if (alt) {
-              fullText += (fullText ? ' ' : '') + (alt.transcript || '');
-              if (alt.words) {
-                for (const w of alt.words) {
-                  const startStr = w.startTime || '0s';
-                  const endStr = w.endTime || '0s';
-                  const startSec = parseFloat(startStr.replace('s', '')) || 0;
-                  const endSec = parseFloat(endStr.replace('s', '')) || 0;
-                  words.push({
-                    word: w.word,
-                    start: startSec,
-                    end: endSec,
-                    confidence: alt.confidence || 0.95,
-                  });
-                }
-              }
-            }
-          }
-
-          // If Google STT returned valid words/text, run AI Auto-Correction and return it
-          if (words.length > 0 || fullText.trim()) {
-            const corrected = await correctThaiWordsWithLLM(words, fullText);
-            return NextResponse.json({
-              success: true,
-              text: corrected.text,
-              duration: corrected.words.length > 0 ? corrected.words[corrected.words.length - 1].end : 0,
-              language: 'th',
-              segments: [],
-              words: corrected.words,
-            });
-          }
-        } else {
-          const errorText = await googleResponse.text();
-          console.warn('[Google STT Fallback Notice]: Google STT returned error, falling back to Whisper:', googleResponse.status, errorText);
-        }
-      } catch (err: unknown) {
-        console.warn('[Google STT Fallback Notice]: Exception in Google STT, falling back to Whisper:', err);
-      }
-    }
-
-    // 3. Fallback: OpenAI Whisper-1
-    let apiUrl = 'https://api.openai.com/v1/audio/transcriptions';
-    let apiKey = process.env.OPENAI_API_KEY;
-    let targetModel = 'whisper-1';
-
-    // Fallback to Groq only if OpenAI key is missing on the server
-    if (!apiKey && process.env.GROQ_API_KEY) {
-      apiUrl = 'https://api.groq.com/openai/v1/audio/transcriptions';
-      apiKey = process.env.GROQ_API_KEY;
-      targetModel = 'whisper-large-v3';
-    }
-
-    if (!apiKey) {
+    // 2. Google Cloud Speech-to-Text (The Exclusive High-Accuracy Engine)
+    if (!process.env.GOOGLE_STT_API_KEY) {
       return NextResponse.json(
         {
           error:
-            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า API Key (GOOGLE, OPENAI, หรือ GROQ) กรุณาตั้งค่าบน Vercel หรือใส่ API Key ในโหมด BYOK เพื่อใช้งาน',
+            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า GOOGLE_STT_API_KEY กรุณาตั้งค่าบน Vercel หรือใส่ API Key ในโหมด BYOK เพื่อใช้งาน',
         },
         { status: 500 }
       );
     }
 
-    // 4. Prepare FormData for OpenAI/Groq API
-    const apiFormData = new FormData();
-    apiFormData.append('file', audioFile, 'audio.mp3');
-    apiFormData.append('model', targetModel);
-    apiFormData.append('response_format', 'verbose_json');
-    apiFormData.append('language', language);
-    apiFormData.append('temperature', '0.2');
-    apiFormData.append('prompt', 'สวัสดีครับ นี่คือคำบรรยายวิดีโอภาษาไทย');
-    
-    // สำคัญ: OpenAI อนุญาตให้ส่ง timestamp_granularities[] ได้เหมือนกันเพื่อขอระดับคำ
-    apiFormData.append('timestamp_granularities[]', 'word');
-    apiFormData.append('timestamp_granularities[]', 'segment');
+    try {
+      const buffer = Buffer.from(await audioFile.arrayBuffer());
+      const base64Audio = buffer.toString('base64');
 
-    const apiResponse = await fetch(
-      apiUrl,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: apiFormData,
-      }
-    );
-
-    if (!apiResponse.ok) {
-      const errorText = await apiResponse.text();
-      console.error('[STT API Error]:', apiResponse.status, errorText);
-
-      let errorMessage = `STT API Error (${apiResponse.status})`;
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorMessage = errorJson.error?.message || errorMessage;
-      } catch {
-        // Fallback
-      }
-
-      if (apiResponse.status === 429) {
-        return NextResponse.json(
-          {
-            error:
-              'โควต้าเซิร์ฟเวอร์ระบบกำลังเต็มชั่วคราว (Rate Limit) กรุณารอสักครู่แล้วลองใหม่ หรือใส่ API Key ตัวเอง (BYOK) เพื่อถอดเสียงได้ทันที',
+      const googleResponse = await fetch(
+        `https://speech.googleapis.com/v1/speech:recognize?key=${process.env.GOOGLE_STT_API_KEY}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
           },
-          { status: 429 }
+          body: JSON.stringify({
+            config: {
+              encoding: 'MP3',
+              languageCode: language === 'en' ? 'en-US' : 'th-TH',
+              enableWordTimeOffsets: true,
+              enableAutomaticPunctuation: true,
+              useEnhanced: true,
+              speechContexts: [
+                {
+                  phrases: [
+                    'สายชาร์จ', 'หัวชาร์จ', 'เก้าสิบองศา', 'เล่นเกม', 'จ่ายไฟ', 'วัตต์', 'แอมป์',
+                    'ฟาสต์ชาร์จ', 'พาวเวอร์แบงค์', 'แนะนำ', 'รีวิว', 'คลิปนี้', 'สวัสดีครับ', 'สวัสดีค่ะ',
+                    'ตัวนี้', 'อันนี้', 'แบบนี้', 'ราคา', 'โปรโมชั่น', 'ส่งฟรี', 'ของแท้', 'ประกัน',
+                    'สักเส้นนึง', 'ความยาว', 'ทนทาน', 'ชาร์จไว', 'ชาร์จเร็ว', 'ตัวเนี้ย', 'เล่นเกมไปด้วย'
+                  ],
+                  boost: 15.0,
+                },
+              ],
+              model: 'default',
+            },
+            audio: {
+              content: base64Audio,
+            },
+          }),
+        }
+      );
+
+      if (!googleResponse.ok) {
+        const errorText = await googleResponse.text();
+        console.error('[Google STT Error]:', googleResponse.status, errorText);
+        let parsedError = errorText;
+        try {
+          const errJson = JSON.parse(errorText);
+          parsedError = errJson.error?.message || errorText;
+        } catch {}
+        return NextResponse.json(
+          { error: `Google STT Error: ${parsedError}` },
+          { status: googleResponse.status }
         );
       }
 
-      return NextResponse.json({ error: errorMessage }, { status: apiResponse.status });
+      const googleData = await googleResponse.json();
+      const words: TranscribedWord[] = [];
+      let fullText = '';
+
+      for (const result of googleData.results || []) {
+        const alt = result.alternatives?.[0];
+        if (alt) {
+          fullText += (fullText ? ' ' : '') + (alt.transcript || '');
+          if (alt.words) {
+            for (const w of alt.words) {
+              const startStr = w.startTime || '0s';
+              const endStr = w.endTime || '0s';
+              const startSec = parseFloat(startStr.replace('s', '')) || 0;
+              const endSec = parseFloat(endStr.replace('s', '')) || 0;
+              words.push({
+                word: w.word,
+                start: startSec,
+                end: endSec,
+                confidence: alt.confidence || 0.95,
+              });
+            }
+          }
+        }
+      }
+
+      // Run AI Auto-Correction (Post-Processing)
+      const corrected = await correctThaiWordsWithLLM(words, fullText);
+
+      return NextResponse.json({
+        success: true,
+        text: corrected.text,
+        duration: corrected.words.length > 0 ? corrected.words[corrected.words.length - 1].end : 0,
+        language: 'th',
+        segments: [],
+        words: corrected.words,
+      });
+    } catch (err: unknown) {
+      console.error('[Google STT Exception]:', err);
+      const errMsg = err instanceof Error ? err.message : 'Google STT Failed';
+      return NextResponse.json({ error: errMsg }, { status: 500 });
     }
-
-    const result = await apiResponse.json();
-    const rawWords = (result.words || []).map((w: TranscribedWord) => ({
-      word: w.word,
-      start: w.start,
-      end: w.end,
-    }));
-
-    const corrected = await correctThaiWordsWithLLM(rawWords, result.text || '');
-
-    return NextResponse.json({
-      success: true,
-      text: corrected.text,
-      duration: result.duration || (corrected.words.length > 0 ? corrected.words[corrected.words.length - 1].end : 0),
-      language: result.language || 'th',
-      segments: result.segments || [],
-      words: corrected.words,
-    });
   } catch (error) {
     console.error('[Transcribe Route Error]:', error);
     return NextResponse.json(

@@ -285,6 +285,7 @@ export function ProviderSelector() {
       {/* BYOK Input Form (Only for Paid / Unlocked users) */}
       {isPaid && showKeyInput && (() => {
         const trimmed = groqApiKey.trim();
+        const isKeyGoogle = trimmed.startsWith('AIza');
         const isKeyOpenAI = trimmed.startsWith('sk-');
         const isKeyGroq = trimmed.startsWith('gsk_');
 
@@ -294,7 +295,7 @@ export function ProviderSelector() {
               <div className="relative flex-1">
                 <input
                   type="password"
-                  placeholder="กรอก API Key ของ OpenAI (sk-...) หรือ Groq (gsk_...)"
+                  placeholder="กรอก API Key ของ Google Cloud (AIza...), OpenAI (sk-...), หรือ Groq (gsk_...)"
                   value={groqApiKey}
                   onChange={(e) => setGroqApiKey(e.target.value)}
                   className="w-full bg-zinc-950/80 border border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
@@ -311,6 +312,13 @@ export function ProviderSelector() {
             </div>
 
             {/* Provider Detected Badge */}
+            {isKeyGoogle && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-sky-400 font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-sky-500/15 border border-sky-500/30">
+                  <Sparkles className="w-3.5 h-3.5" /> ตรวจพบ Google Cloud Speech-to-Text (ความแม่นยำภาษาไทยสูงสุด)
+                </span>
+              </div>
+            )}
             {isKeyOpenAI && (
               <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30">
