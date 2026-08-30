@@ -149,13 +149,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: limitCheck.reason }, { status: 429 });
     }
 
-    // 2. Check Server API Key
-    const groqApiKey = process.env.GROQ_API_KEY;
-    if (!groqApiKey) {
+    // 2. Determine Engine (Groq vs OpenAI) based on Tier or available keys
+    let apiUrl = 'https://api.groq.com/openai/v1/audio/transcriptions';
+    let apiKey = process.env.GROQ_API_KEY;
+    let targetModel = model;
+
+    // ถ้าเป็น User แบบเสียเงิน (Tier 99+) และมี OpenAI API Key ในระบบ ให้ใช้ OpenAI แท้
+    if (isPaidUser && process.env.OPENAI_API_KEY) {
+      apiUrl = 'https://api.openai.com/v1/audio/transcriptions';
+      apiKey = process.env.OPENAI_API_KEY;
+      targetModel = 'whisper-1'; // ชื่อโมเดลของ OpenAI
+    } else if (!process.env.GROQ_API_KEY && process.env.OPENAI_API_KEY) {
+      // ถ้าไม่มี Groq แต่มี OpenAI ให้ Fallback ไปใช้ OpenAI เลย
+      apiUrl = 'https://api.openai.com/v1/audio/transcriptions';
+      apiKey = process.env.OPENAI_API_KEY;
+      targetModel = 'whisper-1';
+    }
+
+    if (!apiKey) {
       return NextResponse.json(
         {
           error:
-            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า GROQ_API_KEY กรุณาใส่ API Key ในโหมด BYOK หรือตั้งค่าบน Vercel Environment Variables',
+            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า API Key (ต้องมี GROQ_API_KEY หรือ OPENAI_API_KEY)',
         },
         { status: 500 }
       );
@@ -169,46 +184,47 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Payload size check (Vercel Serverless Function limit = 4.5MB)
+    // Note: OpenAI limits to 25MB, Groq limits to 25MB, but Vercel limits HTTP payload to 4.5MB
     const MAX_SERVER_AUDIO_BYTES = 4.2 * 1024 * 1024;
     if (audioFile.size > MAX_SERVER_AUDIO_BYTES) {
       return NextResponse.json(
         {
           error:
-            'ขนาดไฟล์เสียงเกิน 4MB สำหรับเซิร์ฟเวอร์ฟรี กรุณาใช้โหมด BYOK (ใส่ API Key ตัวเอง) เพื่อถอดเสียงไฟล์ขนาดใหญ่ได้ไม่จำกัด',
+            'ขนาดไฟล์เสียงเกิน 4MB สำหรับเซิร์ฟเวอร์ฟรี กรุณาใช้โหมด BYOK เพื่อถอดเสียงไฟล์ขนาดใหญ่',
         },
         { status: 413 }
       );
     }
 
-    // 4. Prepare FormData for Groq API
-    const groqFormData = new FormData();
-    groqFormData.append('file', audioFile, 'audio.mp3');
-    groqFormData.append('model', model);
-    groqFormData.append('response_format', 'verbose_json');
-    groqFormData.append('language', language);
-    // Use fallback temperature if possible or slightly higher temp to prevent collapse
-    groqFormData.append('temperature', '0.2');
-    // Remove the bad instruction prompt. Use a natural Thai context instead.
-    groqFormData.append('prompt', 'สวัสดีครับ นี่คือคำบรรยายวิดีโอภาษาไทย');
-    groqFormData.append('timestamp_granularities[]', 'word');
-    groqFormData.append('timestamp_granularities[]', 'segment');
+    // 4. Prepare FormData for API
+    const apiFormData = new FormData();
+    apiFormData.append('file', audioFile, 'audio.mp3');
+    apiFormData.append('model', targetModel);
+    apiFormData.append('response_format', 'verbose_json');
+    apiFormData.append('language', language);
+    apiFormData.append('temperature', '0.2');
+    apiFormData.append('prompt', 'สวัสดีครับ นี่คือคำบรรยายวิดีโอภาษาไทย');
+    
+    // สำคัญ: OpenAI อนุญาตให้ส่ง timestamp_granularities[] ได้เหมือนกันเพื่อขอระดับคำ
+    apiFormData.append('timestamp_granularities[]', 'word');
+    apiFormData.append('timestamp_granularities[]', 'segment');
 
-    const groqResponse = await fetch(
-      'https://api.groq.com/openai/v1/audio/transcriptions',
+    const apiResponse = await fetch(
+      apiUrl,
       {
         method: 'POST',
         headers: {
-          Authorization: `Bearer ${groqApiKey}`,
+          Authorization: `Bearer ${apiKey}`,
         },
-        body: groqFormData,
+        body: apiFormData,
       }
     );
 
-    if (!groqResponse.ok) {
-      const errorText = await groqResponse.text();
-      console.error('[Groq API Error]:', groqResponse.status, errorText);
+    if (!apiResponse.ok) {
+      const errorText = await apiResponse.text();
+      console.error('[STT API Error]:', apiResponse.status, errorText);
 
-      let errorMessage = `Groq API Error (${groqResponse.status})`;
+      let errorMessage = `STT API Error (${apiResponse.status})`;
       try {
         const errorJson = JSON.parse(errorText);
         errorMessage = errorJson.error?.message || errorMessage;
@@ -216,7 +232,7 @@ export async function POST(request: NextRequest) {
         // Fallback
       }
 
-      if (groqResponse.status === 429) {
+      if (apiResponse.status === 429) {
         return NextResponse.json(
           {
             error:
@@ -226,10 +242,10 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      return NextResponse.json({ error: errorMessage }, { status: groqResponse.status });
+      return NextResponse.json({ error: errorMessage }, { status: apiResponse.status });
     }
 
-    const result = await groqResponse.json();
+    const result = await apiResponse.json();
 
     return NextResponse.json({
       success: true,
