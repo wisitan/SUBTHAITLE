@@ -24,11 +24,12 @@ import {
   Film,
   AlignLeft,
   Settings2,
+  LogIn,
 } from 'lucide-react';
 
 export function UploadZone() {
   const router = useRouter();
-  const { user, tier } = useAuth();
+  const { user, tier, signInWithGoogle } = useAuth();
   const {
     file,
     setFile,
@@ -164,6 +165,11 @@ export function UploadZone() {
   };
 
   const handleStartTranscribe = async () => {
+    if (!user && !isBYOK && provider !== 'local') {
+      signInWithGoogle();
+      return;
+    }
+
     if (!audioBlob) {
       setErrorMessage('ไม่พบไฟล์เสียงสำหรับการถอดข้อความ กรุณาเลือกไฟล์ใหม่อีกครั้ง');
       return;
@@ -586,25 +592,38 @@ export function UploadZone() {
           {/* Action Trigger Button */}
           <div className="mt-5 flex justify-end gap-3">
             {!captions.length ? (
-              <button
-                type="button"
-                disabled={isExtracting || isTranscribing}
-                onClick={handleStartTranscribe}
-                className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-              >
-                {isTranscribing ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>{transcribeMessage || 'กำลังถอดเสียง...'}</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    <span>เริ่มถอดเสียงภาษาไทย (Start Transcription)</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
+              !user && !isBYOK && provider !== 'local' ? (
+                <button
+                  type="button"
+                  disabled={isExtracting}
+                  onClick={() => signInWithGoogle()}
+                  className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-black text-base flex items-center justify-center gap-2.5 shadow-lg shadow-orange-500/25 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <LogIn className="w-5 h-5 text-zinc-950" />
+                  <span>เข้าสู่ระบบด้วย Google เพื่อเริ่มถอดเสียงฟรี (3 คลิป/วัน)</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={isExtracting || isTranscribing}
+                  onClick={handleStartTranscribe}
+                  className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isTranscribing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>{transcribeMessage || 'กำลังถอดเสียง...'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      <span>เริ่มถอดเสียงภาษาไทย (Start Transcription)</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
+              )
             ) : (
               <button
                 type="button"

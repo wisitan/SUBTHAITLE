@@ -69,7 +69,7 @@ export function UserProfileButton() {
         };
       default:
         return {
-          label: 'Free Tier (3/วัน)',
+          label: 'Free',
           icon: <CheckCircle2 className="w-3 h-3 text-zinc-400" />,
           classes: 'bg-zinc-800 text-zinc-300 border-zinc-700',
         };

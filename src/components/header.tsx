@@ -10,13 +10,13 @@ import { Flame, Heart } from 'lucide-react';
 
 export function Header() {
   const { dailyUsageCount, provider, groqApiKey } = useAppStore();
-  const { isPaid } = useAuth();
+  const { user, isPaid } = useAuth();
   
   const maxQuota = isPaid ? 5 : 3;
   const isUsingBYOK = isPaid && (provider === 'groq' && !!groqApiKey);
 
   return (
-    <header className="w-full border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50 overflow-hidden">
+    <header className="w-full border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-3 sm:px-4 h-16 flex items-center justify-between gap-2">
         {/* Logo and Brand */}
         <Link href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0 min-w-0">
@@ -44,20 +44,22 @@ export function Header() {
 
         {/* Quota, Donate Button & User Profile */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          {/* Daily Quota Badge */}
-          <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-700/80 text-xs sm:text-sm shrink-0">
-            <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
-            <span className="text-zinc-300 hidden md:inline font-medium">โควต้า:</span>
-            {isUsingBYOK ? (
-              <span className="font-bold text-emerald-400 whitespace-nowrap text-xs">
-                BYOK ไม่จำกัด
-              </span>
-            ) : (
-              <span className="font-bold text-amber-400 whitespace-nowrap">
-                {dailyUsageCount}/{maxQuota} <span className="hidden sm:inline">คลิป</span>
-              </span>
-            )}
-          </div>
+          {/* Daily Quota Badge (Only shown when logged in) */}
+          {user && (
+            <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-700/80 text-xs sm:text-sm shrink-0">
+              <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
+              <span className="text-zinc-300 hidden md:inline font-medium">โควต้า:</span>
+              {isUsingBYOK ? (
+                <span className="font-bold text-emerald-400 whitespace-nowrap text-xs">
+                  BYOK ไม่จำกัด
+                </span>
+              ) : (
+                <span className="font-bold text-amber-400 whitespace-nowrap">
+                  {dailyUsageCount}/{maxQuota} <span className="hidden sm:inline">คลิป</span>
+                </span>
+              )}
+            </div>
+          )}
 
           {/* Donate / Support Button */}
           {!isPaid && (
