@@ -186,8 +186,10 @@ export async function POST(request: NextRequest) {
     groqFormData.append('model', model);
     groqFormData.append('response_format', 'verbose_json');
     groqFormData.append('language', language);
-    groqFormData.append('temperature', '0.0');
-    groqFormData.append('prompt', 'ตัดคำภาษาไทย เว้นวรรคตามหลักภาษาอย่างเป็นธรรมชาติ ซับไตเติลภาษาไทย');
+    // Use fallback temperature if possible or slightly higher temp to prevent collapse
+    groqFormData.append('temperature', '0.2');
+    // Remove the bad instruction prompt. Use a natural Thai context instead.
+    groqFormData.append('prompt', 'สวัสดีครับ นี่คือคำบรรยายวิดีโอภาษาไทย');
     groqFormData.append('timestamp_granularities[]', 'word');
     groqFormData.append('timestamp_granularities[]', 'segment');
 

@@ -66,8 +66,8 @@ export async function transcribeAudio(
     formData.append('model', 'whisper-large-v3');
     formData.append('response_format', 'verbose_json');
     formData.append('language', 'th');
-    formData.append('temperature', '0.0');
-    formData.append('prompt', 'ตัดคำภาษาไทย เว้นวรรคตามหลักภาษาอย่างเป็นธรรมชาติ ซับไตเติลภาษาไทย');
+    formData.append('temperature', '0.2');
+    formData.append('prompt', 'สวัสดีครับ นี่คือคำบรรยายวิดีโอภาษาไทย');
     formData.append('timestamp_granularities[]', 'word');
     formData.append('timestamp_granularities[]', 'segment');
 
