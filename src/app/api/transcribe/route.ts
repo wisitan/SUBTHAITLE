@@ -4,6 +4,7 @@ import { Ratelimit } from '@upstash/ratelimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 60 seconds max execution time for Vercel functions
 
 // Quota Rules: Free = 3/day, Paid (Supporter/Pro) = 5/day, Global = 200/day
 const MAX_REQUESTS_FREE_PER_DAY = 3;
@@ -127,6 +128,84 @@ async function checkRateLimits(
   return { allowed: true };
 }
 
+interface TranscribedWord {
+  word: string;
+  start: number;
+  end: number;
+  confidence?: number;
+}
+
+// 🧠 AI Auto-Correction (Post-Processing Engine)
+// ใช้ LLM เกลาคำผิดตามบริบทภาษาไทยโดยไม่เปลี่ยนจังหวะเวลา (Timestamps)
+async function correctThaiWordsWithLLM(
+  words: TranscribedWord[],
+  rawText: string
+): Promise<{ words: TranscribedWord[]; text: string }> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || words.length === 0) {
+    return { words, text: rawText };
+  }
+
+  try {
+    const wordListInput = words.map((w) => ({
+      word: w.word,
+      start: w.start,
+      end: w.end,
+    }));
+
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are an expert Thai speech transcription post-correction engine for video subtitles (Shorts, Reels, TikTok, product reviews). Your job is to fix phonetic errors, typos, homophones (e.g. ชาชาติ -> สายชาร์จ, สักเช่นนึง -> สักเส้นนึง, ดีดี -> ดีๆ, นะครับ -> นะครับ) based on video context (gadgets, technology, shopping, gaming). Maintain the exact same number of items and timestamps in the array. Return JSON only in this format: {"words": [{"word": "...", "start": 0.0, "end": 0.5}], "text": "Full corrected text"}',
+          },
+          {
+            role: 'user',
+            content: JSON.stringify(wordListInput),
+          },
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.1,
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn('[Auto-Correction Notice]: Failed to call LLM, returning raw words:', response.status);
+      return { words, text: rawText };
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) return { words, text: rawText };
+
+    const parsed = JSON.parse(content);
+    if (Array.isArray(parsed.words) && parsed.words.length === words.length) {
+      const mergedWords: TranscribedWord[] = words.map((orig, i) => ({
+        word: parsed.words[i].word || orig.word,
+        start: typeof parsed.words[i].start === 'number' ? parsed.words[i].start : orig.start,
+        end: typeof parsed.words[i].end === 'number' ? parsed.words[i].end : orig.end,
+        confidence: orig.confidence,
+      }));
+      return {
+        words: mergedWords,
+        text: parsed.text || mergedWords.map((w) => w.word).join(' '),
+      };
+    }
+  } catch (err) {
+    console.warn('[Auto-Correction Exception]:', err);
+  }
+
+  return { words, text: rawText };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -186,6 +265,18 @@ export async function POST(request: NextRequest) {
                 languageCode: 'th-TH',
                 enableWordTimeOffsets: true,
                 enableAutomaticPunctuation: true,
+                useEnhanced: true,
+                speechContexts: [
+                  {
+                    phrases: [
+                      'สายชาร์จ', 'หัวชาร์จ', 'เก้าสิบองศา', 'เล่นเกม', 'จ่ายไฟ', 'วัตต์', 'แอมป์',
+                      'ฟาสต์ชาร์จ', 'พาวเวอร์แบงค์', 'แนะนำ', 'รีวิว', 'คลิปนี้', 'สวัสดีครับ', 'สวัสดีค่ะ',
+                      'ตัวนี้', 'อันนี้', 'แบบนี้', 'ราคา', 'โปรโมชั่น', 'ส่งฟรี', 'ของแท้', 'ประกัน',
+                      'สักเส้นนึง', 'ความยาว', 'ทนทาน', 'ชาร์จไว', 'ชาร์จเร็ว', 'ตัวเนี้ย', 'เล่นเกมไปด้วย'
+                    ],
+                    boost: 15.0,
+                  },
+                ],
                 model: 'default',
               },
               audio: {
@@ -197,7 +288,7 @@ export async function POST(request: NextRequest) {
 
         if (googleResponse.ok) {
           const googleData = await googleResponse.json();
-          const words: Array<{ word: string; start: number; end: number; confidence: number }> = [];
+          const words: TranscribedWord[] = [];
           let fullText = '';
 
           for (const result of googleData.results || []) {
@@ -221,15 +312,16 @@ export async function POST(request: NextRequest) {
             }
           }
 
-          // If Google STT returned valid words/text, return it
+          // If Google STT returned valid words/text, run AI Auto-Correction and return it
           if (words.length > 0 || fullText.trim()) {
+            const corrected = await correctThaiWordsWithLLM(words, fullText);
             return NextResponse.json({
               success: true,
-              text: fullText,
-              duration: words.length > 0 ? words[words.length - 1].end : 0,
+              text: corrected.text,
+              duration: corrected.words.length > 0 ? corrected.words[corrected.words.length - 1].end : 0,
               language: 'th',
               segments: [],
-              words: words,
+              words: corrected.words,
             });
           }
         } else {
@@ -313,14 +405,21 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await apiResponse.json();
+    const rawWords = (result.words || []).map((w: TranscribedWord) => ({
+      word: w.word,
+      start: w.start,
+      end: w.end,
+    }));
+
+    const corrected = await correctThaiWordsWithLLM(rawWords, result.text || '');
 
     return NextResponse.json({
       success: true,
-      text: result.text || '',
-      duration: result.duration || 0,
+      text: corrected.text,
+      duration: result.duration || (corrected.words.length > 0 ? corrected.words[corrected.words.length - 1].end : 0),
       language: result.language || 'th',
       segments: result.segments || [],
-      words: result.words || [],
+      words: corrected.words,
     });
   } catch (error) {
     console.error('[Transcribe Route Error]:', error);
