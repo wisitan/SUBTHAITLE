@@ -47,7 +47,7 @@ export function Header() {
           {user && (
             <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-zinc-900 border border-zinc-700/80 text-xs sm:text-sm shrink-0">
               <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 shrink-0" />
-              <span className="text-zinc-300 hidden md:inline font-medium">โควต้า:</span>
+              <span className="text-zinc-300 hidden md:inline font-medium">โควต้าฟรี:</span>
               <span className="font-bold text-amber-400 whitespace-nowrap">
                 {dailyUsageCount}/{maxQuota} <span className="hidden sm:inline">คลิป</span>
               </span>
