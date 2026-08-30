@@ -132,7 +132,6 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const audioFile = formData.get('file') as Blob | null;
     const language = (formData.get('language') as string) || 'th';
-    const model = (formData.get('model') as string) || 'whisper-large-v3';
     const userId = (formData.get('userId') as string) || null;
     const userTier = (formData.get('tier') as string) || 'free';
 
@@ -149,28 +148,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: limitCheck.reason }, { status: 429 });
     }
 
-    // 2. Determine Engine (Groq vs OpenAI) based on Tier or available keys
-    let apiUrl = 'https://api.groq.com/openai/v1/audio/transcriptions';
-    let apiKey = process.env.GROQ_API_KEY;
-    let targetModel = model;
+    // 2. Transcribe using OpenAI Whisper-1 (The Ultimate Accuracy for Thai)
+    let apiUrl = 'https://api.openai.com/v1/audio/transcriptions';
+    let apiKey = process.env.OPENAI_API_KEY;
+    let targetModel = 'whisper-1';
 
-    // ถ้าเป็น User แบบเสียเงิน (Tier 99+) และมี OpenAI API Key ในระบบ ให้ใช้ OpenAI แท้
-    if (isPaidUser && process.env.OPENAI_API_KEY) {
-      apiUrl = 'https://api.openai.com/v1/audio/transcriptions';
-      apiKey = process.env.OPENAI_API_KEY;
-      targetModel = 'whisper-1'; // ชื่อโมเดลของ OpenAI
-    } else if (!process.env.GROQ_API_KEY && process.env.OPENAI_API_KEY) {
-      // ถ้าไม่มี Groq แต่มี OpenAI ให้ Fallback ไปใช้ OpenAI เลย
-      apiUrl = 'https://api.openai.com/v1/audio/transcriptions';
-      apiKey = process.env.OPENAI_API_KEY;
-      targetModel = 'whisper-1';
+    // Fallback to Groq only if OpenAI key is missing on the server
+    if (!apiKey && process.env.GROQ_API_KEY) {
+      apiUrl = 'https://api.groq.com/openai/v1/audio/transcriptions';
+      apiKey = process.env.GROQ_API_KEY;
+      targetModel = 'whisper-large-v3';
     }
 
     if (!apiKey) {
       return NextResponse.json(
         {
           error:
-            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า API Key (ต้องมี GROQ_API_KEY หรือ OPENAI_API_KEY)',
+            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า OPENAI_API_KEY กรุณาตั้งค่าบน Vercel หรือใส่ API Key ในโหมด BYOK เพื่อใช้งาน',
         },
         { status: 500 }
       );

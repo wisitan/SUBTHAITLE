@@ -56,14 +56,22 @@ export async function transcribeAudio(
 
   // 2. Execution path based on Provider / Mode
   if (isBYOK) {
-    // BYOK Mode: Call Groq API directly from client (Bypasses server payload and timeout limits)
+    const trimmedKey = groqApiKey.trim();
+    const isOpenAI = trimmedKey.startsWith('sk-');
+    const providerLabel = isOpenAI ? 'OpenAI Whisper (BYOK)' : 'Groq Whisper (BYOK)';
+    const apiUrl = isOpenAI
+      ? '/api/proxy/openai/v1/audio/transcriptions'
+      : '/api/proxy/groq/openai/v1/audio/transcriptions';
+    const targetModel = isOpenAI ? 'whisper-1' : 'whisper-large-v3';
+
+    // BYOK Mode: Call API directly from client (Bypasses server payload and timeout limits)
     if (onProgress) {
-      onProgress('กำลังถอดเสียงผ่าน Groq API (BYOK Mode)...');
+      onProgress(`กำลังถอดเสียงผ่าน ${providerLabel}...`);
     }
 
     const formData = new FormData();
     formData.append('file', audioBlob, 'audio.mp3');
-    formData.append('model', 'whisper-large-v3');
+    formData.append('model', targetModel);
     formData.append('response_format', 'verbose_json');
     formData.append('language', 'th');
     formData.append('temperature', '0.2');
@@ -71,17 +79,17 @@ export async function transcribeAudio(
     formData.append('timestamp_granularities[]', 'word');
     formData.append('timestamp_granularities[]', 'segment');
 
-    const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+    const res = await fetch(apiUrl, {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${groqApiKey.trim()}`,
+        Authorization: `Bearer ${trimmedKey}`,
       },
       body: formData,
     });
 
     if (!res.ok) {
       const errText = await res.text();
-      let msg = `Groq API Error (${res.status})`;
+      let msg = `${isOpenAI ? 'OpenAI' : 'Groq'} API Error (${res.status})`;
       try {
         const json = JSON.parse(errText);
         msg = json.error?.message || msg;

@@ -83,7 +83,7 @@ export function UploadZone() {
       const maxFreeSizeBytes = 100 * 1024 * 1024;
       if (!isUnlimitedSize && selectedFile.size > maxFreeSizeBytes) {
         setErrorMessage(
-          `ขนาดไฟล์ (${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB) เกินโควต้าฟรี 100 MB กรุณาเลือกไฟล์ที่เล็กลง หรือใส่ Groq API Key ของตัวเอง (BYOK) เพื่ออัปโหลดได้ไม่จำกัด`
+          `ขนาดไฟล์ (${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB) เกินโควต้าฟรี 100 MB กรุณาเลือกไฟล์ที่เล็กลง หรือใส่ API Key ของตัวเอง (BYOK) เพื่ออัปโหลดได้ไม่จำกัด`
         );
         return;
       }
@@ -393,8 +393,10 @@ export function UploadZone() {
                   <span className="text-zinc-100 font-medium">
                     {provider === 'groq'
                       ? isBYOK
-                        ? 'Groq Whisper Cloud (BYOK Mode)'
-                        : 'Groq Whisper Cloud (Free Tier)'
+                        ? groqApiKey.trim().startsWith('sk-')
+                          ? 'OpenAI Whisper-1 (BYOK Mode)'
+                          : 'Groq Whisper V3 (BYOK Mode)'
+                        : 'OpenAI Whisper Cloud (ความแม่นยำสูง)'
                       : 'Local Whisper (Offline Mac)'}
                   </span>
                 </p>

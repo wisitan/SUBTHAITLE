@@ -15,8 +15,10 @@ import {
   Zap,
   Crown,
   Sparkles,
+  HelpCircle,
 } from 'lucide-react';
 import { LocalServerModal } from './local-server-modal';
+import { ApiKeyGuideModal } from './api-key-guide-modal';
 
 export function ProviderSelector() {
   const { provider, setProvider, groqApiKey, setGroqApiKey } = useAppStore();
@@ -25,6 +27,7 @@ export function ProviderSelector() {
   const [showKeyInput, setShowKeyInput] = useState(Boolean(groqApiKey));
   const [isLocalServerOnline, setIsLocalServerOnline] = useState<boolean | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   // Live healthcheck polling for Local Whisper Server (http://127.0.0.1:8765/health)
   useEffect(() => {
@@ -116,6 +119,7 @@ export function ProviderSelector() {
           onClick={() => {
             setShowKeyInput(false);
             setProvider('groq');
+            setGroqApiKey('');
           }}
           className={`relative p-4 sm:p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between h-full ${
             provider === 'groq' && !showKeyInput
@@ -279,46 +283,74 @@ export function ProviderSelector() {
       </div>
 
       {/* BYOK Input Form (Only for Paid / Unlocked users) */}
-      {isPaid && showKeyInput && (
-        <div className="mt-4 pt-4 border-t border-zinc-800/80 animate-in fade-in slide-in-from-top-1 duration-200">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-            <div className="relative flex-1">
-              <input
-                type="password"
-                placeholder="กรอก Groq API Key ของคุณ (gsk_...)"
-                value={groqApiKey}
-                onChange={(e) => setGroqApiKey(e.target.value)}
-                className="w-full bg-zinc-950/80 border border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
-              />
+      {isPaid && showKeyInput && (() => {
+        const trimmed = groqApiKey.trim();
+        const isKeyOpenAI = trimmed.startsWith('sk-');
+        const isKeyGroq = trimmed.startsWith('gsk_');
+
+        return (
+          <div className="mt-4 pt-4 border-t border-zinc-800/80 animate-in fade-in slide-in-from-top-1 duration-200">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+              <div className="relative flex-1">
+                <input
+                  type="password"
+                  placeholder="กรอก API Key ของ OpenAI (sk-...) หรือ Groq (gsk_...)"
+                  value={groqApiKey}
+                  onChange={(e) => setGroqApiKey(e.target.value)}
+                  className="w-full bg-zinc-950/80 border border-zinc-700/80 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsGuideOpen(true)}
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-sm font-semibold text-emerald-400 bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-800/60 rounded-xl transition-colors whitespace-nowrap cursor-pointer"
+              >
+                <HelpCircle className="w-4 h-4" />
+                วิธีขอ API Key
+              </button>
             </div>
-            <a
-              href="https://console.groq.com/keys"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 text-sm font-semibold text-emerald-400 bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-800/60 rounded-xl transition-colors whitespace-nowrap"
-            >
-              <Key className="w-4 h-4" />
-              รับ API Key ฟรีที่นี่
-            </a>
+
+            {/* Provider Detected Badge */}
+            {isKeyOpenAI && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-emerald-400 font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/30">
+                  <Sparkles className="w-3.5 h-3.5" /> ตรวจพบ OpenAI Whisper-1 (ความแม่นยำระดับพรีเมียม)
+                </span>
+              </div>
+            )}
+            {isKeyGroq && (
+              <div className="mt-2 flex items-center gap-1.5 text-xs text-amber-400 font-medium">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30">
+                  <Zap className="w-3.5 h-3.5" /> ตรวจพบ Groq Whisper V3 (ฟรี 100% / เร็วสูง)
+                </span>
+              </div>
+            )}
+
+            <div className="mt-2.5 flex flex-col gap-1.5">
+              <p className="text-xs text-zinc-300 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                API Key จะถูกเก็บในเบราว์เซอร์ของคุณเท่านั้น (ไม่ส่งไปบันทึกบนเซิร์ฟเวอร์ของเรา)
+              </p>
+              <p className="text-xs text-zinc-400 flex items-start gap-1.5 ml-1">
+                <span className="text-zinc-500 mt-0.5">•</span>
+                <span>ถ้าไม่มั่นใจในการใช้ BYOK หรือกลัว Key รั่วไหล คุณสามารถเลือกใช้ <strong>ระบบเติมเครดิต</strong> แทนได้ค่ะ ปลอดภัย 100% เพราะจะใช้ Key ฝั่งเซิร์ฟเวอร์ของเราเอง</span>
+              </p>
+            </div>
           </div>
-          <div className="mt-2.5 flex flex-col gap-1.5">
-            <p className="text-xs text-zinc-300 flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-              API Key จะถูกเก็บในเบราว์เซอร์ของคุณเท่านั้น (ไม่ส่งไปบันทึกบนเซิร์ฟเวอร์ของเรา)
-            </p>
-            <p className="text-xs text-zinc-400 flex items-start gap-1.5 ml-1">
-              <span className="text-zinc-500 mt-0.5">•</span>
-              <span>ถ้าไม่มั่นใจในการใช้ BYOK หรือกลัว Key รั่วไหล คุณสามารถเลือกใช้ <strong>ระบบเติมเครดิต</strong> แทนได้ค่ะ ปลอดภัย 100% เพราะจะใช้ Key ฝั่งเซิร์ฟเวอร์ของเราเอง</span>
-            </p>
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* Local Server Setup Modal */}
       <LocalServerModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         isOnline={isLocalServerOnline}
+      />
+
+      {/* API Key Guide Modal */}
+      <ApiKeyGuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
       />
     </div>
   );
