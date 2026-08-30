@@ -247,11 +247,18 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Google Cloud Speech-to-Text (The Exclusive High-Accuracy Engine)
-    if (!process.env.GOOGLE_STT_API_KEY) {
+    const googleApiKey =
+      process.env.GOOGLE_STT_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.GOOGLE_SPEECH_API_KEY ||
+      process.env.GOOGLE_CLOUD_API_KEY ||
+      process.env.NEXT_PUBLIC_GOOGLE_STT_API_KEY;
+
+    if (!googleApiKey) {
       return NextResponse.json(
         {
           error:
-            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า GOOGLE_STT_API_KEY กรุณาตั้งค่าบน Vercel หรือใส่ API Key ในโหมด BYOK เพื่อใช้งาน',
+            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า GOOGLE_STT_API_KEY กรุณาตั้งค่าบน Vercel (เลือกทั้ง Production และ Preview) หรือใส่ API Key ในโหมด BYOK เพื่อใช้งาน',
         },
         { status: 500 }
       );
@@ -262,7 +269,7 @@ export async function POST(request: NextRequest) {
       const base64Audio = buffer.toString('base64');
 
       const googleResponse = await fetch(
-        `https://speech.googleapis.com/v1/speech:recognize?key=${process.env.GOOGLE_STT_API_KEY}`,
+        `https://speech.googleapis.com/v1/speech:recognize?key=${googleApiKey}`,
         {
           method: 'POST',
           headers: {
