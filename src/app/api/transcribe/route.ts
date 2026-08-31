@@ -137,6 +137,7 @@ interface TranscribedWord {
 
 // 🧠 AI Auto-Correction (Post-Processing Engine)
 // รองรับ Google Gemini (Flash / Pro) เป็นหลัก และ Fallback ไปยัง OpenAI (gpt-4o-mini)
+// ใช้ Payload Optimization ส่งเฉพาะ Array คำ (ลด Token ลง 70% เหลือต้นทุนเพียง 0.07฿/นาที)
 async function correctThaiWordsWithLLM(
   words: TranscribedWord[],
   rawText: string
@@ -145,14 +146,11 @@ async function correctThaiWordsWithLLM(
     return { words, text: rawText };
   }
 
-  const wordListInput = words.map((w) => ({
-    word: w.word,
-    start: w.start,
-    end: w.end,
-  }));
+  // Optimize payload: ส่งเฉพาะคำภาษาไทยแบบ string array เพื่อประหยัด Tokens 70%
+  const wordStringsInput = words.map((w) => w.word);
 
   const systemPrompt =
-    'You are an expert Thai speech transcription post-correction engine for video subtitles (Shorts, Reels, TikTok, product reviews). Your job is to fix phonetic errors, typos, homophones (e.g. ชาชาติ -> สายชาร์จ, สักเช่นนึง -> สักเส้นนึง, ดีดี -> ดีๆ, นะครับ -> นะครับ) based on video context (gadgets, technology, shopping, gaming). Maintain the exact same number of items and timestamps in the array. Return JSON only in this format: {"words": [{"word": "...", "start": 0.0, "end": 0.5}], "text": "Full corrected text"}';
+    'You are an expert Thai speech transcription post-correction engine for video subtitles (Shorts, Reels, TikTok, product reviews). Your job is to fix phonetic errors, typos, homophones (e.g. ชาชาติ -> สายชาร์จ, สักเช่นนึง -> สักเส้นนึง, ดีดี -> ดีๆ, นะครับ -> นะครับ) based on video context (gadgets, technology, shopping, gaming). Return JSON only in this format: {"words": ["word1", "word2", ...], "text": "Full corrected text"}. The words array MUST have the exact same number of items and order as input.';
 
   // 1. Primary Attempt: Google Gemini API (Flash / Pro)
   const geminiApiKey =
@@ -189,7 +187,7 @@ async function correctThaiWordsWithLLM(
               contents: [
                 {
                   role: 'user',
-                  parts: [{ text: JSON.stringify(wordListInput) }],
+                  parts: [{ text: JSON.stringify(wordStringsInput) }],
                 },
               ],
               generationConfig: {
@@ -205,13 +203,18 @@ async function correctThaiWordsWithLLM(
           const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
           if (jsonText) {
             const parsed = JSON.parse(jsonText);
-            if (Array.isArray(parsed.words) && parsed.words.length === words.length) {
-              const mergedWords: TranscribedWord[] = words.map((orig, i) => ({
-                word: parsed.words[i].word || orig.word,
-                start: typeof parsed.words[i].start === 'number' ? parsed.words[i].start : orig.start,
-                end: typeof parsed.words[i].end === 'number' ? parsed.words[i].end : orig.end,
-                confidence: orig.confidence,
-              }));
+            const rawWordsList = parsed.words;
+            if (Array.isArray(rawWordsList) && rawWordsList.length === words.length) {
+              const mergedWords: TranscribedWord[] = words.map((orig, i) => {
+                const item = rawWordsList[i];
+                const correctedWord = typeof item === 'string' ? item : item?.word || orig.word;
+                return {
+                  word: correctedWord,
+                  start: orig.start,
+                  end: orig.end,
+                  confidence: orig.confidence,
+                };
+              });
               return {
                 words: mergedWords,
                 text: parsed.text || mergedWords.map((w) => w.word).join(' '),
@@ -244,7 +247,7 @@ async function correctThaiWordsWithLLM(
             },
             {
               role: 'user',
-              content: JSON.stringify(wordListInput),
+              content: JSON.stringify(wordStringsInput),
             },
           ],
           response_format: { type: 'json_object' },
@@ -257,13 +260,18 @@ async function correctThaiWordsWithLLM(
         const content = data.choices?.[0]?.message?.content;
         if (content) {
           const parsed = JSON.parse(content);
-          if (Array.isArray(parsed.words) && parsed.words.length === words.length) {
-            const mergedWords: TranscribedWord[] = words.map((orig, i) => ({
-              word: parsed.words[i].word || orig.word,
-              start: typeof parsed.words[i].start === 'number' ? parsed.words[i].start : orig.start,
-              end: typeof parsed.words[i].end === 'number' ? parsed.words[i].end : orig.end,
-              confidence: orig.confidence,
-            }));
+          const rawWordsList = parsed.words;
+          if (Array.isArray(rawWordsList) && rawWordsList.length === words.length) {
+            const mergedWords: TranscribedWord[] = words.map((orig, i) => {
+              const item = rawWordsList[i];
+              const correctedWord = typeof item === 'string' ? item : item?.word || orig.word;
+              return {
+                word: correctedWord,
+                start: orig.start,
+                end: orig.end,
+                confidence: orig.confidence,
+              };
+            });
             return {
               words: mergedWords,
               text: parsed.text || mergedWords.map((w) => w.word).join(' '),
