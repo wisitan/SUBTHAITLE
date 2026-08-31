@@ -72,6 +72,7 @@ export function DonatePage() {
   const { user, signInWithGoogle } = useAuth();
   const { creditsMinutes, addCredits, isLifetimeUnlocked, setLifetimeUnlocked } = useAppStore();
 
+  const [selectedPackageId, setSelectedPackageId] = useState<string>('credit_249');
   const [loadingItem, setLoadingItem] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -216,13 +217,16 @@ export function DonatePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
             {CREDIT_PACKAGES.map((pkg) => {
               const Icon = pkg.icon;
+              const isSelected = selectedPackageId === pkg.id;
+
               return (
                 <div
                   key={pkg.id}
-                  className={`relative rounded-3xl p-6 flex flex-col justify-between border transition-all ${
-                    pkg.popular
-                      ? 'border-orange-500/90 bg-orange-500/[0.07] ring-1 ring-orange-500/40 shadow-xl shadow-orange-500/10'
-                      : 'border-zinc-700/80 bg-zinc-900/95 hover:border-zinc-500 shadow-lg'
+                  onClick={() => setSelectedPackageId(pkg.id)}
+                  className={`relative rounded-3xl p-6 flex flex-col justify-between border transition-all duration-200 cursor-pointer ${
+                    isSelected
+                      ? 'border-orange-500/90 bg-orange-500/[0.07] ring-2 ring-orange-500/50 shadow-xl shadow-orange-500/15 md:-translate-y-1'
+                      : 'border-zinc-700/80 bg-zinc-900/95 hover:border-zinc-500 hover:bg-zinc-900/90 shadow-lg'
                   }`}
                 >
                   {pkg.tag && (
@@ -233,7 +237,13 @@ export function DonatePage() {
 
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <div className="w-11 h-11 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400">
+                      <div
+                        className={`w-11 h-11 rounded-2xl border flex items-center justify-center transition-colors ${
+                          isSelected
+                            ? 'bg-orange-500/20 border-orange-500/40 text-orange-400'
+                            : 'bg-zinc-800/80 border-zinc-700 text-zinc-400'
+                        }`}
+                      >
                         <Icon className="w-5 h-5" />
                       </div>
                       <span className="text-xs font-mono font-bold text-zinc-400">
@@ -283,11 +293,15 @@ export function DonatePage() {
                     <button
                       type="button"
                       disabled={loadingItem !== null}
-                      onClick={() => handleBuyCredits(pkg)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPackageId(pkg.id);
+                        handleBuyCredits(pkg);
+                      }}
                       className={`w-full py-3 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md disabled:opacity-50 ${
-                        pkg.popular
-                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 shadow-orange-500/20'
-                          : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700 hover:border-zinc-500'
+                        isSelected
+                          ? 'bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 shadow-orange-500/20 font-extrabold'
+                          : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700 hover:border-zinc-500'
                       }`}
                     >
                       {loadingItem === pkg.id ? (
