@@ -136,71 +136,135 @@ interface TranscribedWord {
 }
 
 // 🧠 AI Auto-Correction (Post-Processing Engine)
-// ใช้ LLM เกลาคำผิดตามบริบทภาษาไทยโดยไม่เปลี่ยนจังหวะเวลา (Timestamps)
+// รองรับ Google Gemini (Flash / Pro) เป็นหลัก และ Fallback ไปยัง OpenAI (gpt-4o-mini)
 async function correctThaiWordsWithLLM(
   words: TranscribedWord[],
   rawText: string
 ): Promise<{ words: TranscribedWord[]; text: string }> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey || words.length === 0) {
+  if (words.length === 0) {
     return { words, text: rawText };
   }
 
-  try {
-    const wordListInput = words.map((w) => ({
-      word: w.word,
-      start: w.start,
-      end: w.end,
-    }));
+  const wordListInput = words.map((w) => ({
+    word: w.word,
+    start: w.start,
+    end: w.end,
+  }));
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
+  const systemPrompt =
+    'You are an expert Thai speech transcription post-correction engine for video subtitles (Shorts, Reels, TikTok, product reviews). Your job is to fix phonetic errors, typos, homophones (e.g. ชาชาติ -> สายชาร์จ, สักเช่นนึง -> สักเส้นนึง, ดีดี -> ดีๆ, นะครับ -> นะครับ) based on video context (gadgets, technology, shopping, gaming). Maintain the exact same number of items and timestamps in the array. Return JSON only in this format: {"words": [{"word": "...", "start": 0.0, "end": 0.5}], "text": "Full corrected text"}';
+
+  // 1. Primary Attempt: Google Gemini API (Flash / Pro)
+  const geminiApiKey =
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_API_KEY ||
+    process.env.GOOGLE_STT_API_KEY ||
+    process.env.Google ||
+    process.env.GOOGLE;
+
+  if (geminiApiKey) {
+    const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    for (const model of candidateModels) {
+      try {
+        const geminiRes = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`,
           {
-            role: 'system',
-            content:
-              'You are an expert Thai speech transcription post-correction engine for video subtitles (Shorts, Reels, TikTok, product reviews). Your job is to fix phonetic errors, typos, homophones (e.g. ชาชาติ -> สายชาร์จ, สักเช่นนึง -> สักเส้นนึง, ดีดี -> ดีๆ, นะครับ -> นะครับ) based on video context (gadgets, technology, shopping, gaming). Maintain the exact same number of items and timestamps in the array. Return JSON only in this format: {"words": [{"word": "...", "start": 0.0, "end": 0.5}], "text": "Full corrected text"}',
-          },
-          {
-            role: 'user',
-            content: JSON.stringify(wordListInput),
-          },
-        ],
-        response_format: { type: 'json_object' },
-        temperature: 0.1,
-      }),
-    });
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemPrompt }],
+              },
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: JSON.stringify(wordListInput) }],
+                },
+              ],
+              generationConfig: {
+                responseMimeType: 'application/json',
+                temperature: 0.1,
+              },
+            }),
+          }
+        );
 
-    if (!response.ok) {
-      console.warn('[Auto-Correction Notice]: Failed to call LLM, returning raw words:', response.status);
-      return { words, text: rawText };
+        if (geminiRes.ok) {
+          const data = await geminiRes.json();
+          const jsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (jsonText) {
+            const parsed = JSON.parse(jsonText);
+            if (Array.isArray(parsed.words) && parsed.words.length === words.length) {
+              const mergedWords: TranscribedWord[] = words.map((orig, i) => ({
+                word: parsed.words[i].word || orig.word,
+                start: typeof parsed.words[i].start === 'number' ? parsed.words[i].start : orig.start,
+                end: typeof parsed.words[i].end === 'number' ? parsed.words[i].end : orig.end,
+                confidence: orig.confidence,
+              }));
+              return {
+                words: mergedWords,
+                text: parsed.text || mergedWords.map((w) => w.word).join(' '),
+              };
+            }
+          }
+        }
+      } catch {
+        // Fallback to next model or OpenAI
+      }
     }
+  }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-    if (!content) return { words, text: rawText };
+  // 2. Secondary Fallback: OpenAI (gpt-4o-mini / gpt-4o)
+  const openAiApiKey = process.env.OPENAI_API_KEY;
+  if (openAiApiKey) {
+    try {
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${openAiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'system',
+              content: systemPrompt,
+            },
+            {
+              role: 'user',
+              content: JSON.stringify(wordListInput),
+            },
+          ],
+          response_format: { type: 'json_object' },
+          temperature: 0.1,
+        }),
+      });
 
-    const parsed = JSON.parse(content);
-    if (Array.isArray(parsed.words) && parsed.words.length === words.length) {
-      const mergedWords: TranscribedWord[] = words.map((orig, i) => ({
-        word: parsed.words[i].word || orig.word,
-        start: typeof parsed.words[i].start === 'number' ? parsed.words[i].start : orig.start,
-        end: typeof parsed.words[i].end === 'number' ? parsed.words[i].end : orig.end,
-        confidence: orig.confidence,
-      }));
-      return {
-        words: mergedWords,
-        text: parsed.text || mergedWords.map((w) => w.word).join(' '),
-      };
+      if (response.ok) {
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
+        if (content) {
+          const parsed = JSON.parse(content);
+          if (Array.isArray(parsed.words) && parsed.words.length === words.length) {
+            const mergedWords: TranscribedWord[] = words.map((orig, i) => ({
+              word: parsed.words[i].word || orig.word,
+              start: typeof parsed.words[i].start === 'number' ? parsed.words[i].start : orig.start,
+              end: typeof parsed.words[i].end === 'number' ? parsed.words[i].end : orig.end,
+              confidence: orig.confidence,
+            }));
+            return {
+              words: mergedWords,
+              text: parsed.text || mergedWords.map((w) => w.word).join(' '),
+            };
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[Auto-Correction OpenAI Fallback Exception]:', err);
     }
-  } catch (err) {
-    console.warn('[Auto-Correction Exception]:', err);
   }
 
   return { words, text: rawText };
