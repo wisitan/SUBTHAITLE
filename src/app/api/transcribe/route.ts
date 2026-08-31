@@ -9,8 +9,8 @@ export const maxDuration = 60; // 60 seconds max execution time for Vercel funct
 // 1. Google AI Free Tier: Max 300 THB / month (~357 minutes / 180 clips per month across all free users)
 const GLOBAL_GOOGLE_MONTHLY_CAP_CLIPS = 180;
 
-// 2. Groq AI Free Tier: Max 100 THB / month -> ~3.33 THB / day (~50 minutes / 30 clips per day across all free users)
-const GLOBAL_GROQ_DAILY_CAP_CLIPS = 30;
+// 2. Groq AI Free Tier: Max 200 THB / month -> ~6.67 THB / day (~100 minutes / 60 clips per day across all free users)
+const GLOBAL_GROQ_DAILY_CAP_CLIPS = 60;
 
 // Initialize Upstash Redis if environment variables are provided
 let redisClient: Redis | null = null;
@@ -31,6 +31,12 @@ let memoryGoogleMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
 let memoryGroqDailyClips = 0;
 let memoryGroqDay = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+const GOOGLE_BUDGET_EXCEEDED_MSG =
+  'โควต้าใช้งานฟรีด้วย Google AI ของระบบในเดือนนี้เต็มแล้วค่ะ เนื่องจากแต่ละคลิปมีต้นทุนค่า API ที่ทางทีมผู้พัฒนาต้องรับภาระ โดยโควต้าฟรีจะรีเซ็ตใหม่อีกครั้งในวันที่ 1 ของเดือนถัดไป หรือสามารถเติมเครดิต / ใช้โหมด Groq AI / BYOK เพื่อใช้งานต่อได้ทันทีค่ะ';
+
+const GROQ_BUDGET_EXCEEDED_MSG =
+  'โควต้าใช้งานฟรีด้วย Groq AI ของระบบในวันนี้เต็มแล้วค่ะ เนื่องจากมีผู้ใช้งานครบโควต้าสนับสนุนประจำวันแล้ว (ระบบจะรีเซ็ตโควต้าฟรีใหม่ทุกเที่ยงคืน) กรุณากลับมาใหม่ในวันพรุ่งนี้ หรือเติมเครดิตเพื่อใช้งานต่อได้ทันทีค่ะ';
 
 async function checkSafetyBudget(
   provider: 'google' | 'groq',
@@ -53,8 +59,7 @@ async function checkSafetyBudget(
         if (count && count >= GLOBAL_GOOGLE_MONTHLY_CAP_CLIPS) {
           return {
             allowed: false,
-            reason:
-              'โควต้าใช้งานฟรีด้วย Google AI ของระบบในเดือนนี้เต็มแล้วค่ะ (ระบบจำกัดงบฟรีไว้ที่ 300 บาท/เดือน) กรุณาเติมเครดิตเพื่อใช้งานต่อ หรือใช้โหมด Groq AI / BYOK ได้ทันทีค่ะ',
+            reason: GOOGLE_BUDGET_EXCEEDED_MSG,
           };
         }
       } catch (err) {
@@ -68,14 +73,13 @@ async function checkSafetyBudget(
       if (memoryGoogleMonthlyClips >= GLOBAL_GOOGLE_MONTHLY_CAP_CLIPS) {
         return {
           allowed: false,
-          reason:
-            'โควต้าใช้งานฟรีด้วย Google AI ของระบบในเดือนนี้เต็มแล้วค่ะ (ระบบจำกัดงบฟรีไว้ที่ 300 บาท/เดือน) กรุณาเติมเครดิตเพื่อใช้งานต่อ หรือใช้โหมด Groq AI / BYOK ได้ทันทีค่ะ',
+          reason: GOOGLE_BUDGET_EXCEEDED_MSG,
         };
       }
     }
   }
 
-  // 2. Groq Free Mode Budget Check (~3.33 THB / day ~ 30 clips)
+  // 2. Groq Free Mode Budget Check (200 THB / month ~ 6.67 THB/day ~ 60 clips/day)
   if (provider === 'groq') {
     if (redisClient) {
       try {
@@ -83,8 +87,7 @@ async function checkSafetyBudget(
         if (count && count >= GLOBAL_GROQ_DAILY_CAP_CLIPS) {
           return {
             allowed: false,
-            reason:
-              'โควต้าใช้งานฟรีด้วย Groq AI ของระบบในวันนี้เต็มแล้วค่ะ กรุณากลับมาใหม่ในวันพรุ่งนี้ หรือเติมเครดิตเพื่อใช้งานต่อได้ทันทีค่ะ',
+            reason: GROQ_BUDGET_EXCEEDED_MSG,
           };
         }
       } catch (err) {
@@ -98,8 +101,7 @@ async function checkSafetyBudget(
       if (memoryGroqDailyClips >= GLOBAL_GROQ_DAILY_CAP_CLIPS) {
         return {
           allowed: false,
-          reason:
-            'โควต้าใช้งานฟรีด้วย Groq AI ของระบบในวันนี้เต็มแล้วค่ะ กรุณากลับมาใหม่ในวันพรุ่งนี้ หรือเติมเครดิตเพื่อใช้งานต่อได้ทันทีค่ะ',
+          reason: GROQ_BUDGET_EXCEEDED_MSG,
         };
       }
     }
