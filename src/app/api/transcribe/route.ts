@@ -1,131 +1,141 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
-import { Ratelimit } from '@upstash/ratelimit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds max execution time for Vercel functions
 
-// Quota Rules: Free = 3/day, Paid (Supporter/Pro) = 5/day, Global = 200/day
-const MAX_REQUESTS_FREE_PER_DAY = 3;
-const MAX_REQUESTS_PAID_PER_DAY = 5;
-const MAX_GLOBAL_REQUESTS_PER_DAY = 200;
+// 🛡️ Global Safety Budget Rules (Cost Protection Caps for Free Tiers)
+// 1. Google AI Free Tier: Max 300 THB / month (~357 minutes / 180 clips per month across all free users)
+const GLOBAL_GOOGLE_MONTHLY_CAP_CLIPS = 180;
+
+// 2. Groq AI Free Tier: Max 100 THB / month -> ~3.33 THB / day (~50 minutes / 30 clips per day across all free users)
+const GLOBAL_GROQ_DAILY_CAP_CLIPS = 30;
 
 // Initialize Upstash Redis if environment variables are provided
 let redisClient: Redis | null = null;
-let freeLimiter: Ratelimit | null = null;
-let paidLimiter: Ratelimit | null = null;
-let globalLimiter: Ratelimit | null = null;
-
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
   try {
     redisClient = new Redis({
       url: process.env.UPSTASH_REDIS_REST_URL,
       token: process.env.UPSTASH_REDIS_REST_TOKEN,
     });
-
-    freeLimiter = new Ratelimit({
-      redis: redisClient,
-      limiter: Ratelimit.slidingWindow(MAX_REQUESTS_FREE_PER_DAY, '1 d'),
-      prefix: 'subthaitle:free',
-    });
-
-    paidLimiter = new Ratelimit({
-      redis: redisClient,
-      limiter: Ratelimit.slidingWindow(MAX_REQUESTS_PAID_PER_DAY, '1 d'),
-      prefix: 'subthaitle:paid',
-    });
-
-    globalLimiter = new Ratelimit({
-      redis: redisClient,
-      limiter: Ratelimit.slidingWindow(MAX_GLOBAL_REQUESTS_PER_DAY, '1 d'),
-      prefix: 'subthaitle:global',
-    });
   } catch (err) {
-    console.warn('Failed to initialize Upstash Redis ratelimiter:', err);
+    console.warn('Failed to initialize Upstash Redis:', err);
   }
 }
 
-// In-memory fallback sliding rate limiter for local dev
-const memoryRequestCounts = new Map<string, { count: number; resetAt: number }>();
-let globalRequestCount = 0;
-let globalResetAt = Date.now() + 24 * 60 * 60 * 1000;
+// In-memory fallback tracking for local development
+let memoryGoogleMonthlyClips = 0;
+let memoryGoogleMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
 
-async function checkRateLimits(
-  identifier: string,
+let memoryGroqDailyClips = 0;
+let memoryGroqDay = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+async function checkSafetyBudget(
+  provider: 'google' | 'groq',
   isPaidUser: boolean
 ): Promise<{ allowed: boolean; reason?: string }> {
-  const maxLimit = isPaidUser ? MAX_REQUESTS_PAID_PER_DAY : MAX_REQUESTS_FREE_PER_DAY;
-
-  // 1. If Redis is configured, use Upstash sliding window rate limiting
-  if (globalLimiter && freeLimiter && paidLimiter) {
-    try {
-      const activeLimiter = isPaidUser ? paidLimiter : freeLimiter;
-      const [globalResult, tierResult] = await Promise.all([
-        globalLimiter.limit('global_transcribe_usage'),
-        activeLimiter.limit(identifier),
-      ]);
-
-      if (!globalResult.success) {
-        return {
-          allowed: false,
-          reason: 'โควต้าฟรีรวมของเซิร์ฟเวอร์ประจำวันเต็มแล้วค่ะ เพื่อป้องกันค่าใช้จ่ายเกินลิมิต กรุณาใส่ Groq API Key ของตัวเอง (BYOK) หรือรัน Local Whisper เพื่อใช้งานต่อ',
-        };
-      }
-
-      if (!tierResult.success) {
-        return {
-          allowed: false,
-          reason: isPaidUser
-            ? `โควต้าประจำวันของคุณครบ ${MAX_REQUESTS_PAID_PER_DAY} คลิปแล้วค่ะ กรุณาใส่ Groq API Key ของคุณ (BYOK) เพื่อถอดเสียงต่อได้ไม่จำกัด`
-            : `โควต้าฟรีประจำวันของคุณครบ ${MAX_REQUESTS_FREE_PER_DAY} คลิปแล้วค่ะ เข้าสู่ระบบหรือร่วมสนับสนุน 99฿ เพื่อรับโควต้า 5 คลิป/วัน และปลดล็อก BYOK ไม่จำกัด`,
-        };
-      }
-
-      return { allowed: true };
-    } catch (err) {
-      console.warn('Redis rate limit check error, falling back to memory:', err);
-    }
-  }
-
-  // 2. In-memory fallback for local development
-  const now = Date.now();
-
-  if (now > globalResetAt) {
-    globalRequestCount = 0;
-    globalResetAt = now + 24 * 60 * 60 * 1000;
-    memoryRequestCounts.clear();
-  }
-
-  if (globalRequestCount >= MAX_GLOBAL_REQUESTS_PER_DAY) {
-    return {
-      allowed: false,
-      reason: 'โควต้าฟรีรวมของเซิร์ฟเวอร์ประจำวันเต็มแล้วค่ะ กรุณาใส่ Groq API Key ของตัวเอง (BYOK) เพื่อใช้งานต่อ',
-    };
-  }
-
-  const record = memoryRequestCounts.get(identifier);
-  if (!record || now > record.resetAt) {
-    memoryRequestCounts.set(identifier, {
-      count: 1,
-      resetAt: now + 24 * 60 * 60 * 1000,
-    });
-    globalRequestCount++;
+  // Paid credit users are NEVER blocked by budget caps
+  if (isPaidUser) {
     return { allowed: true };
   }
 
-  if (record.count >= maxLimit) {
-    return {
-      allowed: false,
-      reason: isPaidUser
-        ? `โควต้าประจำวันของคุณครบ ${maxLimit} คลิปแล้วค่ะ ใส่ API Key ตัวเอง (BYOK) เพื่อใช้งานต่อได้ไม่จำกัด`
-        : `โควต้าฟรีประจำวันของคุณครบ ${maxLimit} คลิปแล้วค่ะ ร่วมสนับสนุน 99฿ เพื่อเพิ่มโควต้าและปลดล็อก BYOK ไม่จำกัด`,
-    };
+  const now = new Date();
+  const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
+  const currentDay = now.toISOString().slice(0, 10);   // YYYY-MM-DD
+
+  // 1. Google Free Mode Budget Check (300 THB / month ~ 180 clips)
+  if (provider === 'google') {
+    if (redisClient) {
+      try {
+        const count = await redisClient.get<number>(`subthaitle:budget:google:${currentMonth}`);
+        if (count && count >= GLOBAL_GOOGLE_MONTHLY_CAP_CLIPS) {
+          return {
+            allowed: false,
+            reason:
+              'โควต้าใช้งานฟรีด้วย Google AI ของระบบในเดือนนี้เต็มแล้วค่ะ (ระบบจำกัดงบฟรีไว้ที่ 300 บาท/เดือน) กรุณาเติมเครดิตเพื่อใช้งานต่อ หรือใช้โหมด Groq AI / BYOK ได้ทันทีค่ะ',
+          };
+        }
+      } catch (err) {
+        console.warn('Redis budget check error:', err);
+      }
+    } else {
+      if (memoryGoogleMonth !== currentMonth) {
+        memoryGoogleMonth = currentMonth;
+        memoryGoogleMonthlyClips = 0;
+      }
+      if (memoryGoogleMonthlyClips >= GLOBAL_GOOGLE_MONTHLY_CAP_CLIPS) {
+        return {
+          allowed: false,
+          reason:
+            'โควต้าใช้งานฟรีด้วย Google AI ของระบบในเดือนนี้เต็มแล้วค่ะ (ระบบจำกัดงบฟรีไว้ที่ 300 บาท/เดือน) กรุณาเติมเครดิตเพื่อใช้งานต่อ หรือใช้โหมด Groq AI / BYOK ได้ทันทีค่ะ',
+        };
+      }
+    }
   }
 
-  record.count += 1;
-  globalRequestCount++;
+  // 2. Groq Free Mode Budget Check (~3.33 THB / day ~ 30 clips)
+  if (provider === 'groq') {
+    if (redisClient) {
+      try {
+        const count = await redisClient.get<number>(`subthaitle:budget:groq:${currentDay}`);
+        if (count && count >= GLOBAL_GROQ_DAILY_CAP_CLIPS) {
+          return {
+            allowed: false,
+            reason:
+              'โควต้าใช้งานฟรีด้วย Groq AI ของระบบในวันนี้เต็มแล้วค่ะ กรุณากลับมาใหม่ในวันพรุ่งนี้ หรือเติมเครดิตเพื่อใช้งานต่อได้ทันทีค่ะ',
+          };
+        }
+      } catch (err) {
+        console.warn('Redis budget check error:', err);
+      }
+    } else {
+      if (memoryGroqDay !== currentDay) {
+        memoryGroqDay = currentDay;
+        memoryGroqDailyClips = 0;
+      }
+      if (memoryGroqDailyClips >= GLOBAL_GROQ_DAILY_CAP_CLIPS) {
+        return {
+          allowed: false,
+          reason:
+            'โควต้าใช้งานฟรีด้วย Groq AI ของระบบในวันนี้เต็มแล้วค่ะ กรุณากลับมาใหม่ในวันพรุ่งนี้ หรือเติมเครดิตเพื่อใช้งานต่อได้ทันทีค่ะ',
+        };
+      }
+    }
+  }
+
   return { allowed: true };
+}
+
+async function recordSafetyBudgetUsage(provider: 'google' | 'groq', isPaidUser: boolean) {
+  if (isPaidUser) return;
+
+  const now = new Date();
+  const currentMonth = now.toISOString().slice(0, 7);
+  const currentDay = now.toISOString().slice(0, 10);
+
+  if (provider === 'google') {
+    if (redisClient) {
+      try {
+        await redisClient.incr(`subthaitle:budget:google:${currentMonth}`);
+        await redisClient.expire(`subthaitle:budget:google:${currentMonth}`, 35 * 24 * 3600);
+      } catch {}
+    } else {
+      memoryGoogleMonthlyClips++;
+    }
+  }
+
+  if (provider === 'groq') {
+    if (redisClient) {
+      try {
+        await redisClient.incr(`subthaitle:budget:groq:${currentDay}`);
+        await redisClient.expire(`subthaitle:budget:groq:${currentDay}`, 2 * 24 * 3600);
+      } catch {}
+    } else {
+      memoryGroqDailyClips++;
+    }
+  }
 }
 
 interface TranscribedWord {
@@ -292,7 +302,6 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const audioFile = formData.get('file') as Blob | null;
     const language = (formData.get('language') as string) || 'th';
-    const userId = (formData.get('userId') as string) || null;
     const userTier = (formData.get('tier') as string) || 'free';
     const provider = (formData.get('provider') as string) || 'google';
     const mode = (formData.get('mode') as string) || 'google_free';
@@ -300,15 +309,10 @@ export async function POST(request: NextRequest) {
 
     const isPaidUser = userTier === 'tier_99' || userTier === 'tier_299' || mode === 'credits';
 
-    // Identifier: Use userId if logged in, otherwise client IP
-    const forwardedFor = request.headers.get('x-forwarded-for');
-    const clientIp = forwardedFor ? forwardedFor.split(',')[0].trim() : '127.0.0.1';
-    const rateLimitIdentifier = userId ? `user:${userId}` : `ip:${clientIp}`;
-
-    // 1. Check Rate Limits
-    const limitCheck = await checkRateLimits(rateLimitIdentifier, isPaidUser);
-    if (!limitCheck.allowed) {
-      return NextResponse.json({ error: limitCheck.reason }, { status: 429 });
+    // 1. Check Global Safety Budget Caps for Free Tiers
+    const budgetCheck = await checkSafetyBudget(provider as 'google' | 'groq', isPaidUser);
+    if (!budgetCheck.allowed) {
+      return NextResponse.json({ error: budgetCheck.reason }, { status: 429 });
     }
 
     if (!audioFile) {
@@ -379,6 +383,9 @@ export async function POST(request: NextRequest) {
         end: w.end,
         confidence: 0.95,
       }));
+
+      // Record safety budget usage for free tier
+      await recordSafetyBudgetUsage('groq', isPaidUser);
 
       return NextResponse.json({
         success: true,
@@ -490,6 +497,9 @@ export async function POST(request: NextRequest) {
 
       // Run AI Auto-Correction (Post-Processing)
       const corrected = await correctThaiWordsWithLLM(words, fullText);
+
+      // Record safety budget usage for free tier
+      await recordSafetyBudgetUsage('google', isPaidUser);
 
       return NextResponse.json({
         success: true,
