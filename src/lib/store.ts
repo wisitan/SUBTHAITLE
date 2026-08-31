@@ -127,6 +127,8 @@ export interface AppState {
   setRawWords: (words: CaptionWord[]) => void;
   setPacingMode: (mode: PacingMode, customWords?: number) => void;
   regroupCaptions: (mode?: PacingMode, customWords?: number) => void;
+  setCreditsMinutes: (minutes: number) => void;
+  resetQuotas: (userId?: string) => void;
   setCaptions: (captions: CaptionItem[]) => void;
   updateCaptionText: (id: string, text: string) => void;
   updateCaptionTiming: (id: string, start: number, end: number) => void;
@@ -320,6 +322,9 @@ export const useAppStore = create<AppState>()(
       addCredits: (minutes) =>
         set((state) => ({ creditsMinutes: Math.max(0, state.creditsMinutes + minutes) })),
         
+      setCreditsMinutes: (creditsMinutes) =>
+        set({ creditsMinutes: Math.max(0, creditsMinutes) }),
+        
       deductCredits: (minutes) => {
         let success = false;
         set((state) => {
@@ -330,6 +335,21 @@ export const useAppStore = create<AppState>()(
           return state;
         });
         return success;
+      },
+      
+      resetQuotas: (userId) => {
+        if (typeof window !== 'undefined') {
+          try {
+            localStorage.removeItem(getUserGoogleMonthKey(userId));
+            localStorage.removeItem(getUserGroqDayKey(userId));
+            localStorage.removeItem(getUserTodayUsageKey(userId));
+          } catch {}
+        }
+        set({
+          googleMonthlyUsageCount: 0,
+          groqDailyUsageCount: 0,
+          dailyUsageCount: 0,
+        });
       },
       
       setLifetimeUnlocked: (isLifetimeUnlocked) => set({ isLifetimeUnlocked }),
