@@ -163,7 +163,16 @@ async function correctThaiWordsWithLLM(
     process.env.GOOGLE;
 
   if (geminiApiKey) {
-    const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    const candidateModels = [
+      'gemini-3.7-flash',
+      'gemini-3.6-flash',
+      'gemini-3.5-flash',
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+      'gemini-3.1-flash-lite',
+      'gemini-3.1-pro',
+    ];
     for (const model of candidateModels) {
       try {
         const geminiRes = await fetch(
@@ -210,8 +219,8 @@ async function correctThaiWordsWithLLM(
             }
           }
         }
-      } catch {
-        // Fallback to next model or OpenAI
+      } catch (err) {
+        console.warn(`[Gemini Fallback]: Model ${model} failed, trying next...`, err);
       }
     }
   }
