@@ -24,6 +24,7 @@ interface CreditPackage {
   name: string;
   price: number;
   minutes: number;
+  hoursDisplay: string;
   perMinute: number;
   popular?: boolean;
   tag?: string;
@@ -37,6 +38,7 @@ const CREDIT_PACKAGES: CreditPackage[] = [
     name: 'Starter',
     price: 99,
     minutes: 60,
+    hoursDisplay: '1 ชั่วโมง',
     perMinute: 1.65,
     icon: Coffee,
     description: 'เหมาะสำหรับทดลองใช้ หรือทำคลิปสั้นทั่วไป ~60 คลิป',
@@ -46,21 +48,23 @@ const CREDIT_PACKAGES: CreditPackage[] = [
     name: 'Creator',
     price: 249,
     minutes: 180,
+    hoursDisplay: '3 ชั่วโมง',
     perMinute: 1.38,
     popular: true,
-    tag: '🔥 ยอดนิยมที่สุด (3 ชั่วโมง)',
+    tag: '🔥 ยอดนิยมที่สุด',
     icon: Flame,
-    description: 'สุดคุ้มสำหรับคอนเทนต์ครีเอเตอร์ ได้เครดิตจุใจ 3 ชั่วโมงเต็ม (~180 คลิป)',
+    description: 'สุดคุ้มสำหรับคอนเทนต์ครีเอเตอร์ ได้เครดิตจุใจ ~180 คลิป',
   },
   {
     id: 'credit_599',
     name: 'Pro Studio',
     price: 599,
     minutes: 480,
+    hoursDisplay: '8 ชั่วโมง',
     perMinute: 1.25,
     icon: Crown,
-    tag: '⚡ คุ้มค่าสูงสุด (8 ชั่วโมง)',
-    description: 'สำหรับสตูดิโอและเอเจนซี่ ได้เครดิตจัดเต็มถึง 8 ชั่วโมง (~480 คลิป)',
+    tag: '⚡ คุ้มค่าสูงสุด',
+    description: 'สำหรับสตูดิโอและเอเจนซี่ ได้เครดิตจัดเต็ม ~480 คลิป',
   },
 ];
 
@@ -246,8 +250,12 @@ export function DonatePage() {
                         <span className="text-xs text-zinc-400">จ่ายครั้งเดียว</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-lg font-black text-amber-400 font-mono">+{pkg.minutes}</span>
-                        <span className="text-xs text-zinc-300 ml-1">นาที</span>
+                        <div className="text-base sm:text-lg font-black text-amber-400 font-mono leading-tight">
+                          +{pkg.hoursDisplay}
+                        </div>
+                        <div className="text-[11px] text-zinc-400 font-medium">
+                          ({pkg.minutes} นาที)
+                        </div>
                       </div>
                     </div>
 
@@ -258,7 +266,7 @@ export function DonatePage() {
                       </li>
                       <li className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                        <span>ตรวจทานคำผิดด้วย <strong>GPT-4o-mini</strong> อัตโนมัติ</span>
+                        <span>ตรวจทานคำผิดด้วย <strong>Gemini 3.7 Flash</strong> อัตโนมัติ</span>
                       </li>
                       <li className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-emerald-400 shrink-0" />
