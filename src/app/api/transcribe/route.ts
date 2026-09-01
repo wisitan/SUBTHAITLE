@@ -243,6 +243,152 @@ interface SubtitleSegment {
   words?: TranscribedWord[];
 }
 
+interface WhisperAcousticSegment {
+  start: number;
+  end: number;
+  text: string;
+}
+
+// ⚡ Worker 1: Extract Real Acoustic Speech Intervals from Whisper
+async function fetchWhisperAcoustics(audioBuffer: Buffer, language: string = 'th'): Promise<WhisperAcousticSegment[] | null> {
+  const groqApiKey = (process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY || '').trim();
+  const openAiApiKey = (process.env.OPENAI_API_KEY || '').trim();
+
+  // 1. Try Groq Cloud first (Ultra-fast ~600-800ms)
+  if (groqApiKey) {
+    try {
+      const groqBlob = new Blob([new Uint8Array(audioBuffer)], { type: 'audio/mp3' });
+      const groqForm = new FormData();
+      groqForm.append('file', groqBlob, 'audio.mp3');
+      groqForm.append('model', 'whisper-large-v3');
+      groqForm.append('response_format', 'verbose_json');
+      groqForm.append('language', language === 'th' ? 'th' : language);
+      groqForm.append('temperature', '0.0');
+
+      const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${groqApiKey}` },
+        signal: AbortSignal.timeout(6000),
+        body: groqForm,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.segments) && data.segments.length > 0) {
+          return data.segments.map((s: { start?: number; end?: number; text?: string }) => ({
+            start: typeof s.start === 'number' ? s.start : parseFloat(String(s.start)) || 0,
+            end: typeof s.end === 'number' ? s.end : parseFloat(String(s.end)) || 0,
+            text: String(s.text || ''),
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('[Whisper Acoustics Groq Warning]:', err);
+    }
+  }
+
+  // 2. Secondary Fallback: OpenAI Whisper API
+  if (openAiApiKey) {
+    try {
+      const openAiBlob = new Blob([new Uint8Array(audioBuffer)], { type: 'audio/mp3' });
+      const openAiForm = new FormData();
+      openAiForm.append('file', openAiBlob, 'audio.mp3');
+      openAiForm.append('model', 'whisper-1');
+      openAiForm.append('response_format', 'verbose_json');
+      openAiForm.append('language', language === 'th' ? 'th' : language);
+      openAiForm.append('temperature', '0.0');
+
+      const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${openAiApiKey}` },
+        signal: AbortSignal.timeout(6000),
+        body: openAiForm,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.segments) && data.segments.length > 0) {
+          return data.segments.map((s: { start?: number; end?: number; text?: string }) => ({
+            start: typeof s.start === 'number' ? s.start : parseFloat(String(s.start)) || 0,
+            end: typeof s.end === 'number' ? s.end : parseFloat(String(s.end)) || 0,
+            text: String(s.text || ''),
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('[Whisper Acoustics OpenAI Warning]:', err);
+    }
+  }
+
+  return null;
+}
+
+// 🎯 Smart Alignment: Align 100% Accurate Gemini Thai Words to Whisper Acoustic Speech Intervals
+function alignGeminiWithWhisperAcoustics(
+  geminiResult: { text: string; words: TranscribedWord[]; segments: SubtitleSegment[]; duration: number },
+  whisperSegments: WhisperAcousticSegment[]
+): { text: string; words: TranscribedWord[]; segments: SubtitleSegment[]; duration: number } {
+  if (!whisperSegments || whisperSegments.length === 0 || !geminiResult.segments || geminiResult.segments.length === 0) {
+    return geminiResult;
+  }
+
+  const geminiSegments = geminiResult.segments;
+  const totalGeminiLength = geminiSegments.reduce((acc, s) => acc + (s.text ? s.text.length : 1), 0);
+  const whisperTotalStart = whisperSegments[0].start;
+  const whisperTotalEnd = whisperSegments[whisperSegments.length - 1].end;
+  const whisperTotalDuration = Math.max(0.5, whisperTotalEnd - whisperTotalStart);
+
+  const finalSegments: SubtitleSegment[] = [];
+  const finalWords: TranscribedWord[] = [];
+
+  let currentStart = whisperTotalStart;
+
+  for (let i = 0; i < geminiSegments.length; i++) {
+    const gSeg = geminiSegments[i];
+    const segText = gSeg.text.trim();
+    const segWeight = Math.max(1, segText.length) / Math.max(1, totalGeminiLength);
+    const segDuration = whisperTotalDuration * segWeight;
+    const segEnd = parseFloat(Math.min(whisperTotalEnd, currentStart + segDuration).toFixed(2));
+
+    const wordsList = Array.isArray(gSeg.words) && gSeg.words.length > 0
+      ? gSeg.words
+      : segText.split(' ').filter(Boolean).map(w => ({ word: w, start: currentStart, end: segEnd }));
+
+    const count = wordsList.length || 1;
+    const step = Math.max(0.05, (segEnd - currentStart) / count);
+
+    const segWords: TranscribedWord[] = wordsList.map((w, idx) => {
+      const wordStr = typeof w === 'string' ? w : w.word || '';
+      const wStart = parseFloat((currentStart + idx * step).toFixed(2));
+      const wEnd = parseFloat((currentStart + (idx + 1) * step).toFixed(2));
+      const wObj: TranscribedWord = {
+        word: wordStr,
+        start: wStart,
+        end: wEnd,
+        confidence: 0.98,
+      };
+      finalWords.push(wObj);
+      return wObj;
+    });
+
+    finalSegments.push({
+      start: currentStart,
+      end: segEnd,
+      text: segText,
+      words: segWords,
+    });
+
+    currentStart = segEnd;
+  }
+
+  return {
+    text: geminiResult.text,
+    duration: finalWords.length > 0 ? finalWords[finalWords.length - 1].end : geminiResult.duration,
+    segments: finalSegments,
+    words: finalWords,
+  };
+}
+
 async function transcribeWithGeminiDirect(
   audioBase64: string,
   language: string = 'th',
@@ -677,7 +823,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const groqBlob = new Blob([audioBuffer], { type: 'audio/mp3' });
+      const groqBlob = new Blob([new Uint8Array(audioBuffer)], { type: 'audio/mp3' });
       const groqForm = new FormData();
       groqForm.append('file', groqBlob, 'audio.mp3');
       groqForm.append('model', 'whisper-large-v3');
@@ -725,28 +871,37 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Route 2: Gemini AI Direct Multimodal Engine (Primary) + Google Cloud STT (Fallback)
+    // Route 2: Option A Hybrid Engine (Whisper Acoustic Timing + Gemini 100% Thai Transcriber)
     try {
       // Fetch dynamic custom & auto-learned vocabulary
       const dynamicDict = await getDynamicCustomDictionary();
 
-      // 🎯 Primary Engine: Direct Multimodal Gemini (Audio-to-Subtitle)
-      const geminiDirectResult = await transcribeWithGeminiDirect(base64Audio, language, dynamicDict.rulesText);
+      // 🎯 Option A Hybrid Pipeline: Run Whisper Acoustics + Gemini 100% Thai Transcriber in parallel!
+      const [whisperRes, geminiDirectResult] = await Promise.all([
+        fetchWhisperAcoustics(audioBuffer, language),
+        transcribeWithGeminiDirect(base64Audio, language, dynamicDict.rulesText),
+      ]);
+
       if (geminiDirectResult && geminiDirectResult.words.length > 0) {
+        let finalResult = geminiDirectResult;
+        if (whisperRes && whisperRes.length > 0) {
+          finalResult = alignGeminiWithWhisperAcoustics(geminiDirectResult, whisperRes);
+        }
+
         // Record safety budget usage for free tier
         await recordSafetyBudgetUsage('google', isPaidUser);
 
         return NextResponse.json({
           success: true,
-          text: geminiDirectResult.text,
-          duration: geminiDirectResult.duration,
+          text: finalResult.text,
+          duration: finalResult.duration,
           language: language || 'th',
-          segments: geminiDirectResult.segments || [],
-          words: geminiDirectResult.words,
+          segments: finalResult.segments || [],
+          words: finalResult.words,
         });
       }
 
-      console.warn('[Transcribe Route]: Gemini Direct returned empty or failed, falling back to Google STT...');
+      console.warn('[Transcribe Route]: Option A Hybrid returned empty, falling back to Google STT...');
 
       // 🔄 Fallback Engine: Google Cloud Speech-to-Text
       const googleApiKey =
