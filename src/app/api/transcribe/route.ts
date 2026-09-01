@@ -498,7 +498,9 @@ STRICT JSON OUTPUT SCHEMA:
 
   const candidateModels = [
     'gemini-3.7-flash',
+    'gemini-3.6-flash',
     'gemini-3.5-flash',
+    'gemini-flash-latest',
     'gemini-3.5-flash-lite',
   ];
 
@@ -509,7 +511,7 @@ STRICT JSON OUTPUT SCHEMA:
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          signal: AbortSignal.timeout(7000),
+          signal: AbortSignal.timeout(12000),
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [
@@ -665,7 +667,9 @@ Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรม
   if (geminiApiKey) {
     const candidateModels = [
       'gemini-3.7-flash',
+      'gemini-3.6-flash',
       'gemini-3.5-flash',
+      'gemini-flash-latest',
       'gemini-3.5-flash-lite',
     ];
 
