@@ -6,7 +6,6 @@ import { useAppStore, calculateCreditUsage } from '@/lib/store';
 import { useAuth } from '@/context/auth-context';
 import { extractAudioFromMedia, AudioExtractProgress } from '@/lib/audio-extract';
 import { transcribeAudio } from '@/lib/transcribe';
-import { generateSrt, generateVtt } from '@/lib/srt';
 import {
   UploadCloud,
   FileVideo,
@@ -18,12 +17,6 @@ import {
   ArrowRight,
   Loader2,
   Sparkles,
-  SlidersHorizontal,
-  Download,
-  Flame,
-  Film,
-  AlignLeft,
-  Settings2,
   LogIn,
   Coins,
 } from 'lucide-react';
@@ -47,10 +40,6 @@ export function UploadZone() {
     providerMode,
     groqApiKey,
     creditsMinutes,
-    pacingMode,
-    customMaxWords,
-    setPacingMode,
-    captions,
     setCaptions,
   } = useAppStore();
 
@@ -80,6 +69,19 @@ export function UploadZone() {
     }
     return () => clearInterval(interval);
   }, [isTranscribing]);
+
+  // Reset previous finished file on home page mount so upload zone is always clean & ready
+  useEffect(() => {
+    const s = useAppStore.getState();
+    if (s.status === 'ready' || s.captions.length > 0) {
+      s.setFile(null);
+      s.setVideoUrl(null);
+      s.setAudioBlob(null);
+      s.setMediaDuration(0);
+      s.setStatus('idle', 0, '');
+      s.setErrorMessage(null);
+    }
+  }, []);
 
   const isBYOK = (providerMode === 'byok' || providerMode === 'local') && Boolean(groqApiKey);
   const isFreeMode = providerMode === 'free' || providerMode === 'google_free' || providerMode === 'groq_free';
@@ -257,32 +259,6 @@ export function UploadZone() {
         err instanceof Error ? err.message : 'เกิดข้อผิดพลาดไม่ทราบสาเหตุในการถอดเสียง'
       );
     }
-  };
-
-  const totalWords = captions.reduce((acc, cue) => acc + (cue.words?.length || cue.text.split(' ').length), 0);
-
-  const handleDownloadSrt = () => {
-    if (!captions.length) return;
-    const srtData = generateSrt(captions);
-    const blob = new Blob([srtData], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${file?.name.replace(/\.[^/.]+$/, '') || 'subthaitle'}.srt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const handleDownloadVtt = () => {
-    if (!captions.length) return;
-    const vttData = generateVtt(captions);
-    const blob = new Blob([vttData], { type: 'text/vtt;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${file?.name.replace(/\.[^/.]+$/, '') || 'subthaitle'}.vtt`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   return (
@@ -466,7 +442,7 @@ export function UploadZone() {
           )}
 
           {/* Video Preview thumbnail & Duration */}
-          {videoUrl && !captions.length && (() => {
+          {videoUrl && (() => {
             const isFreeMode = providerMode === 'free' || providerMode === 'google_free' || providerMode === 'groq_free';
             const isOverFreeLimit = isFreeMode && mediaDuration > 125;
             const requiredCredits = calculateCreditUsage(mediaDuration);
@@ -561,245 +537,49 @@ export function UploadZone() {
             );
           })()}
 
-          {/* Transcription Results & Pacing Card (Phase 3) */}
-          {captions.length > 0 && (
-            <div className="my-5 p-5 bg-zinc-950/90 rounded-2xl border border-emerald-500/40 space-y-5 animate-in fade-in duration-300 shadow-xl">
-              {/* Header with Stats & Quick Export */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-zinc-700/70">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h5 className="text-base font-bold text-white flex items-center gap-2">
-                      ถอดเสียงภาษาไทยสำเร็จ!
-                      <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-950 border border-emerald-700 text-emerald-300 font-medium">
-                        Whisper Large v3
-                      </span>
-                    </h5>
-                    <span className="text-xs text-zinc-300">
-                      มีทั้งหมด {captions.length} ท่อนซับ (~{totalWords} คำ)
-                    </span>
-                  </div>
-                </div>
-
-                {/* Quick SRT / VTT Download Buttons */}
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleDownloadSrt}
-                    className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-orange-300 hover:border-orange-500/50"
-                    title="ดาวน์โหลดไฟล์ .SRT สำหรับใช้งานทั่วไป"
-                  >
-                    <Download className="w-4 h-4 text-orange-400" />
-                    ดาวน์โหลด .SRT
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleDownloadVtt}
-                    className="px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-200 border border-zinc-700/80 flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:text-emerald-300 hover:border-emerald-500/50"
-                    title="ดาวน์โหลดไฟล์ WebVTT (.VTT)"
-                  >
-                    <Download className="w-4 h-4 text-emerald-400" />
-                    ดาวน์โหลด .VTT
-                  </button>
-                </div>
-              </div>
-
-              {/* 🎛️ Caption Pacing / Length Selector (Killer Feature) */}
-              <div className="p-4 rounded-2xl bg-zinc-900/95 border border-zinc-700/80 hover:border-zinc-500/70 space-y-3 transition-all duration-200">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <SlidersHorizontal className="w-4 h-4 text-orange-400" />
-                    <span className="text-sm font-bold text-zinc-100">
-                      ✂️ ปรับจังหวะความยาวท่อนซับ (Caption Pacing):
-                    </span>
-                  </div>
-                  <span className="text-xs text-zinc-300">
-                    คลิกเลือกโหมดเพื่อจัดกลุ่มคำใหม่แบบ Realtime
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                  {/* Option 1: Short / Shorts */}
-                  <button
-                    type="button"
-                    onClick={() => setPacingMode('short')}
-                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                      pacingMode === 'short'
-                        ? 'bg-orange-500/20 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                        : 'bg-zinc-950/70 border-zinc-700/70 text-zinc-300 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm flex items-center gap-1.5 text-orange-300">
-                        <Flame className="w-4 h-4 text-orange-400" />
-                        สั้นกระชับ (3-5 คำ)
-                      </span>
-                      {pacingMode === 'short' && (
-                        <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-                      )}
-                    </div>
-                    <p className="text-xs text-zinc-300 leading-snug">
-                      เหมาะกับ TikTok, Reels, Shorts คนดูอ่านตามทันที
-                    </p>
-                  </button>
-
-                  {/* Option 2: Medium / Standard */}
-                  <button
-                    type="button"
-                    onClick={() => setPacingMode('medium')}
-                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                      pacingMode === 'medium'
-                        ? 'bg-orange-500/20 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                        : 'bg-zinc-950/70 border-zinc-700/70 text-zinc-300 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm flex items-center gap-1.5 text-orange-300">
-                        <AlignLeft className="w-4 h-4 text-amber-400" />
-                        มาตรฐาน (6-9 คำ)
-                      </span>
-                      {pacingMode === 'medium' && (
-                        <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-                      )}
-                    </div>
-                    <p className="text-xs text-zinc-300 leading-snug">
-                      เหมาะกับคลิป Vlog ทั่วไป อ่านสบาย ไม่สั้นไม่ยาวไป
-                    </p>
-                  </button>
-
-                  {/* Option 3: Long / Cinema */}
-                  <button
-                    type="button"
-                    onClick={() => setPacingMode('long')}
-                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                      pacingMode === 'long'
-                        ? 'bg-orange-500/20 border-orange-500 text-white shadow-lg shadow-orange-500/10 ring-1 ring-orange-500/50'
-                        : 'bg-zinc-950/70 border-zinc-700/70 text-zinc-300 hover:border-zinc-400 hover:bg-zinc-900 shadow-sm'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm flex items-center gap-1.5 text-orange-300">
-                        <Film className="w-4 h-4 text-emerald-400" />
-                        ประโยคยาว (10-15 คำ)
-                      </span>
-                      {pacingMode === 'long' && (
-                        <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
-                      )}
-                    </div>
-                    <p className="text-xs text-zinc-300 leading-snug">
-                      เหมาะกับ YouTube แนวนอน, สัมภาษณ์ หรือสารคดี
-                    </p>
-                  </button>
-                </div>
-
-                {/* Custom Word Slider Toggle */}
-                <div className="pt-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-sm border-t border-zinc-700/70">
-                  <div className="flex items-center gap-2 text-zinc-300">
-                    <Settings2 className="w-4 h-4 text-zinc-400" />
-                    <span>หรือปรับกำหนดจำนวนคำต่อท่อนเอง:</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="range"
-                      min={3}
-                      max={18}
-                      value={customMaxWords}
-                      aria-label="กำหนดจำนวนคำต่อท่อน"
-                      onChange={(e) => {
-                        const words = parseInt(e.target.value, 10);
-                        setPacingMode('custom', words);
-                      }}
-                      className="w-36 accent-orange-500 cursor-pointer"
-                    />
-                    <span className="px-2.5 py-0.5 rounded-lg bg-zinc-900 border border-zinc-700 text-orange-400 font-mono font-bold min-w-[3.5rem] text-center text-sm shadow-sm">
-                      {customMaxWords} คำ
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Subtitle Snippet Preview */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm text-zinc-300">
-                  <span>ตัวอย่างท่อนซับที่จัดกลุ่มแล้ว ({captions.length} ท่อน):</span>
-                  <span className="text-xs font-mono text-zinc-400">
-                    คำนวณเวลาตรงตามเสียง 100%
-                  </span>
-                </div>
-                <div className="max-h-52 overflow-y-auto space-y-2 p-4 rounded-xl bg-zinc-950/75 border border-zinc-700/70 text-sm font-mono">
-                  {captions.map((cue, idx) => (
-                    <div
-                      key={cue.id || idx}
-                      className="flex items-start gap-2.5 text-zinc-200 hover:bg-zinc-900/80 p-1.5 rounded-lg transition-colors"
-                    >
-                      <span className="text-orange-400 font-bold shrink-0 select-none text-xs font-mono">
-                        [{cue.start.toFixed(2)}s ➔ {cue.end.toFixed(2)}s]
-                      </span>
-                      <span className="text-zinc-100 font-sans font-medium">{cue.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Action Trigger Button */}
           <div className="mt-5 flex justify-end gap-3">
-            {!captions.length ? (
-              !user && !isBYOK && providerMode !== 'local' ? (
-                <button
-                  type="button"
-                  disabled={isExtracting}
-                  onClick={() => signInWithGoogle()}
-                  className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-black text-base flex items-center justify-center gap-2.5 shadow-lg shadow-orange-500/25 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  <LogIn className="w-5 h-5 text-zinc-950" />
-                  <span>เข้าสู่ระบบด้วย Google เพื่อเริ่มถอดเสียง</span>
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  disabled={
-                    isExtracting ||
-                    isTranscribing ||
-                    ((providerMode === 'google_free' || providerMode === 'groq_free') && mediaDuration > 125) ||
-                    (providerMode === 'credits' && creditsMinutes < calculateCreditUsage(mediaDuration))
-                  }
-                  onClick={handleStartTranscribe}
-                  className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  {isTranscribing ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      <span>{transcribeMessage || 'กำลังถอดเสียง...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5" />
-                      <span>
-                        {isFreeMode
-                          ? 'เริ่มถอดเสียงด้วย AI (โหมดฟรี)'
-                          : providerMode === 'credits'
-                          ? `เริ่มถอดเสียงด้วย Credit (หัก ${calculateCreditUsage(mediaDuration)} นาที)`
-                          : 'เริ่มถอดเสียงด้วย AI'}
-                      </span>
-                      <ArrowRight className="w-5 h-5" />
-                    </>
-                  )}
-                </button>
-              )
+            {!user && !isBYOK && providerMode !== 'local' ? (
+              <button
+                type="button"
+                disabled={isExtracting}
+                onClick={() => signInWithGoogle()}
+                className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-black text-base flex items-center justify-center gap-2.5 shadow-lg shadow-orange-500/25 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <LogIn className="w-5 h-5 text-zinc-950" />
+                <span>เข้าสู่ระบบด้วย Google เพื่อเริ่มถอดเสียง</span>
+                <ArrowRight className="w-5 h-5" />
+              </button>
             ) : (
               <button
                 type="button"
-                onClick={() => router.push('/editor')}
-                className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-zinc-950 font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all cursor-pointer"
+                disabled={
+                  isExtracting ||
+                  isTranscribing ||
+                  ((providerMode === 'google_free' || providerMode === 'groq_free') && mediaDuration > 125) ||
+                  (providerMode === 'credits' && creditsMinutes < calculateCreditUsage(mediaDuration))
+                }
+                onClick={handleStartTranscribe}
+                className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-base flex items-center justify-center gap-2 shadow-lg shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
-                <SlidersHorizontal className="w-5 h-5" />
-                <span>เข้าสู่หน้าแก้ไขซับไตเติล (Open Caption Editor)</span>
-                <ArrowRight className="w-5 h-5" />
+                {isTranscribing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>{transcribeMessage || 'กำลังถอดเสียง...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    <span>
+                      {isFreeMode
+                        ? 'เริ่มถอดเสียงด้วย AI (โหมดฟรี)'
+                        : providerMode === 'credits'
+                        ? `เริ่มถอดเสียงด้วย Credit (หัก ${calculateCreditUsage(mediaDuration)} นาที)`
+                        : 'เริ่มถอดเสียงด้วย AI'}
+                    </span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
               </button>
             )}
           </div>
