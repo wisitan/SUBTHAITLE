@@ -236,11 +236,12 @@ async function getDynamicCustomDictionary(): Promise<{ phrases: string[]; rulesT
 }
 
 // 🧠 AI Auto-Correction (Post-Processing Engine)
-// รองรับ Google Gemini (Flash / Pro) เป็นหลัก และ Fallback ไปยัง OpenAI (gpt-4o-mini)
+// รองรับ Google Gemini (Flash / Pro) Multimodal Audio Verification เป็นหลัก และ Fallback ไปยัง OpenAI (gpt-4o-mini)
 async function correctThaiWordsWithLLM(
   words: TranscribedWord[],
   rawText: string,
-  extraRulesText: string = ''
+  extraRulesText: string = '',
+  audioBase64?: string
 ): Promise<{ words: TranscribedWord[]; text: string }> {
   if (words.length === 0) {
     return { words, text: rawText };
@@ -251,7 +252,7 @@ async function correctThaiWordsWithLLM(
 
   const systemPrompt = `You are the world's most accurate Thai speech subtitle correction engine, specialized in video content (Shorts, TikTok, YouTube Reviews, Tech Gadgets, Cooking, Lifestyle).
 
-TASK: Given an array of Thai words from speech recognition and the full raw transcript, fix phonetic errors, sound-alikes, garbled English loanwords, and Thai-specific mistakes using full sentence context.
+TASK: You are provided with the audio file, the raw transcript, and word-level tokens from speech recognition. Listen directly to the audio to verify and fix phonetic errors, sound-alikes, garbled English loanwords, and Thai-specific mistakes using full audio + text context.
 
 CORRECTION RULES (organized by category):
 
@@ -294,7 +295,7 @@ Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรม
   // Build user message with full context
   const userMessage = `Full Transcript Context:\n"${rawText}"\n\nOriginal Words Array:\n${JSON.stringify(wordStringsInput)}`;
 
-  // 1. Primary Attempt: Google Gemini API (Google AI Studio)
+  // 1. Primary Attempt: Google Gemini API (Google AI Studio) with Multimodal Audio Verification
   const geminiApiKey = (
     process.env.GEMINI_API_KEY ||
     process.env.GOOGLE_AI_KEY ||
@@ -308,6 +309,18 @@ Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรม
       'gemini-1.5-flash',
       'gemini-2.5-flash',
     ];
+
+    const userParts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> = [];
+    if (audioBase64) {
+      userParts.push({
+        inline_data: {
+          mime_type: 'audio/mp3',
+          data: audioBase64,
+        },
+      });
+    }
+    userParts.push({ text: userMessage });
+
     for (const model of candidateModels) {
       try {
         const geminiRes = await fetch(
@@ -317,7 +330,7 @@ Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรม
             headers: {
               'Content-Type': 'application/json',
             },
-            signal: AbortSignal.timeout(4000),
+            signal: AbortSignal.timeout(7000),
             body: JSON.stringify({
               system_instruction: {
                 parts: [{ text: systemPrompt }],
@@ -325,7 +338,7 @@ Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรม
               contents: [
                 {
                   role: 'user',
-                  parts: [{ text: userMessage }],
+                  parts: userParts,
                 },
               ],
               generationConfig: {
@@ -521,6 +534,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Convert audio to buffer and base64 for STT and Multimodal AI verification
+    const audioBuffer = Buffer.from(await audioFile.arrayBuffer());
+    const base64Audio = audioBuffer.toString('base64');
+
     // Route 1: Groq Cloud Whisper Engine
     if (provider === 'groq') {
       const groqApiKey = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
@@ -532,8 +549,9 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      const groqBlob = new Blob([audioBuffer], { type: 'audio/mp3' });
       const groqForm = new FormData();
-      groqForm.append('file', audioFile, 'audio.mp3');
+      groqForm.append('file', groqBlob, 'audio.mp3');
       groqForm.append('model', 'whisper-large-v3');
       groqForm.append('response_format', 'verbose_json');
       groqForm.append('language', language === 'th' ? 'th' : language);
@@ -562,9 +580,9 @@ export async function POST(request: NextRequest) {
         confidence: 0.95,
       }));
 
-      // Run AI Auto-Correction (Post-Processing with Gemini Flash + Dynamic Dictionary Rules)
+      // Run AI Auto-Correction (Post-Processing with Gemini Flash Multimodal Audio Verification + Dynamic Dictionary Rules)
       const dynamicDict = await getDynamicCustomDictionary();
-      const corrected = await correctThaiWordsWithLLM(rawWords, groqData.text || '', dynamicDict.rulesText);
+      const corrected = await correctThaiWordsWithLLM(rawWords, groqData.text || '', dynamicDict.rulesText, base64Audio);
 
       // Record safety budget usage for free tier
       await recordSafetyBudgetUsage('groq', isPaidUser);
@@ -579,7 +597,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Route 2: Google Cloud Speech-to-Text (+ AI Auto-Correction with GPT-4o-mini)
+    // Route 2: Google Cloud Speech-to-Text (+ AI Auto-Correction with GPT-4o-mini / Gemini Multimodal)
     const googleApiKey =
       process.env.GOOGLE_STT_API_KEY ||
       process.env.GOOGLE_API_KEY ||
@@ -602,9 +620,6 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const buffer = Buffer.from(await audioFile.arrayBuffer());
-      const base64Audio = buffer.toString('base64');
-
       // Fetch dynamic custom & auto-learned vocabulary
       const dynamicDict = await getDynamicCustomDictionary();
       const basePhrases = [
@@ -686,8 +701,8 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Run AI Auto-Correction (Post-Processing with Gemini Flash + Dynamic Dictionary Rules)
-      const corrected = await correctThaiWordsWithLLM(words, fullText, dynamicDict.rulesText);
+      // Run AI Auto-Correction (Post-Processing with Gemini Flash Multimodal Audio Verification + Dynamic Dictionary Rules)
+      const corrected = await correctThaiWordsWithLLM(words, fullText, dynamicDict.rulesText, base64Audio);
 
       // Record safety budget usage for free tier
       await recordSafetyBudgetUsage('google', isPaidUser);
