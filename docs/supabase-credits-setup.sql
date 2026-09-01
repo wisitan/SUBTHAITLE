@@ -325,8 +325,18 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 9. Enable Realtime Publications on profiles table
-ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
+-- 9. Enable Realtime Publications on profiles table (Safe check)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables 
+    WHERE pubname = 'supabase_realtime' 
+      AND schemaname = 'public' 
+      AND tablename = 'profiles'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
+  END IF;
+END $$;
 
 -- 10. Grant execute permissions to ensure RPC calls succeed
 GRANT EXECUTE ON FUNCTION public.add_user_credits TO anon, authenticated, service_role;
@@ -334,4 +344,8 @@ GRANT EXECUTE ON FUNCTION public.deduct_user_credits TO anon, authenticated, ser
 GRANT EXECUTE ON FUNCTION public.unlock_lifetime_pass TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.consume_google_free_quota TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.consume_groq_free_quota TO anon, authenticated, service_role;
+
+-- 11. Reload schema cache immediately
+NOTIFY pgrst, 'reload schema';
+
 
