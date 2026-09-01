@@ -434,7 +434,7 @@ export function UploadZone() {
 
           {/* Video Preview thumbnail & Duration */}
           {videoUrl && !captions.length && (() => {
-            const isFreeMode = providerMode === 'google_free' || providerMode === 'groq_free';
+            const isFreeMode = providerMode === 'free' || providerMode === 'google_free' || providerMode === 'groq_free';
             const isOverFreeLimit = isFreeMode && mediaDuration > 125;
             const requiredCredits = calculateCreditUsage(mediaDuration);
             const isNotEnoughCredits = providerMode === 'credits' && creditsMinutes < requiredCredits;
@@ -470,19 +470,11 @@ export function UploadZone() {
                     <p className="text-xs text-zinc-300">
                       โหมดที่เลือก:{' '}
                       <span className="text-zinc-100 font-bold">
-                        {providerMode === 'google_free'
-                          ? 'Google AI (Free 5 คลิป/เดือน • สูงสุด 2 นาที)'
-                          : providerMode === 'groq_free'
-                          ? 'Groq AI (Free 3 คลิป/วัน • สูงสุด 2 นาที)'
+                        {isFreeMode
+                          ? 'ฟรี 3 คลิป/วัน (สูงสุด 2 นาที)'
                           : providerMode === 'credits'
                           ? `Credit ที่มี (ใช้ ${requiredCredits} นาที / คงเหลือ ${creditsMinutes} นาที)`
-                          : isBYOK
-                          ? groqApiKey.trim().startsWith('AIza')
-                            ? 'Google Cloud STT (BYOK Mode)'
-                            : groqApiKey.trim().startsWith('sk-')
-                            ? 'OpenAI Whisper-1 (BYOK Mode)'
-                            : 'Groq Whisper V3 (BYOK Mode)'
-                          : 'BYOK / Local AI'}
+                          : 'Credit ที่มี'}
                       </span>
                     </p>
 

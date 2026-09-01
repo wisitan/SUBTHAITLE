@@ -3,7 +3,7 @@ import { DictionaryEntry } from '../default-dictionary';
 
 export type TranscriptionProvider = 'groq' | 'elevenlabs' | 'local';
 export type UserTier = 'free' | 'tier_99' | 'tier_299';
-export type ProviderMode = 'google_free' | 'groq_free' | 'credits' | 'byok' | 'local';
+export type ProviderMode = 'free' | 'credits' | 'google_free' | 'groq_free' | 'byok' | 'local';
 
 export interface CaptionWord {
   word: string;

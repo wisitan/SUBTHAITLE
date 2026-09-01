@@ -3,13 +3,11 @@ import {
   CaptionWord,
   useAppStore,
   calculateCreditUsage,
-  getGoogleMonthlyUsageFromStorage,
   getGroqDailyUsageFromStorage,
 } from './store';
 import { cleanThaiText, resegmentThaiWords } from './thai-text';
 import { groupWordsIntoCaptions, splitLongCaptions } from './caption-grouping';
 import { applyDictionaryToWords, applyDictionaryReplacements } from './default-dictionary';
-import { sliceAudioIntoChunks, AudioChunk } from './audio-extract';
 
 export interface TranscribeResponse {
   success: boolean;
@@ -31,29 +29,7 @@ export interface TranscribeResponse {
 }
 
 /**
- * Concurrency-controlled execution pool (prevents rate limits / DoS)
- */
-async function runConcurrencyPool<T, R>(
-  items: T[],
-  concurrencyLimit: number,
-  workerFn: (item: T) => Promise<R>
-): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let nextIdx = 0;
-
-  const workers = new Array(Math.min(concurrencyLimit, items.length)).fill(0).map(async () => {
-    while (nextIdx < items.length) {
-      const currentIdx = nextIdx++;
-      results[currentIdx] = await workerFn(items[currentIdx]);
-    }
-  });
-
-  await Promise.all(workers);
-  return results;
-}
-
-/**
- * Transcribes audio blob using the configured provider mode (Google Free, Groq Free, Credits, BYOK, or Local)
+ * Transcribes audio blob in a single step using the configured STT Provider (Free 3 clips/day or Credits)
  */
 export async function transcribeAudio(
   audioBlob: Blob,
@@ -61,29 +37,17 @@ export async function transcribeAudio(
   authInfo?: { userId?: string; tier?: string }
 ): Promise<CaptionItem[]> {
   const store = useAppStore.getState();
-  const { providerMode, groqApiKey, creditsMinutes, mediaDuration } = store;
-  const effectiveTier = authInfo?.tier || store.tier;
+  const { providerMode, creditsMinutes, mediaDuration } = store;
+  const isFreeMode = providerMode === 'free' || providerMode === 'groq_free' || providerMode === 'google_free';
 
-  // 1. Quota & Credit Validation based on providerMode
+  // 1. Quota & Credit Validation
   let requiredCredits = 0;
 
-  if (providerMode === 'google_free') {
-    const googleMonthlyUsage = getGoogleMonthlyUsageFromStorage(authInfo?.userId);
-    if (googleMonthlyUsage >= store.maxGoogleMonthlyQuota) {
+  if (isFreeMode) {
+    const dailyUsage = getGroqDailyUsageFromStorage(authInfo?.userId);
+    if (dailyUsage >= store.maxGroqDailyQuota) {
       throw new Error(
-        `โควต้าฟรี Google AI ของคุณครบ ${store.maxGoogleMonthlyQuota} คลิปในเดือนนี้แล้วค่ะ กรุณาสลับไปใช้ Groq AI หรือใช้เครดิตที่เติมไว้เพื่อถอดเสียงต่อได้ทันที`
-      );
-    }
-    if (mediaDuration > 125) {
-      throw new Error(
-        'โหมดฟรีรองรับคลิปยาวไม่เกิน 2 นาที กรุณาเลือกโหมด "Credit ที่มี" เพื่อถอดเสียงคลิปยาว หรือตัดแบ่งคลิปก่อนค่ะ'
-      );
-    }
-  } else if (providerMode === 'groq_free') {
-    const groqDailyUsage = getGroqDailyUsageFromStorage(authInfo?.userId);
-    if (groqDailyUsage >= store.maxGroqDailyQuota) {
-      throw new Error(
-        `โควต้าฟรี Groq AI ของคุณครบ ${store.maxGroqDailyQuota} คลิปในวันนี้แล้วค่ะ กรุณาสลับไปใช้ Google AI หรือใช้เครดิตที่เติมไว้เพื่อถอดเสียงต่อได้ทันที`
+        `โควต้าฟรีประจำวันของคุณครบ ${store.maxGroqDailyQuota} คลิปแล้วค่ะ (รีเซ็ตใหม่ทุกเที่ยงคืน) หรือสามารถเติมเครดิตเพื่อถอดเสียงต่อได้ทันทีค่ะ`
       );
     }
     if (mediaDuration > 125) {
@@ -98,364 +62,57 @@ export async function transcribeAudio(
         `เครดิตของคุณคงเหลือ ${creditsMinutes} นาที (คลิปนี้ต้องใช้ ${requiredCredits} นาที) กรุณาเติมเครดิตเพิ่มก่อนกดถอดเสียงค่ะ`
       );
     }
-  } else if (providerMode === 'byok') {
-    if (!groqApiKey.trim()) {
-      throw new Error('กรุณากรอก API Key ของคุณในโหมด BYOK ก่อนเริ่มถอดเสียงค่ะ');
-    }
   }
 
   if (onProgress) {
     onProgress('กำลังส่งไฟล์เสียงไปถอดข้อความด้วย AI...');
   }
 
-  let data: TranscribeResponse | null = null;
-
-  // 2. Execution path based on Provider / Mode
-  const isBYOK = providerMode === 'byok' && Boolean(groqApiKey.trim());
-
-  if (isBYOK) {
-    const trimmedKey = groqApiKey.trim();
-    const isGoogle = trimmedKey.startsWith('AIza');
-    const isOpenAI = trimmedKey.startsWith('sk-');
-
-    if (isGoogle) {
-      // BYOK Google Cloud STT
-      if (onProgress) {
-        onProgress('กำลังถอดเสียงผ่าน Google Cloud Speech-to-Text (BYOK)...');
-      }
-
-      const base64Audio = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (typeof reader.result === 'string') {
-            const base64 = reader.result.split(',')[1] || '';
-            resolve(base64);
-          } else {
-            reject(new Error('ไม่สามารถแปลงไฟล์เป็น Base64 ได้'));
-          }
-        };
-        reader.onerror = () => reject(new Error('เกิดข้อผิดพลาดในการอ่านไฟล์'));
-        reader.readAsDataURL(audioBlob);
-      });
-
-      const res = await fetch(`https://speech.googleapis.com/v1/speech:recognize?key=${trimmedKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          config: {
-            encoding: 'MP3',
-            languageCode: 'th-TH',
-            enableWordTimeOffsets: true,
-            enableAutomaticPunctuation: true,
-            useEnhanced: true,
-            speechContexts: [
-              {
-                phrases: [
-                  'สายชาร์จ', 'หัวชาร์จ', 'เก้าสิบองศา', 'เล่นเกม', 'จ่ายไฟ', 'วัตต์', 'แอมป์',
-                  'ฟาสต์ชาร์จ', 'พาวเวอร์แบงค์', 'แนะนำ', 'รีวิว', 'คลิปนี้', 'สวัสดีครับ', 'สวัสดีค่ะ',
-                  'ตัวนี้', 'อันนี้', 'แบบนี้', 'ราคา', 'โปรโมชั่น', 'ส่งฟรี', 'ของแท้', 'ประกัน',
-                  'สักเส้นนึง', 'ความยาว', 'ทนทาน', 'ชาร์จไว', 'ชาร์จเร็ว', 'ตัวเนี้ย', 'เล่นเกมไปด้วย'
-                ],
-                boost: 15.0,
-              },
-            ],
-            model: 'default',
-          },
-          audio: {
-            content: base64Audio,
-          },
-        }),
-      });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        let msg = `Google Cloud STT Error (${res.status})`;
-        try {
-          const json = JSON.parse(errText);
-          msg = json.error?.message || msg;
-        } catch {}
-        throw new Error(`การถอดเสียงด้วย Google Cloud ล้มเหลว: ${msg}`);
-      }
-
-      const googleData = await res.json();
-      const words: Array<{ word: string; start: number; end: number; confidence: number }> = [];
-      let fullText = '';
-
-      for (const result of googleData.results || []) {
-        const alt = result.alternatives?.[0];
-        if (alt) {
-          fullText += (fullText ? ' ' : '') + (alt.transcript || '');
-          if (alt.words) {
-            for (const w of alt.words) {
-              const startStr = w.startTime || '0s';
-              const endStr = w.endTime || '0s';
-              const startSec = parseFloat(startStr.replace('s', '')) || 0;
-              const endSec = parseFloat(endStr.replace('s', '')) || 0;
-              words.push({
-                word: w.word,
-                start: startSec,
-                end: endSec,
-                confidence: alt.confidence || 0.95,
-              });
-            }
-          }
-        }
-      }
-
-      data = {
-        success: true,
-        text: fullText,
-        duration: words.length > 0 ? words[words.length - 1].end : 0,
-        words,
-      };
-    } else {
-      // BYOK OpenAI or Groq
-      const providerLabel = isOpenAI ? 'OpenAI Whisper (BYOK)' : 'Groq Whisper (BYOK)';
-      const apiUrl = isOpenAI
-        ? '/api/proxy/openai/v1/audio/transcriptions'
-        : '/api/proxy/groq/openai/v1/audio/transcriptions';
-      const targetModel = isOpenAI ? 'whisper-1' : 'whisper-large-v3';
-
-      if (onProgress) {
-        onProgress(`กำลังถอดเสียงผ่าน ${providerLabel}...`);
-      }
-
-      const formData = new FormData();
-      formData.append('file', audioBlob, 'audio.mp3');
-      formData.append('model', targetModel);
-      formData.append('response_format', 'verbose_json');
-      formData.append('language', 'th');
-      formData.append('temperature', '0.2');
-      formData.append('prompt', 'สวัสดีครับ นี่คือคำบรรยายวิดีโอภาษาไทย');
-      formData.append('timestamp_granularities[]', 'word');
-      formData.append('timestamp_granularities[]', 'segment');
-
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${trimmedKey}`,
-        },
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const errText = await res.text();
-        let msg = `${isOpenAI ? 'OpenAI' : 'Groq'} API Error (${res.status})`;
-        try {
-          const json = JSON.parse(errText);
-          msg = json.error?.message || msg;
-        } catch {}
-        throw new Error(`การถอดเสียงล้มเหลว: ${msg}`);
-      }
-
-      data = await res.json();
-    }
-  } else if (providerMode === 'local') {
-    // Local Whisper Mode (Offline Mac MLX)
-    if (onProgress) {
-      onProgress('กำลังเชื่อมต่อไปยัง Local Whisper Server ในเครื่อง...');
-    }
-
-    const formData = new FormData();
-    formData.append('file', audioBlob, 'audio.mp3');
-    formData.append('language', 'th');
-
-    try {
-      const res = await fetch('http://127.0.0.1:8765/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => null);
-        throw new Error(errJson?.detail || `Local Whisper Server returned status ${res.status}`);
-      }
-
-      data = await res.json();
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      if (message.includes('Local Transcription Failed') || message.includes('status')) {
-        throw new Error(message);
-      }
-      throw new Error(
-        'ไม่สามารถเชื่อมต่อ Local Whisper Server ได้ กรุณาดาวน์โหลดและเปิดใช้งาน start_server บนเครื่องของคุณก่อนกดถอดเสียงค่ะ (http://localhost:8765)'
-      );
-    }
-  } else {
-    // Server API route for Cloud Free & Credit Modes
-    // Check if audio exceeds 25 seconds (> 25s) and needs smart parallel chunking for Vercel Serverless
-    if (mediaDuration > 25) {
-      if (onProgress) {
-        onProgress('กำลังตัดแบ่งไฟล์เสียงเพื่อส่งถอดเสียงคู่ขนาน (Parallel Turbo Engine)...');
-      }
-
-      const chunks = await sliceAudioIntoChunks(audioBlob, mediaDuration, 25);
-
-      if (chunks.length > 1) {
-        let completedCount = 0;
-        const totalChunks = chunks.length;
-
-        // Concurrency Pool Worker: max 2 parallel requests
-        const transcribeSingleChunk = async (chunk: AudioChunk): Promise<TranscribeResponse> => {
-          const formData = new FormData();
-          formData.append('file', chunk.blob, 'audio.mp3');
-          formData.append('language', 'th');
-          formData.append('provider', providerMode === 'groq_free' ? 'groq' : 'google');
-          formData.append('mode', providerMode);
-          formData.append('duration', chunk.index === 0 ? mediaDuration.toString() : chunk.duration.toString());
-          formData.append('chunkIndex', chunk.index.toString());
-          formData.append('totalChunks', totalChunks.toString());
-          formData.append('isChunkPart', (chunk.index > 0).toString());
-          if (authInfo?.userId) {
-            formData.append('userId', authInfo.userId);
-          }
-          formData.append('tier', effectiveTier);
-
-          const res = await fetch('/api/transcribe', {
-            method: 'POST',
-            body: formData,
-          });
-
-          let resText = '';
-          let chunkResult: TranscribeResponse;
-          try {
-            resText = await res.text();
-            chunkResult = JSON.parse(resText);
-          } catch {
-            throw new Error(
-              `เซิร์ฟเวอร์ส่งการตอบกลับที่ไม่ถูกต้องในท่อนที่ ${chunk.index + 1} (${res.status}): ${resText.slice(0, 150) || 'กรุณาลองใหม่อีกครั้ง'}`
-            );
-          }
-
-          if (!res.ok || !chunkResult.success) {
-            throw new Error(chunkResult.error || `เกิดข้อผิดพลาดในการถอดเสียงท่อนที่ ${chunk.index + 1}`);
-          }
-
-          completedCount++;
-          if (onProgress) {
-            onProgress(`กำลังถอดเสียงคู่ขนาน: สำเร็จแล้ว ${completedCount}/${totalChunks} ท่อน...`);
-          }
-
-          return chunkResult;
-        };
-
-        // Run with concurrency pool limit 2
-        const chunkResults = await runConcurrencyPool(chunks, 2, transcribeSingleChunk);
-
-        // Merge chunk words and adjust timestamps
-        const allWords: Array<{ word: string; start: number; end: number; confidence?: number }> = [];
-        let combinedText = '';
-
-        for (let i = 0; i < chunks.length; i++) {
-          const chunk = chunks[i];
-          const chunkRes = chunkResults[i];
-
-          if (chunkRes.text) {
-            combinedText += (combinedText ? ' ' : '') + chunkRes.text;
-          }
-
-          for (const w of chunkRes.words || []) {
-            allWords.push({
-              word: w.word,
-              start: Number((w.start + chunk.startOffset).toFixed(2)),
-              end: Number((w.end + chunk.startOffset).toFixed(2)),
-              confidence: w.confidence,
-            });
-          }
-        }
-
-        data = {
-          success: true,
-          text: combinedText,
-          duration: mediaDuration,
-          words: allWords,
-        };
-
-        // Update Quota / Credits on successful transcription
-        if (providerMode === 'credits' && requiredCredits > 0) {
-          store.deductCredits(requiredCredits);
-        } else if (providerMode === 'google_free') {
-          store.incrementGoogleMonthlyUsage(authInfo?.userId);
-        } else if (providerMode === 'groq_free') {
-          store.incrementGroqDailyUsage(authInfo?.userId);
-        }
-        store.incrementDailyUsage(authInfo?.userId);
-      }
-    }
-
-    // Standard Single-Request Path (for clips <= 3 mins or single chunk)
-    if (!data) {
-      if (onProgress) {
-        onProgress(
-          providerMode === 'groq_free'
-            ? 'กำลังถอดเสียงผ่าน Groq AI Cloud...'
-            : 'กำลังถอดเสียงผ่าน Google Cloud AI...'
-        );
-      }
-
-      // Safety check for Vercel 4.5MB payload limit
-      if (audioBlob.size > 4.2 * 1024 * 1024) {
-        throw new Error(
-          'ขนาดไฟล์เสียงเกิน 4MB สำหรับเซิร์ฟเวอร์ กรุณาใช้โหมด BYOK เพื่อถอดเสียงไฟล์ขนาดใหญ่ได้ทันที'
-        );
-      }
-
-      const formData = new FormData();
-      formData.append('file', audioBlob, 'audio.mp3');
-      formData.append('language', 'th');
-      formData.append('provider', providerMode === 'groq_free' ? 'groq' : 'google');
-      formData.append('mode', providerMode);
-      formData.append('duration', mediaDuration.toString());
-      if (authInfo?.userId) {
-        formData.append('userId', authInfo.userId);
-      }
-      formData.append('tier', effectiveTier);
-
-      const res = await fetch('/api/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
-
-      let resText = '';
-      try {
-        resText = await res.text();
-        data = JSON.parse(resText);
-      } catch {
-        throw new Error(
-          `เซิร์ฟเวอร์ส่งการตอบกลับที่ไม่ถูกต้อง (${res.status}): ${resText.slice(0, 150) || 'กรุณาลองใหม่อีกครั้ง'}`
-        );
-      }
-
-      if (!res.ok || !data || !data.success) {
-        throw new Error(data?.error || 'เกิดข้อผิดพลาดในการถอดเสียงจากเซิร์ฟเวอร์');
-      }
-
-      // Update Quota / Credits on successful transcription
-      if (providerMode === 'credits' && requiredCredits > 0) {
-        store.deductCredits(requiredCredits);
-      } else if (providerMode === 'google_free') {
-        store.incrementGoogleMonthlyUsage(authInfo?.userId);
-      } else if (providerMode === 'groq_free') {
-        store.incrementGroqDailyUsage(authInfo?.userId);
-      }
-      store.incrementDailyUsage(authInfo?.userId);
-    }
+  // 2. Single-Step Transcription Request to Backend
+  const formData = new FormData();
+  formData.append('file', audioBlob, 'audio.mp3');
+  formData.append('language', 'th');
+  formData.append('mode', isFreeMode ? 'free' : 'credits');
+  formData.append('duration', mediaDuration.toString());
+  if (authInfo?.userId) {
+    formData.append('userId', authInfo.userId);
   }
+
+  const res = await fetch('/api/transcribe', {
+    method: 'POST',
+    body: formData,
+  });
+
+  let resText = '';
+  let data: TranscribeResponse;
+  try {
+    resText = await res.text();
+    data = JSON.parse(resText);
+  } catch {
+    throw new Error(
+      `เซิร์ฟเวอร์ส่งการตอบกลับที่ไม่ถูกต้อง (${res.status}): ${resText.slice(0, 150) || 'กรุณาลองใหม่อีกครั้ง'}`
+    );
+  }
+
+  if (!res.ok || !data || !data.success) {
+    throw new Error(data?.error || 'เกิดข้อผิดพลาดในการถอดเสียงจากเซิร์ฟเวอร์');
+  }
+
+  // Update Quota / Credits on successful transcription
+  if (providerMode === 'credits' && requiredCredits > 0) {
+    store.deductCredits(requiredCredits);
+  } else if (isFreeMode) {
+    store.incrementGroqDailyUsage(authInfo?.userId);
+  }
+  store.incrementDailyUsage(authInfo?.userId);
 
   if (onProgress) {
     onProgress('จัดกลุ่มคำและคำนวณจังหวะซับไตเติล (Smart Pacing)...');
   }
 
-  if (!data) {
-    throw new Error('ไม่สามารถรับข้อมูลผลลัพธ์การถอดเสียงจากเซิร์ฟเวอร์ได้');
-  }
-
   // 3. Extract and Clean Word-level Timestamps
   const rawWordTokens: CaptionWord[] = (data.words || [])
     .map((w) => {
-      // Preserve Whisper's native leading/trailing spaces while cleaning the text
       const match = w.word.match(/^(\s*)(.*?)(\s*)$/);
       const leading = match?.[1] || '';
       const core = match?.[2] || '';

@@ -116,7 +116,7 @@ export interface QuotaSlice {
 }
 
 export const createQuotaSlice: StateCreator<AppState, [], [], QuotaSlice> = (set) => ({
-  providerMode: 'google_free',
+  providerMode: 'free',
   provider: 'groq',
   tier: 'free',
   groqApiKey: '',
