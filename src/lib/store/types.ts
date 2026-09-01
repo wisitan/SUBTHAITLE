@@ -48,12 +48,30 @@ export interface CaptionStyle {
   backgroundOpacity?: number;   // 0 to 100 (percentage)
 }
 
+export interface UserProject {
+  id: string;
+  user_id: string;
+  title: string;
+  duration: number;
+  thumbnail_url?: string | null;
+  captions: CaptionItem[];
+  raw_words?: CaptionWord[];
+  style?: CaptionStyle;
+  aspect_ratio?: '9:16' | '16:9' | '1:1';
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface AppState {
   // File & Media state
   file: File | null;
   videoUrl: string | null;
   audioBlob: Blob | null;
   mediaDuration: number;
+  
+  // Projects & Cloud Drafts
+  currentProjectId: string | null;
+  projectTitle: string;
   
   // Processing state
   status: 'idle' | 'extracting_audio' | 'uploading' | 'transcribing' | 'ready' | 'error';
@@ -103,6 +121,9 @@ export interface AppState {
   setVideoUrl: (url: string | null) => void;
   setAudioBlob: (blob: Blob | null) => void;
   setMediaDuration: (duration: number) => void;
+  setCurrentProjectId: (id: string | null) => void;
+  setProjectTitle: (title: string) => void;
+  loadProject: (project: UserProject) => void;
   setStatus: (status: AppState['status'], progress?: number, message?: string) => void;
   setErrorMessage: (msg: string | null) => void;
   setProviderMode: (mode: ProviderMode) => void;

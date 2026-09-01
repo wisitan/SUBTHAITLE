@@ -6,6 +6,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { ProviderSelector } from '@/components/provider-selector';
 import { UploadZone } from '@/components/upload-zone';
+import { RecentProjects } from '@/components/recent-projects';
 import { Heart, ArrowRight, MessageSquareQuote } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 
@@ -45,6 +46,11 @@ export default function Home() {
         {/* Upload & Processing Area */}
         <section>
           <UploadZone />
+        </section>
+
+        {/* Recent Cloud Projects (Canva-Style) */}
+        <section>
+          <RecentProjects />
         </section>
 
         {/* Creator Story Teaser Section */}

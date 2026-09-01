@@ -216,6 +216,38 @@ export function UploadZone() {
       setCaptions(results);
       setStatus('ready', 100, 'ถอดเสียงภาษาไทยสำเร็จ!');
       setIsTranscribing(false);
+
+      const projectName = file?.name || 'SUBTHAITLE Project';
+      useAppStore.getState().setProjectTitle(projectName);
+
+      // Auto-save initial project to Supabase
+      if (user?.id) {
+        try {
+          const storeState = useAppStore.getState();
+          const saveRes = await fetch('/api/projects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              title: projectName,
+              duration: mediaDuration,
+              captions: results,
+              rawWords: storeState.rawWords,
+              style: storeState.style,
+              aspectRatio: storeState.aspectRatio,
+            }),
+          });
+          if (saveRes.ok) {
+            const saveJson = await saveRes.json();
+            if (saveJson.project?.id) {
+              useAppStore.getState().setCurrentProjectId(saveJson.project.id);
+            }
+          }
+        } catch (saveErr) {
+          console.warn('[Auto-Save Initial Project Error]:', saveErr);
+        }
+      }
+
       router.push('/editor');
     } catch (err) {
       console.error('Transcription error:', err);

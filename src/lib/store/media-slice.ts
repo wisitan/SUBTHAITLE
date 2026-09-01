@@ -1,11 +1,14 @@
 import { StateCreator } from 'zustand';
-import { AppState } from './types';
+import { AppState, UserProject } from './types';
 
 export interface MediaSlice {
   file: File | null;
   videoUrl: string | null;
   audioBlob: Blob | null;
   mediaDuration: number;
+
+  currentProjectId: string | null;
+  projectTitle: string;
 
   status: 'idle' | 'extracting_audio' | 'uploading' | 'transcribing' | 'ready' | 'error';
   progress: number;
@@ -21,6 +24,9 @@ export interface MediaSlice {
   setVideoUrl: (url: string | null) => void;
   setAudioBlob: (blob: Blob | null) => void;
   setMediaDuration: (duration: number) => void;
+  setCurrentProjectId: (id: string | null) => void;
+  setProjectTitle: (title: string) => void;
+  loadProject: (project: UserProject) => void;
   setStatus: (status: AppState['status'], progress?: number, message?: string) => void;
   setErrorMessage: (msg: string | null) => void;
   setAspectRatio: (ratio: '9:16' | '16:9' | '1:1') => void;
@@ -36,6 +42,9 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
   audioBlob: null,
   mediaDuration: 0,
 
+  currentProjectId: null,
+  projectTitle: '',
+
   status: 'idle',
   progress: 0,
   statusMessage: '',
@@ -50,6 +59,24 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
   setVideoUrl: (videoUrl) => set({ videoUrl }),
   setAudioBlob: (audioBlob) => set({ audioBlob }),
   setMediaDuration: (mediaDuration) => set({ mediaDuration }),
+
+  setCurrentProjectId: (currentProjectId) => set({ currentProjectId }),
+  setProjectTitle: (projectTitle) => set({ projectTitle }),
+
+  loadProject: (project) => {
+    set((state) => ({
+      currentProjectId: project.id,
+      projectTitle: project.title,
+      mediaDuration: project.duration || 0,
+      captions: project.captions || [],
+      rawWords: project.raw_words || [],
+      style: project.style ? { ...state.style, ...project.style } : state.style,
+      aspectRatio: project.aspect_ratio || '9:16',
+      status: 'ready',
+      currentTime: 0,
+      activeCaptionIndex: null,
+    }));
+  },
 
   setAspectRatio: (aspectRatio) => set({ aspectRatio }),
   setShowTikTokSafeZone: (showTikTokSafeZone) => set({ showTikTokSafeZone }),
@@ -73,6 +100,8 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
       videoUrl: null,
       audioBlob: null,
       mediaDuration: 0,
+      currentProjectId: null,
+      projectTitle: '',
       status: 'idle',
       progress: 0,
       statusMessage: '',

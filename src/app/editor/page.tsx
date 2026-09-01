@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -9,8 +9,12 @@ import {
   FileAudio,
   Film,
   Check,
+  Cloud,
+  Loader2,
+  Upload,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
+import { useAuth } from '@/context/auth-context';
 import { VideoPlayer } from '@/components/video-player';
 import { CaptionTable } from '@/components/caption-table';
 import { StyleEditor } from '@/components/style-editor';
@@ -19,20 +23,81 @@ import { ExportMenu } from '@/components/export-menu';
 import { UserProfileButton } from '@/components/user-profile-button';
 
 export default function EditorPage() {
+  const { user } = useAuth();
+
   const file = useAppStore((s) => s.file);
+  const setFile = useAppStore((s) => s.setFile);
   const videoUrl = useAppStore((s) => s.videoUrl);
+  const setVideoUrl = useAppStore((s) => s.setVideoUrl);
   const captions = useAppStore((s) => s.captions);
+  const rawWords = useAppStore((s) => s.rawWords);
+  const style = useAppStore((s) => s.style);
+  const aspectRatio = useAppStore((s) => s.aspectRatio);
   const activeCaptionIndex = useAppStore((s) => s.activeCaptionIndex);
   const mediaDuration = useAppStore((s) => s.mediaDuration);
+  const currentProjectId = useAppStore((s) => s.currentProjectId);
+  const setCurrentProjectId = useAppStore((s) => s.setCurrentProjectId);
+  const projectTitle = useAppStore((s) => s.projectTitle);
+  const setProjectTitle = useAppStore((s) => s.setProjectTitle);
 
   const [activeTab, setActiveTab] = useState<'captions' | 'style' | 'presets'>('captions');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'idle'>('saved');
 
-
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // Debounced Auto-Save to Supabase
+  useEffect(() => {
+    if (!user || captions.length === 0) return;
+
+    setSaveStatus('saving');
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/projects', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: currentProjectId || undefined,
+            userId: user.id,
+            title: projectTitle || file?.name || 'SUBTHAITLE Project',
+            duration: mediaDuration,
+            captions,
+            rawWords,
+            style,
+            aspectRatio,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.project?.id && !currentProjectId) {
+            setCurrentProjectId(data.project.id);
+          }
+          setSaveStatus('saved');
+        } else {
+          setSaveStatus('idle');
+        }
+      } catch (err) {
+        console.warn('Auto-save error:', err);
+        setSaveStatus('idle');
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [user, captions, style, aspectRatio, currentProjectId, projectTitle, file, mediaDuration, rawWords, setCurrentProjectId]);
+
+  const handleReconnectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setVideoUrl(URL.createObjectURL(selectedFile));
+      showToast('เชื่อมต่อไฟล์วิดีโอสำเร็จ!');
+    }
   };
 
   // If no active captions or media loaded, show friendly empty state
@@ -50,10 +115,10 @@ export default function EditorPage() {
           <div className="pt-2">
             <Link
               href="/"
-              className="inline-flex items-center justify-center gap-2 w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm rounded-xl shadow-lg transition-all"
+              className="inline-flex items-center justify-center gap-2 w-full py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm rounded-xl shadow-lg transition-all cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>กลับสู่หน้าหลักเพื่ออัปโหลดไฟล์</span>
+              <span>กลับสู่หน้าหลักเพื่อเลือกไฟล์</span>
             </Link>
           </div>
         </div>
@@ -63,6 +128,14 @@ export default function EditorPage() {
 
   return (
     <div className="min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden bg-zinc-950 text-zinc-100 flex flex-col selection:bg-orange-500/30">
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="video/*,audio/*"
+        className="hidden"
+        onChange={handleReconnectFile}
+      />
+
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 flex items-center gap-2 bg-emerald-500 text-zinc-950 font-bold px-4 py-2.5 rounded-xl shadow-2xl animate-in slide-in-from-top-2 text-sm">
@@ -78,7 +151,7 @@ export default function EditorPage() {
           <div className="flex items-center gap-3 min-w-0">
             <Link
               href="/"
-              className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors shrink-0"
+              className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer"
               title="กลับสู่หน้าหลัก"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -93,13 +166,50 @@ export default function EditorPage() {
                 )}
               </div>
               <div className="min-w-0">
-                <h1 className="text-sm sm:text-base font-bold text-white truncate max-w-[200px] sm:max-w-md">
-                  {file?.name || 'SUBTHAITLE Project'}
-                </h1>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={projectTitle || file?.name || 'SUBTHAITLE Project'}
+                    onChange={(e) => setProjectTitle(e.target.value)}
+                    className="text-sm sm:text-base font-bold text-white bg-transparent border-b border-transparent hover:border-zinc-700 focus:border-orange-500 focus:outline-none transition-colors truncate max-w-[180px] sm:max-w-md py-0.5"
+                    title="คลิกเพื่อแก้ไขชื่อโปรเจกต์"
+                  />
+
+                  {/* Cloud Sync Indicator */}
+                  {user && (
+                    <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-zinc-400 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded-md">
+                      {saveStatus === 'saving' ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin text-orange-400" />
+                          <span>กำลังบันทึก...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Cloud className="w-3 h-3 text-emerald-400" />
+                          <span>บันทึกบนคลาวด์แล้ว</span>
+                        </>
+                      )}
+                    </span>
+                  )}
+                </div>
+
                 <div className="flex items-center gap-2 text-xs text-zinc-300">
                   <span>ความยาว: {mediaDuration ? `${Math.round(mediaDuration)}s` : '--'}</span>
                   <span>•</span>
                   <span className="text-emerald-400 font-semibold">{captions.length} ท่อนซับ</span>
+                  {!videoUrl && (
+                    <>
+                      <span>•</span>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="text-orange-400 hover:underline cursor-pointer flex items-center gap-1"
+                      >
+                        <Upload className="w-3 h-3" />
+                        <span>เลือกวิดีโอเพื่อพรีวิว</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
