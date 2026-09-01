@@ -24,9 +24,26 @@ export function ProviderSelector() {
   } = useAppStore();
 
   const { user } = useAuth();
+  const [systemEnergy, setSystemEnergy] = React.useState<{
+    energyLevel: 'full' | 'medium' | 'low' | 'empty';
+    percentage: number;
+    isExhausted: boolean;
+  }>({
+    energyLevel: 'full',
+    percentage: 100,
+    isExhausted: false,
+  });
 
   useEffect(() => {
     syncQuotas(user?.id);
+    fetch('/api/system/quota')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && typeof data.percentage === 'number') {
+          setSystemEnergy(data);
+        }
+      })
+      .catch(() => {});
   }, [user, syncQuotas]);
 
   const remainingDaily = Math.max(0, maxGroqDailyQuota - groqDailyUsageCount);
@@ -91,18 +108,64 @@ export function ProviderSelector() {
               )}
             </div>
 
-            <div className="mt-4 space-y-1.5">
+            <div className="mt-4 space-y-2">
               <p className="text-xs text-zinc-200 font-medium">
-                ⚡ ถอดเสียงรวดเร็วด้วย AI ภาษาไทย
+                ⚡ ถอดเสียงรวดเร็วด้วย AI ภาษาไทย (คลิปละไม่เกิน 2 นาที)
               </p>
-              <p className="text-xs text-zinc-400">
-                คลิปละไม่เกิน 2 นาที (รีเซ็ตทุกเที่ยงคืน)
-              </p>
+
+              {/* Battery / Energy Status Gauge (Visual Bar, No Raw Numbers) */}
+              <div className="p-2.5 rounded-xl bg-zinc-900/90 border border-zinc-800 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  {/* Battery Casing */}
+                  <div className="relative flex items-center">
+                    <div className="w-7 h-4 rounded-sm border-1.5 border-zinc-500 bg-zinc-950 p-0.5 flex items-center gap-0.5">
+                      <div
+                        className={`h-full rounded-2xs transition-all duration-500 ${
+                          systemEnergy.energyLevel === 'empty'
+                            ? 'w-0'
+                            : systemEnergy.energyLevel === 'low'
+                            ? 'w-1/4 bg-rose-500'
+                            : systemEnergy.energyLevel === 'medium'
+                            ? 'w-2/3 bg-amber-400'
+                            : 'w-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]'
+                        }`}
+                      />
+                    </div>
+                    {/* Battery Anode Pin */}
+                    <div className="w-0.5 h-1.5 bg-zinc-500 rounded-r-xs ml-0.5" />
+                  </div>
+
+                  <span className="text-[11px] text-zinc-400 font-medium">
+                    พลังงานเซิร์ฟเวอร์ฟรีวันนี้:
+                  </span>
+                </div>
+
+                {/* Status Text Badge */}
+                <span
+                  className={`text-[10.5px] font-bold px-2 py-0.5 rounded-md ${
+                    systemEnergy.energyLevel === 'empty'
+                      ? 'bg-rose-950/80 text-rose-300 border border-rose-800'
+                      : systemEnergy.energyLevel === 'low'
+                      ? 'bg-amber-950/80 text-amber-300 border border-amber-800'
+                      : systemEnergy.energyLevel === 'medium'
+                      ? 'bg-amber-950/60 text-amber-300 border border-amber-800/60'
+                      : 'bg-emerald-950/80 text-emerald-300 border border-emerald-800'
+                  }`}
+                >
+                  {systemEnergy.energyLevel === 'empty'
+                    ? 'โควต้าเต็มแล้ว'
+                    : systemEnergy.energyLevel === 'low'
+                    ? 'ใกล้หมด'
+                    : systemEnergy.energyLevel === 'medium'
+                    ? 'ปานกลาง'
+                    : 'เต็มเปี่ยม ⚡'}
+                </span>
+              </div>
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between">
-            <span className="text-xs text-zinc-400">โควตาวันนี้:</span>
+            <span className="text-xs text-zinc-400">โควต้าของคุณ:</span>
             <span className={`text-xs font-bold ${remainingDaily > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
               เหลือ {remainingDaily}/{maxGroqDailyQuota} คลิป
             </span>

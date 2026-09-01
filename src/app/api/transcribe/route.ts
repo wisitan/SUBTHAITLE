@@ -4,6 +4,7 @@ import {
   calculateCreditUsage,
 } from '@/services/billing/quota';
 import { transcribeAudioBuffer } from '@/services/ai';
+import { getDailySystemUsage, incrementDailySystemUsage } from '../system/quota/route';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,7 +48,19 @@ export async function POST(request: NextRequest) {
 
     // Mode validation
     if (mode === 'free' || mode === 'groq_free' || mode === 'google_free') {
-      // Free mode limit: max 2 minutes (125s)
+      // 1. Check Global System-Wide Daily Limit (500 clips / day)
+      const systemUsage = getDailySystemUsage();
+      if (systemUsage.isExhausted) {
+        return NextResponse.json(
+          {
+            error:
+              '⚠️ โควต้าฟรีประจำวันของระบบครบกำหนดแล้วค่ะ (รีเซ็ตทุกเที่ยงคืน) กรุณาเลือกโหมด "Credit ที่มี" หรือเติมเครดิตเพื่อถอดเสียงได้ทันทีค่ะ',
+          },
+          { status: 429 }
+        );
+      }
+
+      // 2. Free mode duration limit: max 2 minutes (125s)
       if (clientDuration > 125) {
         return NextResponse.json(
           {
@@ -65,6 +78,9 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: firstRow.message }, { status: 429 });
         }
       }
+
+      // Track global free usage
+      incrementDailySystemUsage();
     } else if (mode === 'credits') {
       const neededCredits = calculateCreditUsage(clientDuration);
       if (supabase && userId) {
