@@ -9,6 +9,7 @@ import {
 import { cleanThaiText, resegmentThaiWords } from './thai-text';
 import { groupWordsIntoCaptions, splitLongCaptions } from './caption-grouping';
 import { applyDictionaryToWords, applyDictionaryReplacements } from './default-dictionary';
+import { sliceAudioIntoChunks, AudioChunk } from './audio-extract';
 
 export interface TranscribeResponse {
   success: boolean;
@@ -27,6 +28,28 @@ export interface TranscribeResponse {
     confidence?: number;
   }>;
   error?: string;
+}
+
+/**
+ * Concurrency-controlled execution pool (prevents rate limits / DoS)
+ */
+async function runConcurrencyPool<T, R>(
+  items: T[],
+  concurrencyLimit: number,
+  workerFn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let nextIdx = 0;
+
+  const workers = new Array(Math.min(concurrencyLimit, items.length)).fill(0).map(async () => {
+    while (nextIdx < items.length) {
+      const currentIdx = nextIdx++;
+      results[currentIdx] = await workerFn(items[currentIdx]);
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
 }
 
 /**
@@ -85,7 +108,7 @@ export async function transcribeAudio(
     onProgress('กำลังส่งไฟล์เสียงไปถอดข้อความด้วย AI...');
   }
 
-  let data: TranscribeResponse;
+  let data: TranscribeResponse | null = null;
 
   // 2. Execution path based on Provider / Mode
   const isBYOK = providerMode === 'byok' && Boolean(groqApiKey.trim());
@@ -262,64 +285,171 @@ export async function transcribeAudio(
     }
   } else {
     // Server API route for Cloud Free & Credit Modes
-    if (onProgress) {
-      onProgress(
-        providerMode === 'groq_free'
-          ? 'กำลังถอดเสียงผ่าน Groq AI Cloud...'
-          : 'กำลังถอดเสียงผ่าน Google Cloud AI...'
-      );
+    // Check if audio exceeds 3 minutes (> 180s) and needs smart parallel chunking
+    if (mediaDuration > 180) {
+      if (onProgress) {
+        onProgress('กำลังตัดแบ่งไฟล์เสียงเพื่อส่งถอดเสียงคู่ขนาน (Parallel Turbo Engine)...');
+      }
+
+      const chunks = await sliceAudioIntoChunks(audioBlob, mediaDuration, 150);
+
+      if (chunks.length > 1) {
+        let completedCount = 0;
+        const totalChunks = chunks.length;
+
+        // Concurrency Pool Worker: max 2 parallel requests
+        const transcribeSingleChunk = async (chunk: AudioChunk): Promise<TranscribeResponse> => {
+          const formData = new FormData();
+          formData.append('file', chunk.blob, 'audio.mp3');
+          formData.append('language', 'th');
+          formData.append('provider', providerMode === 'groq_free' ? 'groq' : 'google');
+          formData.append('mode', providerMode);
+          formData.append('duration', chunk.index === 0 ? mediaDuration.toString() : chunk.duration.toString());
+          formData.append('chunkIndex', chunk.index.toString());
+          formData.append('totalChunks', totalChunks.toString());
+          formData.append('isChunkPart', (chunk.index > 0).toString());
+          if (authInfo?.userId) {
+            formData.append('userId', authInfo.userId);
+          }
+          formData.append('tier', effectiveTier);
+
+          const res = await fetch('/api/transcribe', {
+            method: 'POST',
+            body: formData,
+          });
+
+          let resText = '';
+          let chunkResult: TranscribeResponse;
+          try {
+            resText = await res.text();
+            chunkResult = JSON.parse(resText);
+          } catch {
+            throw new Error(
+              `เซิร์ฟเวอร์ส่งการตอบกลับที่ไม่ถูกต้องในท่อนที่ ${chunk.index + 1} (${res.status}): ${resText.slice(0, 150) || 'กรุณาลองใหม่อีกครั้ง'}`
+            );
+          }
+
+          if (!res.ok || !chunkResult.success) {
+            throw new Error(chunkResult.error || `เกิดข้อผิดพลาดในการถอดเสียงท่อนที่ ${chunk.index + 1}`);
+          }
+
+          completedCount++;
+          if (onProgress) {
+            onProgress(`กำลังถอดเสียงคู่ขนาน: สำเร็จแล้ว ${completedCount}/${totalChunks} ท่อน...`);
+          }
+
+          return chunkResult;
+        };
+
+        // Run with concurrency pool limit 2
+        const chunkResults = await runConcurrencyPool(chunks, 2, transcribeSingleChunk);
+
+        // Merge chunk words and adjust timestamps
+        const allWords: Array<{ word: string; start: number; end: number; confidence?: number }> = [];
+        let combinedText = '';
+
+        for (let i = 0; i < chunks.length; i++) {
+          const chunk = chunks[i];
+          const chunkRes = chunkResults[i];
+
+          if (chunkRes.text) {
+            combinedText += (combinedText ? ' ' : '') + chunkRes.text;
+          }
+
+          for (const w of chunkRes.words || []) {
+            allWords.push({
+              word: w.word,
+              start: Number((w.start + chunk.startOffset).toFixed(2)),
+              end: Number((w.end + chunk.startOffset).toFixed(2)),
+              confidence: w.confidence,
+            });
+          }
+        }
+
+        data = {
+          success: true,
+          text: combinedText,
+          duration: mediaDuration,
+          words: allWords,
+        };
+
+        // Update Quota / Credits on successful transcription
+        if (providerMode === 'credits' && requiredCredits > 0) {
+          store.deductCredits(requiredCredits);
+        } else if (providerMode === 'google_free') {
+          store.incrementGoogleMonthlyUsage(authInfo?.userId);
+        } else if (providerMode === 'groq_free') {
+          store.incrementGroqDailyUsage(authInfo?.userId);
+        }
+        store.incrementDailyUsage(authInfo?.userId);
+      }
     }
 
-    // Safety check for Vercel 4.5MB payload limit
-    if (audioBlob.size > 4.2 * 1024 * 1024) {
-      throw new Error(
-        'ขนาดไฟล์เสียงเกิน 4MB สำหรับเซิร์ฟเวอร์ กรุณาใช้โหมด BYOK เพื่อถอดเสียงไฟล์ขนาดใหญ่ได้ทันที'
-      );
-    }
+    // Standard Single-Request Path (for clips <= 3 mins or single chunk)
+    if (!data) {
+      if (onProgress) {
+        onProgress(
+          providerMode === 'groq_free'
+            ? 'กำลังถอดเสียงผ่าน Groq AI Cloud...'
+            : 'กำลังถอดเสียงผ่าน Google Cloud AI...'
+        );
+      }
 
-    const formData = new FormData();
-    formData.append('file', audioBlob, 'audio.mp3');
-    formData.append('language', 'th');
-    formData.append('provider', providerMode === 'groq_free' ? 'groq' : 'google');
-    formData.append('mode', providerMode);
-    formData.append('duration', mediaDuration.toString());
-    if (authInfo?.userId) {
-      formData.append('userId', authInfo.userId);
-    }
-    formData.append('tier', effectiveTier);
+      // Safety check for Vercel 4.5MB payload limit
+      if (audioBlob.size > 4.2 * 1024 * 1024) {
+        throw new Error(
+          'ขนาดไฟล์เสียงเกิน 4MB สำหรับเซิร์ฟเวอร์ กรุณาใช้โหมด BYOK เพื่อถอดเสียงไฟล์ขนาดใหญ่ได้ทันที'
+        );
+      }
 
-    const res = await fetch('/api/transcribe', {
-      method: 'POST',
-      body: formData,
-    });
+      const formData = new FormData();
+      formData.append('file', audioBlob, 'audio.mp3');
+      formData.append('language', 'th');
+      formData.append('provider', providerMode === 'groq_free' ? 'groq' : 'google');
+      formData.append('mode', providerMode);
+      formData.append('duration', mediaDuration.toString());
+      if (authInfo?.userId) {
+        formData.append('userId', authInfo.userId);
+      }
+      formData.append('tier', effectiveTier);
 
-    let resText = '';
-    try {
-      resText = await res.text();
-      data = JSON.parse(resText);
-    } catch {
-      throw new Error(
-        `เซิร์ฟเวอร์ส่งการตอบกลับที่ไม่ถูกต้อง (${res.status}): ${resText.slice(0, 150) || 'กรุณาลองใหม่อีกครั้ง'}`
-      );
-    }
+      const res = await fetch('/api/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
 
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || 'เกิดข้อผิดพลาดในการถอดเสียงจากเซิร์ฟเวอร์');
-    }
+      let resText = '';
+      try {
+        resText = await res.text();
+        data = JSON.parse(resText);
+      } catch {
+        throw new Error(
+          `เซิร์ฟเวอร์ส่งการตอบกลับที่ไม่ถูกต้อง (${res.status}): ${resText.slice(0, 150) || 'กรุณาลองใหม่อีกครั้ง'}`
+        );
+      }
 
-    // Update Quota / Credits on successful transcription
-    if (providerMode === 'credits' && requiredCredits > 0) {
-      store.deductCredits(requiredCredits);
-    } else if (providerMode === 'google_free') {
-      store.incrementGoogleMonthlyUsage(authInfo?.userId);
-    } else if (providerMode === 'groq_free') {
-      store.incrementGroqDailyUsage(authInfo?.userId);
+      if (!res.ok || !data || !data.success) {
+        throw new Error(data?.error || 'เกิดข้อผิดพลาดในการถอดเสียงจากเซิร์ฟเวอร์');
+      }
+
+      // Update Quota / Credits on successful transcription
+      if (providerMode === 'credits' && requiredCredits > 0) {
+        store.deductCredits(requiredCredits);
+      } else if (providerMode === 'google_free') {
+        store.incrementGoogleMonthlyUsage(authInfo?.userId);
+      } else if (providerMode === 'groq_free') {
+        store.incrementGroqDailyUsage(authInfo?.userId);
+      }
+      store.incrementDailyUsage(authInfo?.userId);
     }
-    store.incrementDailyUsage(authInfo?.userId);
   }
 
   if (onProgress) {
     onProgress('จัดกลุ่มคำและคำนวณจังหวะซับไตเติล (Smart Pacing)...');
+  }
+
+  if (!data) {
+    throw new Error('ไม่สามารถรับข้อมูลผลลัพธ์การถอดเสียงจากเซิร์ฟเวอร์ได้');
   }
 
   // 3. Extract and Clean Word-level Timestamps

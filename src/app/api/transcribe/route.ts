@@ -469,7 +469,12 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    if (supabase && userId) {
+    // Extract Chunking Metadata
+    const chunkIndex = formData.get('chunkIndex') ? parseInt(formData.get('chunkIndex') as string, 10) : 0;
+    const isChunkPart = formData.get('isChunkPart') === 'true' || chunkIndex > 0;
+
+    // Deduct credits or consume quota ONLY on chunk 0 or single-file requests (prevents duplicate deductions)
+    if (supabase && userId && !isChunkPart) {
       // 2.1 Credit Mode: Pre-deduct credit atomically via RPC (Locks row & deducts)
       if (mode === 'credits') {
         const neededCredits = calculateCreditUsage(clientDuration);
@@ -511,7 +516,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Free Mode 2-Minute Length Check (120s + 5s tolerance)
-    if ((mode === 'google_free' || mode === 'groq_free') && clientDuration > 125) {
+    if (!isChunkPart && (mode === 'google_free' || mode === 'groq_free') && clientDuration > 125) {
       return NextResponse.json(
         {
           error:
