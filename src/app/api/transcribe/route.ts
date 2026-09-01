@@ -189,13 +189,13 @@ async function correctThaiWordsWithLLM(
   const systemPrompt =
     'You are an expert Thai speech transcription post-correction engine for video subtitles (Shorts, Reels, TikTok, product reviews). Your job is to fix phonetic errors, typos, homophones (e.g. ชาชาติ -> สายชาร์จ, สักเช่นนึง -> สักเส้นนึง, ดีดี -> ดีๆ, นะครับ -> นะครับ) based on video context (gadgets, technology, shopping, gaming). Return JSON only in this format: {"words": ["word1", "word2", ...], "text": "Full corrected text"}. The words array MUST have the exact same number of items and order as input.';
 
-  // 1. Primary Attempt: Google Gemini API (Flash / Pro)
-  const geminiApiKey =
+  // 1. Primary Attempt: Google Gemini API (Google AI Studio)
+  const geminiApiKey = (
     process.env.GEMINI_API_KEY ||
-    process.env.GOOGLE_API_KEY ||
-    process.env.GOOGLE_STT_API_KEY ||
-    process.env.Google ||
-    process.env.GOOGLE;
+    process.env.GOOGLE_AI_KEY ||
+    process.env.GOOGLE_GENAI_API_KEY ||
+    ''
+  ).trim();
 
   if (geminiApiKey) {
     const candidateModels = [
