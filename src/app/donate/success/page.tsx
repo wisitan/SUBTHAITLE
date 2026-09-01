@@ -8,19 +8,31 @@ import { Sparkles, Crown, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react
 
 function SuccessContent() {
   const searchParams = useSearchParams();
+  const sessionId = searchParams.get('session_id');
   const packageId = searchParams.get('packageId') || searchParams.get('tier');
   const { refreshProfile, profile } = useAuth();
 
   useEffect(() => {
-    // Refresh user profile to fetch newly credited balance from Supabase
+    // 1. Verify session directly with server & Stripe (Instant Double-Safety Guarantee)
+    if (sessionId) {
+      fetch('/api/stripe/verify-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId }),
+      })
+        .then(() => refreshProfile())
+        .catch((err) => console.warn('[Verify Session Client Error]:', err));
+    }
+
+    // 2. Poll refresh user profile to ensure Realtime / Webhook updates reflect
     refreshProfile();
-    const t1 = setTimeout(() => refreshProfile(), 1500);
-    const t2 = setTimeout(() => refreshProfile(), 3500);
+    const t1 = setTimeout(() => refreshProfile(), 1000);
+    const t2 = setTimeout(() => refreshProfile(), 2500);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, [refreshProfile]);
+  }, [sessionId, refreshProfile]);
 
   const isLifetime = packageId === 'tier_699' || packageId === 'lifetime_699' || profile?.is_lifetime_unlocked;
   let packageName = 'เครดิตถอดเสียงภาษาไทย';
