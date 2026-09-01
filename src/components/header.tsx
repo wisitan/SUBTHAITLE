@@ -25,8 +25,8 @@ export function Header() {
               <span className="font-black text-base sm:text-lg text-white tracking-tight truncate">
                 SUBTHAITLE
               </span>
-              <span className="px-1.5 py-0.5 text-xs font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-md shrink-0">
-                v4.12
+              <span className="px-1.5 py-0.5 text-xs font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 rounded-md shrink-0 font-mono">
+                {process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA ? `uat-${process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA.slice(0, 7)}` : 'uat-dev'}
               </span>
             </div>
             <p className="text-xs text-zinc-300 font-medium truncate hidden sm:block">Thai Caption & Subtitle Studio</p>
