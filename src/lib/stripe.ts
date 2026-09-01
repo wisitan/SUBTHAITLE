@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
 
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
+const stripeSecretKey = (process.env.STRIPE_SECRET_KEY || '').trim();
 
 export const stripe = stripeSecretKey
   ? new Stripe(stripeSecretKey, {

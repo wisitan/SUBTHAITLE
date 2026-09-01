@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Lock, ShieldCheck, AlertCircle, X } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 
@@ -12,7 +11,6 @@ interface AdminPinModalProps {
 }
 
 export function AdminPinModal({ isOpen, onClose, onSuccess }: AdminPinModalProps) {
-  const router = useRouter();
   const setIsAdmin = useAppStore((state) => state.setIsAdmin);
   const setAdminToken = useAppStore((state) => state.setAdminToken);
   const [pin, setPin] = useState(['', '', '', '']);
@@ -62,8 +60,6 @@ export function AdminPinModal({ isOpen, onClose, onSuccess }: AdminPinModalProps
           onClose();
           if (onSuccess) {
             onSuccess();
-          } else {
-            router.push('/admin/dictionary');
           }
         }, 600);
       } else {
