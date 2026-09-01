@@ -82,6 +82,7 @@ export function UploadZone() {
   }, [isTranscribing]);
 
   const isBYOK = (providerMode === 'byok' || providerMode === 'local') && Boolean(groqApiKey);
+  const isFreeMode = providerMode === 'free' || providerMode === 'google_free' || providerMode === 'groq_free';
   const isUnlimitedSize = isBYOK || providerMode === 'credits';
 
   const handleFile = useCallback(
@@ -747,10 +748,8 @@ export function UploadZone() {
                     <>
                       <Sparkles className="w-5 h-5" />
                       <span>
-                        {providerMode === 'google_free'
-                          ? 'เริ่มถอดเสียงด้วย Google AI'
-                          : providerMode === 'groq_free'
-                          ? 'เริ่มถอดเสียงด้วย Groq AI'
+                        {isFreeMode
+                          ? 'เริ่มถอดเสียงด้วย AI (โหมดฟรี)'
                           : providerMode === 'credits'
                           ? `เริ่มถอดเสียงด้วย Credit (หัก ${calculateCreditUsage(mediaDuration)} นาที)`
                           : 'เริ่มถอดเสียงด้วย AI'}
