@@ -149,10 +149,10 @@ export interface AudioChunk {
 export async function sliceAudioIntoChunks(
   audioBlob: Blob,
   totalDuration: number,
-  chunkDurationSec: number = 150
+  chunkDurationSec: number = 25
 ): Promise<AudioChunk[]> {
-  // If audio is short (<= 3 mins), return single chunk without slicing
-  if (totalDuration <= 180) {
+  // If audio is short (<= chunkDurationSec), return single chunk without slicing
+  if (totalDuration <= chunkDurationSec) {
     return [
       {
         blob: audioBlob,

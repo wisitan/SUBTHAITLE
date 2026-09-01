@@ -285,13 +285,13 @@ export async function transcribeAudio(
     }
   } else {
     // Server API route for Cloud Free & Credit Modes
-    // Check if audio exceeds 1 minute (> 60s) and needs smart parallel chunking
-    if (mediaDuration > 60) {
+    // Check if audio exceeds 25 seconds (> 25s) and needs smart parallel chunking for Vercel Serverless
+    if (mediaDuration > 25) {
       if (onProgress) {
         onProgress('กำลังตัดแบ่งไฟล์เสียงเพื่อส่งถอดเสียงคู่ขนาน (Parallel Turbo Engine)...');
       }
 
-      const chunks = await sliceAudioIntoChunks(audioBlob, mediaDuration, 60);
+      const chunks = await sliceAudioIntoChunks(audioBlob, mediaDuration, 25);
 
       if (chunks.length > 1) {
         let completedCount = 0;

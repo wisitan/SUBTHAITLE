@@ -25,7 +25,7 @@ export async function fetchWhisperAcousticWords(
       const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${openAiApiKey}` },
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(5000),
         body: openAiForm,
       });
 
@@ -59,7 +59,7 @@ export async function fetchWhisperAcousticWords(
       const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${groqApiKey}` },
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(5000),
         body: groqForm,
       });
 

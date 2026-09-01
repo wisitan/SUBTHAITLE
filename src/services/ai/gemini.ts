@@ -64,7 +64,7 @@ STRICT JSON OUTPUT SCHEMA:
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          signal: AbortSignal.timeout(15000),
+          signal: AbortSignal.timeout(6500),
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [
