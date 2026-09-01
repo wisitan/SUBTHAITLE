@@ -172,9 +172,46 @@ interface TranscribedWord {
   confidence?: number;
 }
 
+function alignCorrectedWords(
+  originalWords: TranscribedWord[],
+  correctedWords: (string | { word: string })[]
+): TranscribedWord[] {
+  if (originalWords.length === 0 || correctedWords.length === 0) return originalWords;
+
+  // Case 1: Exact 1-to-1 match
+  if (originalWords.length === correctedWords.length) {
+    return originalWords.map((orig, i) => {
+      const item = correctedWords[i];
+      const wordStr = typeof item === 'string' ? item : item?.word || orig.word;
+      return {
+        word: wordStr,
+        start: orig.start,
+        end: orig.end,
+        confidence: orig.confidence,
+      };
+    });
+  }
+
+  // Case 2: Length difference (e.g. 3 tokens 'วิธี' 'ใช้' 'สี' merged into 'Type-C')
+  const totalStart = originalWords[0].start;
+  const totalEnd = originalWords[originalWords.length - 1].end;
+  const totalDuration = Math.max(0.1, totalEnd - totalStart);
+  const count = correctedWords.length;
+  const step = totalDuration / count;
+
+  return correctedWords.map((item, idx) => {
+    const wordStr = typeof item === 'string' ? item : item?.word || '';
+    return {
+      word: wordStr,
+      start: parseFloat((totalStart + idx * step).toFixed(2)),
+      end: parseFloat((totalStart + (idx + 1) * step).toFixed(2)),
+      confidence: 0.95,
+    };
+  });
+}
+
 // 🧠 AI Auto-Correction (Post-Processing Engine)
 // รองรับ Google Gemini (Flash / Pro) เป็นหลัก และ Fallback ไปยัง OpenAI (gpt-4o-mini)
-// ใช้ Payload Optimization ส่งเฉพาะ Array คำ (ลด Token ลง 70% เหลือต้นทุนเพียง 0.07฿/นาที)
 async function correctThaiWordsWithLLM(
   words: TranscribedWord[],
   rawText: string
@@ -186,8 +223,24 @@ async function correctThaiWordsWithLLM(
   // Optimize payload: ส่งเฉพาะคำภาษาไทยแบบ string array เพื่อประหยัด Tokens 70%
   const wordStringsInput = words.map((w) => w.word);
 
-  const systemPrompt =
-    'You are an expert Thai speech transcription post-correction engine for video subtitles (Shorts, Reels, TikTok, product reviews). Your job is to fix phonetic errors, typos, homophones (e.g. ชาชาติ -> สายชาร์จ, สักเช่นนึง -> สักเส้นนึง, ดีดี -> ดีๆ, นะครับ -> นะครับ) based on video context (gadgets, technology, shopping, gaming). Return JSON only in this format: {"words": ["word1", "word2", ...], "text": "Full corrected text"}. The words array MUST have the exact same number of items and order as input.';
+  const systemPrompt = `You are an elite Thai speech subtitle correction engine for video content (Shorts, TikTok, YouTube Reviews, Tech Gadgets).
+Your job is to fix phonetic speech recognition errors, sound-alikes, and garbled technical jargon based on the full sentence context:
+
+COMMON GADGET & PHONETIC CORRECTION RULES:
+- "วิธีใช้ สี" / "วิธีใช้สี" / "วิธีใช้ ซี" / "วิทีซี" / "ไทป์สี" / "ไทบซี" -> "Type-C" or "USB Type-C"
+- "usb แอมป์" / "usb แอม" / "ยูเอสบี แอมป์" / "ยูเอสบี เอ" -> "USB-A"
+- "ยูเอสบี ซี" / "usb ซี" -> "USB-C"
+- "ชาชาติ" / "ชาจ" / "ชาร์ท" -> "ชาร์จ" (or "สายชาร์จ" if next to "สาย")
+- "สักเช่นนึง" / "สักเส้นนึง" -> "สักเส้นนึง"
+- "ตัวเนีย" / "ตัวเนี้ย" -> "ตัวนี้" or "ตัวเนี้ย"
+- "ดีดี" -> "ดีๆ", "เร็วเร็ว" -> "เร็วๆ", "มากมาก" -> "มากๆ", "จริงจริง" -> "จริงๆ"
+- "พาวเวอร์แบง" / "พาเวอร์แบงค์" -> "Power Bank" or "พาวเวอร์แบงค์"
+- "ฟาสชาร์จ" / "ฟาสต์ชาร์ต" -> "Fast Charge"
+- "หกสิบ ดับเบิลยู" / "ร้อย ดับเบิลยู" -> "60W" / "100W"
+
+STRICT OUTPUT FORMAT:
+Return JSON only: {"words": ["word1", "word2", ...], "text": "Full corrected sentence"}
+The "words" array should represent the corrected words in the exact same chronological sequence.`;
 
   // 1. Primary Attempt: Google Gemini API (Google AI Studio)
   const geminiApiKey = (
@@ -212,7 +265,7 @@ async function correctThaiWordsWithLLM(
             headers: {
               'Content-Type': 'application/json',
             },
-            signal: AbortSignal.timeout(3500),
+            signal: AbortSignal.timeout(4000),
             body: JSON.stringify({
               system_instruction: {
                 parts: [{ text: systemPrompt }],
@@ -220,7 +273,7 @@ async function correctThaiWordsWithLLM(
               contents: [
                 {
                   role: 'user',
-                  parts: [{ text: JSON.stringify(wordStringsInput) }],
+                  parts: [{ text: `Original Words Array:\n${JSON.stringify(wordStringsInput)}` }],
                 },
               ],
               generationConfig: {
@@ -237,17 +290,8 @@ async function correctThaiWordsWithLLM(
           if (jsonText) {
             const parsed = JSON.parse(jsonText);
             const rawWordsList = parsed.words;
-            if (Array.isArray(rawWordsList) && rawWordsList.length === words.length) {
-              const mergedWords: TranscribedWord[] = words.map((orig, i) => {
-                const item = rawWordsList[i];
-                const correctedWord = typeof item === 'string' ? item : item?.word || orig.word;
-                return {
-                  word: correctedWord,
-                  start: orig.start,
-                  end: orig.end,
-                  confidence: orig.confidence,
-                };
-              });
+            if (Array.isArray(rawWordsList) && rawWordsList.length > 0) {
+              const mergedWords = alignCorrectedWords(words, rawWordsList);
               return {
                 words: mergedWords,
                 text: parsed.text || mergedWords.map((w) => w.word).join(' '),
@@ -255,7 +299,6 @@ async function correctThaiWordsWithLLM(
             }
           }
         } else if (geminiRes.status === 400 || geminiRes.status === 403 || geminiRes.status === 404) {
-          // If key is not valid for Gemini API, break early instead of retrying other models
           break;
         }
       } catch (err) {
@@ -285,7 +328,7 @@ async function correctThaiWordsWithLLM(
             },
             {
               role: 'user',
-              content: JSON.stringify(wordStringsInput),
+              content: `Original Words Array:\n${JSON.stringify(wordStringsInput)}`,
             },
           ],
           response_format: { type: 'json_object' },
@@ -299,17 +342,8 @@ async function correctThaiWordsWithLLM(
         if (content) {
           const parsed = JSON.parse(content);
           const rawWordsList = parsed.words;
-          if (Array.isArray(rawWordsList) && rawWordsList.length === words.length) {
-            const mergedWords: TranscribedWord[] = words.map((orig, i) => {
-              const item = rawWordsList[i];
-              const correctedWord = typeof item === 'string' ? item : item?.word || orig.word;
-              return {
-                word: correctedWord,
-                start: orig.start,
-                end: orig.end,
-                confidence: orig.confidence,
-              };
-            });
+          if (Array.isArray(rawWordsList) && rawWordsList.length > 0) {
+            const mergedWords = alignCorrectedWords(words, rawWordsList);
             return {
               words: mergedWords,
               text: parsed.text || mergedWords.map((w) => w.word).join(' '),
@@ -535,12 +569,14 @@ export async function POST(request: NextRequest) {
               speechContexts: [
                 {
                   phrases: [
-                    'สายชาร์จ', 'หัวชาร์จ', 'เก้าสิบองศา', 'เล่นเกม', 'จ่ายไฟ', 'วัตต์', 'แอมป์',
+                    'Type-C', 'USB-C', 'USB Type-C', 'USB-A', 'Type-A', 'Lightning', 'Micro USB',
+                    'สายชาร์จ', 'หัวชาร์จ', 'เก้าสิบองศา', 'เล่นเกม', 'จ่ายไฟ', 'วัตต์', 'แอมป์', 'โวลต์',
                     'ฟาสต์ชาร์จ', 'พาวเวอร์แบงค์', 'แนะนำ', 'รีวิว', 'คลิปนี้', 'สวัสดีครับ', 'สวัสดีค่ะ',
                     'ตัวนี้', 'อันนี้', 'แบบนี้', 'ราคา', 'โปรโมชั่น', 'ส่งฟรี', 'ของแท้', 'ประกัน',
-                    'สักเส้นนึง', 'ความยาว', 'ทนทาน', 'ชาร์จไว', 'ชาร์จเร็ว', 'ตัวเนี้ย', 'เล่นเกมไปด้วย'
+                    'สักเส้นนึง', 'ความยาว', 'ทนทาน', 'ชาร์จไว', 'ชาร์จเร็ว', 'ตัวเนี้ย', 'เล่นเกมไปด้วย',
+                    '60W', '100W', '240W', 'Fast Charge', 'Power Bank', 'Adapter', 'iPhone', 'iPad', 'Kimiso'
                   ],
-                  boost: 15.0,
+                  boost: 20.0,
                 },
               ],
               model: 'default',
