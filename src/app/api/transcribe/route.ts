@@ -7,8 +7,8 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds max execution time for Vercel functions
 
 function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
+  const serviceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '').trim();
 
   if (!url || !serviceKey) return null;
 
@@ -199,14 +199,9 @@ async function correctThaiWordsWithLLM(
 
   if (geminiApiKey) {
     const candidateModels = [
-      'gemini-3.7-flash',
-      'gemini-3.6-flash',
-      'gemini-3.5-flash',
-      'gemini-2.5-flash',
       'gemini-2.0-flash',
       'gemini-1.5-flash',
-      'gemini-3.1-flash-lite',
-      'gemini-3.1-pro',
+      'gemini-2.5-flash',
     ];
     for (const model of candidateModels) {
       try {
@@ -217,6 +212,7 @@ async function correctThaiWordsWithLLM(
             headers: {
               'Content-Type': 'application/json',
             },
+            signal: AbortSignal.timeout(3500),
             body: JSON.stringify({
               system_instruction: {
                 parts: [{ text: systemPrompt }],
@@ -258,9 +254,13 @@ async function correctThaiWordsWithLLM(
               };
             }
           }
+        } else if (geminiRes.status === 400 || geminiRes.status === 403 || geminiRes.status === 404) {
+          // If key is not valid for Gemini API, break early instead of retrying other models
+          break;
         }
       } catch (err) {
-        console.warn(`[Gemini Fallback]: Model ${model} failed, trying next...`, err);
+        console.warn(`[Gemini Fallback]: Model ${model} failed, skipping...`, err);
+        break;
       }
     }
   }
@@ -275,6 +275,7 @@ async function correctThaiWordsWithLLM(
           Authorization: `Bearer ${openAiApiKey}`,
           'Content-Type': 'application/json',
         },
+        signal: AbortSignal.timeout(4000),
         body: JSON.stringify({
           model: 'gpt-4o-mini',
           messages: [

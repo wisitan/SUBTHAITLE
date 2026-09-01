@@ -293,7 +293,15 @@ export async function transcribeAudio(
       body: formData,
     });
 
-    data = await res.json();
+    let resText = '';
+    try {
+      resText = await res.text();
+      data = JSON.parse(resText);
+    } catch {
+      throw new Error(
+        `เซิร์ฟเวอร์ส่งการตอบกลับที่ไม่ถูกต้อง (${res.status}): ${resText.slice(0, 150) || 'กรุณาลองใหม่อีกครั้ง'}`
+      );
+    }
 
     if (!res.ok || !data.success) {
       throw new Error(data.error || 'เกิดข้อผิดพลาดในการถอดเสียงจากเซิร์ฟเวอร์');

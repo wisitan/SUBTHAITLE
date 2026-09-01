@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore, calculateCreditUsage } from '@/lib/store';
 import { useAuth } from '@/context/auth-context';
@@ -59,7 +59,27 @@ export function UploadZone() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcribeMessage, setTranscribeMessage] = useState('');
+  const [transcribeProgressPercent, setTranscribeProgressPercent] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isTranscribing) {
+      setTranscribeProgressPercent(12);
+      interval = setInterval(() => {
+        setTranscribeProgressPercent((prev) => {
+          if (prev < 35) return prev + 6;
+          if (prev < 65) return prev + 3;
+          if (prev < 88) return prev + 1.5;
+          if (prev < 96) return prev + 0.5;
+          return prev;
+        });
+      }, 400);
+    } else {
+      setTranscribeProgressPercent(0);
+    }
+    return () => clearInterval(interval);
+  }, [isTranscribing]);
 
   const isBYOK = (providerMode === 'byok' || providerMode === 'local') && Boolean(groqApiKey);
   const isUnlimitedSize = isBYOK || providerMode === 'credits';
@@ -358,17 +378,56 @@ export function UploadZone() {
             </div>
           )}
 
-          {/* Transcription In Progress Banner */}
+          {/* Transcription In Progress Multi-Stage Progress Bar */}
           {isTranscribing && (
-            <div className="my-5 p-5 bg-gradient-to-r from-orange-500/15 via-amber-500/15 to-rose-500/15 border border-orange-500/40 rounded-2xl animate-pulse">
-              <div className="flex items-center gap-3">
-                <Loader2 className="w-6 h-6 text-orange-400 animate-spin" />
-                <div>
-                  <h5 className="text-base font-bold text-white">กำลังถอดเสียงภาษาไทยด้วย AI...</h5>
-                  <p className="text-sm text-orange-200 mt-0.5">
-                    {transcribeMessage || 'กำลังส่งไฟล์เสียงและคำนวณตำแหน่งเวลาของแต่ละคำ...'}
-                  </p>
+            <div className="my-5 p-5 bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border border-orange-500/40 rounded-2xl space-y-3 shadow-xl animate-in fade-in duration-300">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Loader2 className="w-6 h-6 text-orange-400 animate-spin shrink-0" />
+                  <div>
+                    <h5 className="text-base font-bold text-white">กำลังถอดเสียงภาษาไทยด้วย AI...</h5>
+                    <p className="text-sm text-orange-200 mt-0.5">
+                      {transcribeMessage ||
+                        (transcribeProgressPercent < 35
+                          ? 'กำลังส่งไฟล์เสียงไปยังเซิร์ฟเวอร์...'
+                          : transcribeProgressPercent < 70
+                          ? 'AI กำลังฟังและจับตำแหน่งเวลาของแต่ละคำ...'
+                          : transcribeProgressPercent < 90
+                          ? 'กำลังปรับแต่งคำศัพท์ภาษาไทยให้ถูกต้องแม่นยำ...'
+                          : 'กำลังจัดวรรคและคำนวณจังหวะซับ (Smart Pacing)...')}
+                    </p>
+                  </div>
                 </div>
+                <span className="text-lg font-black font-mono text-orange-400">
+                  {Math.round(transcribeProgressPercent)}%
+                </span>
+              </div>
+
+              {/* Progress Track */}
+              <div className="w-full bg-zinc-950/80 rounded-full h-3 overflow-hidden border border-orange-500/20 p-0.5">
+                <div
+                  className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-400 h-full rounded-full transition-all duration-300 shadow-lg shadow-orange-500/50"
+                  style={{ width: `${Math.min(100, Math.round(transcribeProgressPercent))}%` }}
+                />
+              </div>
+
+              {/* Progress Steps Indicator */}
+              <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1 font-medium">
+                <span className={transcribeProgressPercent >= 15 ? 'text-amber-400 font-semibold' : ''}>
+                  1. ส่งไฟล์เสียง
+                </span>
+                <span>•</span>
+                <span className={transcribeProgressPercent >= 45 ? 'text-amber-400 font-semibold' : ''}>
+                  2. ถอดเสียงระดับคำ
+                </span>
+                <span>•</span>
+                <span className={transcribeProgressPercent >= 75 ? 'text-amber-400 font-semibold' : ''}>
+                  3. ตรวจสอบความถูกต้อง
+                </span>
+                <span>•</span>
+                <span className={transcribeProgressPercent >= 90 ? 'text-amber-400 font-semibold' : ''}>
+                  4. จัดวรรคซับไตเติล
+                </span>
               </div>
             </div>
           )}
