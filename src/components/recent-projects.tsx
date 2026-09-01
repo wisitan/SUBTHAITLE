@@ -4,6 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useAppStore, UserProject } from '@/lib/store';
+import { getVideoFromCache } from '@/lib/video-cache';
 import {
   Clock,
   Cloud,
@@ -69,8 +70,20 @@ export function RecentProjects() {
     fetchProjects();
   }, [fetchProjects]);
 
-  const handleOpenProject = (project: UserProject) => {
+  const handleOpenProject = async (project: UserProject) => {
     loadProject(project);
+
+    try {
+      const cachedVideo = (await getVideoFromCache(project.id)) || (await getVideoFromCache(project.title));
+      if (cachedVideo) {
+        const url = URL.createObjectURL(cachedVideo);
+        useAppStore.getState().setVideoUrl(url);
+        useAppStore.getState().setFile(cachedVideo as File);
+      }
+    } catch (err) {
+      console.warn('[RecentProjects] Failed to load cached video:', err);
+    }
+
     router.push('/editor');
   };
 

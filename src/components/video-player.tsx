@@ -9,8 +9,10 @@ import {
   Tv,
   Square,
   Sparkles,
+  Upload,
 } from 'lucide-react';
 import { loadGoogleFont } from '@/lib/fonts';
+import { saveVideoToCache } from '@/lib/video-cache';
 import { useCaptionSync } from '@/hooks/use-caption-sync';
 import { TikTokSafeZone } from './tiktok-safe-zone';
 import { VideoControls } from './video-player/video-controls';
@@ -37,10 +39,13 @@ export function VideoPlayer({ className = '' }: Props) {
   const showTikTokSafeZone = useAppStore((s) => s.showTikTokSafeZone);
   const setShowTikTokSafeZone = useAppStore((s) => s.setShowTikTokSafeZone);
   const seekTarget = useAppStore((s) => s.seekTarget);
+  const currentProjectId = useAppStore((s) => s.currentProjectId);
+  const projectTitle = useAppStore((s) => s.projectTitle);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const videoDisplayRef = useRef<HTMLDivElement>(null);
+  const canvasInputRef = useRef<HTMLInputElement>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(mediaDuration || 0);
@@ -390,9 +395,67 @@ export function VideoPlayer({ className = '' }: Props) {
             )}
           </>
         ) : (
-          <div className="text-center p-8 space-y-2">
-            <Smartphone className="w-12 h-12 text-zinc-600 mx-auto" />
-            <p className="text-xs text-zinc-400 font-medium">ไม่มีวิดีโอสำหรับการแสดงผล</p>
+          <div className="relative w-full h-full flex flex-col items-center justify-center p-6 text-center">
+            {/* Background Subtitle Preview even without raw video */}
+            <SubtitleOverlay
+              activeCaption={activeCaption}
+              currentTime={currentTime}
+              style={style}
+              visualBounds={visualBounds}
+            />
+
+            {/* TikTok Safe Zone */}
+            {showTikTokSafeZone && aspectRatio === '9:16' && (
+              <div
+                className="absolute inset-0 m-auto pointer-events-none z-30"
+                style={{
+                  width: `${visualBounds.w}px`,
+                  height: `${visualBounds.h}px`,
+                }}
+              >
+                <TikTokSafeZone visible={true} />
+              </div>
+            )}
+
+            {/* Clickable Card to Attach Video */}
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                canvasInputRef.current?.click();
+              }}
+              className="z-40 p-5 sm:p-6 rounded-3xl bg-zinc-900/90 border border-zinc-700/80 hover:border-orange-500 hover:bg-zinc-900 transition-all text-center space-y-3 shadow-2xl backdrop-blur-md cursor-pointer max-w-xs group/canvas"
+            >
+              <input
+                ref={canvasInputRef}
+                type="file"
+                accept="video/*,audio/*"
+                className="hidden"
+                onChange={(e) => {
+                  const selected = e.target.files?.[0];
+                  if (selected) {
+                    const url = URL.createObjectURL(selected);
+                    useAppStore.getState().setFile(selected);
+                    useAppStore.getState().setVideoUrl(url);
+                    const k = currentProjectId || projectTitle || selected.name;
+                    if (k) saveVideoToCache(k, selected);
+                  }
+                }}
+              />
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center mx-auto group-hover/canvas:scale-110 transition-transform">
+                <Upload className="w-6 h-6" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-white group-hover/canvas:text-orange-400 transition-colors">
+                  คลิกเพื่อเลือกไฟล์วิดีโอ
+                </h4>
+                <p className="text-[11px] text-zinc-400 mt-0.5">
+                  เลือกไฟล์ {file?.name || projectTitle || 'วิดีโอต้นฉบับ'} เพื่อดูพรีวิวและส่งออก
+                </p>
+              </div>
+              <span className="inline-block px-3 py-1 rounded-xl bg-orange-500 text-zinc-950 text-xs font-bold shadow-md">
+                + เชื่อมต่อวิดีโอ
+              </span>
+            </div>
           </div>
         )}
 

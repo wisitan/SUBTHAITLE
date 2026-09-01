@@ -6,6 +6,7 @@ import { useAppStore, calculateCreditUsage } from '@/lib/store';
 import { useAuth } from '@/context/auth-context';
 import { extractAudioFromMedia, AudioExtractProgress } from '@/lib/audio-extract';
 import { transcribeAudio } from '@/lib/transcribe';
+import { saveVideoToCache } from '@/lib/video-cache';
 import {
   UploadCloud,
   FileVideo,
@@ -243,11 +244,18 @@ export function UploadZone() {
             const saveJson = await saveRes.json();
             if (saveJson.project?.id) {
               useAppStore.getState().setCurrentProjectId(saveJson.project.id);
+              if (file) {
+                saveVideoToCache(saveJson.project.id, file);
+              }
             }
           }
         } catch (saveErr) {
           console.warn('[Auto-Save Initial Project Error]:', saveErr);
         }
+      }
+
+      if (file) {
+        saveVideoToCache(projectName, file);
       }
 
       router.push('/editor');

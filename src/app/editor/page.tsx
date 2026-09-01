@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/context/auth-context';
+import { getVideoFromCache, saveVideoToCache } from '@/lib/video-cache';
 import { VideoPlayer } from '@/components/video-player';
 import { CaptionTable } from '@/components/caption-table';
 import { StyleEditor } from '@/components/style-editor';
@@ -91,11 +92,47 @@ export default function EditorPage() {
     return () => clearTimeout(timer);
   }, [user, captions, style, aspectRatio, currentProjectId, projectTitle, file, mediaDuration, rawWords, setCurrentProjectId]);
 
+  // Auto-restore cached video from browser IndexedDB if videoUrl is missing
+  useEffect(() => {
+    if (videoUrl) return;
+    const lookupKey = currentProjectId || projectTitle || file?.name;
+    if (!lookupKey) return;
+
+    let isMounted = true;
+    (async () => {
+      try {
+        const cachedBlob =
+          (await getVideoFromCache(lookupKey)) ||
+          (currentProjectId ? await getVideoFromCache(currentProjectId) : null) ||
+          (projectTitle ? await getVideoFromCache(projectTitle) : null);
+
+        if (cachedBlob && isMounted && !useAppStore.getState().videoUrl) {
+          const url = URL.createObjectURL(cachedBlob);
+          setVideoUrl(url);
+          setFile(cachedBlob as File);
+        }
+      } catch (err) {
+        console.warn('[Editor] Auto-restore cached video error:', err);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentProjectId, projectTitle, file, videoUrl, setVideoUrl, setFile]);
+
   const handleReconnectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
       setFile(selectedFile);
       setVideoUrl(URL.createObjectURL(selectedFile));
+      const key = currentProjectId || projectTitle || selectedFile.name;
+      if (key) {
+        saveVideoToCache(key, selectedFile);
+      }
+      if (currentProjectId) {
+        saveVideoToCache(currentProjectId, selectedFile);
+      }
       showToast('เชื่อมต่อไฟล์วิดีโอสำเร็จ!');
     }
   };
