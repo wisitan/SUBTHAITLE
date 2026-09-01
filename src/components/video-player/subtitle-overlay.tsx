@@ -198,8 +198,8 @@ export function SubtitleOverlay({
                           ? 800
                           : 500,
                         transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
-                        marginLeft: `${wordBufferPx}px`,
-                        marginRight: `${wordBufferPx}px`,
+                        marginLeft: isScaled ? `${wordBufferPx}px` : undefined,
+                        marginRight: isScaled ? `${wordBufferPx}px` : undefined,
                       }}
                     >
                       {w.word}
@@ -253,8 +253,8 @@ export function SubtitleOverlay({
                           ? 800
                           : 500,
                         transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
-                        marginLeft: `${wordBufferPx}px`,
-                        marginRight: `${wordBufferPx}px`,
+                        marginLeft: isScaled ? `${wordBufferPx}px` : undefined,
+                        marginRight: isScaled ? `${wordBufferPx}px` : undefined,
                         textShadow: isWordActive && shadowsCss !== 'none' ? shadowsCss : 'none',
                       }}
                     >

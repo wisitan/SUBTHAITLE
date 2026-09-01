@@ -39,18 +39,21 @@ function getThaiSegmenter() {
 export function resegmentThaiWords<T extends { word: string; start: number; end: number }>(tokens: T[]): T[] {
   if (!tokens || tokens.length === 0) return [];
 
+  // 1. First Pass: Merge broken Thai subwords, floating vowels, and tone marks across tokens
+  const preMerged = mergeThaiSubwordsFallback(tokens);
+
   const segmenter = getThaiSegmenter();
   if (!segmenter) {
-    return mergeThaiSubwordsFallback(tokens);
+    return preMerged;
   }
 
   const result: T[] = [];
 
-  for (const token of tokens) {
-    const text = token.word.trim();
+  for (const token of preMerged) {
+    const text = cleanThaiText(token.word.trim());
     if (!text) continue;
 
-    // Segment each token independently to prevent cross-token corruption
+    // Segment each token independently using Intl.Segmenter
     const segs = Array.from(segmenter.segment(text)).filter((s) => s.segment.trim());
     if (segs.length <= 1) {
       result.push({
@@ -83,8 +86,8 @@ export function resegmentThaiWords<T extends { word: string; start: number; end:
 }
 
 /**
- * Fallback merge for environments without Intl.Segmenter.
- * Only handles combining characters (tone marks, vowel marks) — not mid-syllable splits.
+ * Fallback merge for combining characters (tone marks, upper/lower vowel marks)
+ * and leading vowels that got detached into separate tokens.
  */
 function mergeThaiSubwordsFallback<T extends { word: string; start: number; end: number }>(rawWords: T[]): T[] {
   if (!rawWords || rawWords.length === 0) return [];
@@ -108,36 +111,42 @@ function mergeThaiSubwordsFallback<T extends { word: string; start: number; end:
 
 /**
  * Cleans and normalizes Thai transcription text.
+ * Fixes floating vowels, tone mark order, duplicate marks, and Whisper loops.
  */
 export function cleanThaiText(rawText: string): string {
   if (!rawText) return '';
 
   let text = rawText;
 
-  // 1. Remove zero-width spaces and weird non-printable unicode
-  text = text.replace(/[\u200B-\u200D\uFEFF]/g, '');
+  // 1. Remove zero-width spaces, soft hyphens and weird non-printable unicode
+  text = text.replace(/[\u200B-\u200D\uFEFF\u00AD]/g, '');
 
   // 2. Normalize non-breaking spaces to standard space
   text = text.replace(/\u00A0/g, ' ');
 
-  // 3. Remove known hallucinated subtitle tags like [Music] or (Applause)
+  // 3. Remove spaces directly preceding Thai combining vowels or tone marks (Fix floating vowels)
+  text = text.replace(/\s+([\u0E30-\u0E3A\u0E47-\u0E4E])/g, '$1');
+
+  // 4. Remove known hallucinated subtitle tags like [Music] or (Applause)
   HALLUCINATION_PATTERNS.forEach((pattern) => {
     text = text.replace(pattern, '');
   });
 
-  // 4. Normalize repetitive Thai tone marks / duplicate vowels
-  // e.g. ้้ -> ้, ่่ -> ่
+  // 5. Fix Thai Unicode combining order: Consonant + Upper Vowel + Tone Mark
+  // If tone mark came before vowel (e.g. ก + ้ + ิ -> ก + ิ + ้), swap them
+  text = text.replace(/([\u0E48-\u0E4B])([\u0E31\u0E34-\u0E3A])/g, '$2$1');
+
+  // 6. Normalize repetitive Thai tone marks / duplicate vowels (e.g. ้้ -> ้, ่่ -> ่)
   text = text.replace(/([่้๊๋์])\1+/g, '$1');
   text = text.replace(/([ะัาิีึืุู])\1+/g, '$1');
 
-  // 5. Fix Thai SARA AM if separated (ํ + า -> ำ)
+  // 7. Fix Thai SARA AM if separated (NIKHAHIT ํ + SARA AA า -> SARA AM ำ)
   text = text.replace(/\u0E4D\u0E32/g, '\u0E33');
 
-  // 6. Clean up repetitive word loops (Whisper loop bug: "สวัสดีครับ สวัสดีครับ สวัสดีครับ")
-  // Use explicit whitespace boundaries instead of ASCII-only \b for Thai support
+  // 8. Clean up repetitive word loops (Whisper loop bug: "สวัสดีครับ สวัสดีครับ สวัสดีครับ")
   text = text.replace(/(?:^|\s)(\S+(?:\s+\S+){0,3})\s+\1\s+\1+(?=\s|$)/gi, ' $1');
 
-  // 7. Normalize multi-spaces into single space
+  // 9. Normalize multi-spaces into single space
   text = text.replace(/\s+/g, ' ');
 
   return text.trim();
