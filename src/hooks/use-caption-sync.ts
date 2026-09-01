@@ -19,8 +19,10 @@ export function useCaptionSync(
   const activeCaptionIndex = useAppStore((s) => s.activeCaptionIndex);
   const setActiveCaptionIndex = useAppStore((s) => s.setActiveCaptionIndex);
 
-  // Find active caption index based on currentTime (strict interval priority to prevent jumping to previous cue)
+  // Find active caption index based on currentTime (strict match first, tiny tolerance fallback)
   const activeIndex = useMemo(() => {
+    if (!captions || captions.length === 0) return -1;
+
     // 1. Strict match: currentTime is within [start, end)
     const strictIndex = captions.findIndex(
       (c) => c.start <= currentTime && currentTime < c.end
@@ -29,7 +31,7 @@ export function useCaptionSync(
 
     // 2. Tolerance match: for very end of cue or between close frames
     return captions.findIndex(
-      (c) => c.start <= currentTime && currentTime <= c.end + 0.08
+      (c) => c.start <= currentTime && currentTime <= c.end + 0.05
     );
   }, [captions, currentTime]);
 
