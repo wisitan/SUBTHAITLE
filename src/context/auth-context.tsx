@@ -54,6 +54,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
+    try {
+      // 1. Fetch via dedicated server API (Bypasses RLS issues safely)
+      const res = await fetch(`/api/user/profile?userId=${encodeURIComponent(userId)}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.profile) {
+          return json.profile as UserProfile;
+        }
+      }
+    } catch (err) {
+      console.warn('Server profile fetch error, falling back to direct Supabase SDK:', err);
+    }
+
+    // 2. Fallback to Supabase client SDK
     const supabase = getSupabase();
     if (!supabase) return null;
 
@@ -62,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.warn('Error fetching user profile:', error.message);
