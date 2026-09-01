@@ -477,7 +477,7 @@ async function transcribeWithGeminiDirect(
 
   if (!geminiApiKey) return null;
 
-  const systemPrompt = `You are the world's most accurate Thai speech transcription and subtitle segmentation engine for video content (Shorts, TikTok, YouTube Reviews, Tech Gadgets, Lifestyle).
+  const systemPrompt = `You are the world's most accurate Thai speech transcription engine for video content (Shorts, TikTok, YouTube Reviews).
 
 TASK:
 Listen carefully to the audio file and transcribe the exact spoken Thai speech with natural conversational phrasing, 100% correct Thai spelling, and accurate English loanwords/brands/slang (e.g. Type-C, USB-C, Power Bank, Fast Charge, iPhone, iPad, Adapter, 60W, 100W, Vibe Coding, Affiliate, Kimiso).
@@ -488,22 +488,12 @@ CRITICAL PHONETIC & ANTI-HALLUCINATION RULES:
    - Example: "ก็รองรับ" / "รองรับหัว" / "หัวต่อ" / "หลายแบบ" is 100% Thai ("ก็รองรับหัวได้หลายแบบ"), DO NOT transcribe as "android" or "upload" or "download"!
    - Example: "มีทั้งแบบ", "ดึงออกมา", "เสียบใช้งาน", "ปรับได้" are pure Thai phrases.
 2. English is ONLY for real tech standards and brands: "Type-C", "USB-C", "USB-A", "Lightning", "60W", "100W", "Fast Charge", "Kimiso", "iPhone", "iPad", "Power Bank", "Adapter".
-3. Divide into natural, rhythmic subtitle segments (3 to 7 words per segment, 1.5 - 3.5 seconds each) that read smoothly on mobile screens.
-4. For each segment, provide the exact start and end timestamps in seconds (floats with 2 decimals) where the speaker begins and finishes pronouncing that phrase.
-5. In each segment, break down into an array of individual Thai words in "words".${extraRulesText}
+3. Break the transcript down into an array of individual short words or syllables in "words".${extraRulesText}
 
 STRICT JSON OUTPUT SCHEMA:
 {
   "text": "Full transcribed text...",
-  "duration": 15.5,
-  "segments": [
-    {
-      "start": 0.0,
-      "end": 2.5,
-      "text": "ก็รองรับหัวได้หลายแบบนะครับ",
-      "words": ["ก็รองรับ", "หัว", "ได้", "หลายแบบ", "นะครับ"]
-    }
-  ]
+  "words": ["ก็รองรับ", "หัว", "ได้", "หลายแบบ", "นะครับ"]
 }`;
 
   const candidateModels = [
@@ -573,9 +563,11 @@ STRICT JSON OUTPUT SCHEMA:
               });
             }
           } else if (Array.isArray(parsed.words) && parsed.words.length > 0) {
-            for (const w of parsed.words) {
+            for (let i = 0; i < parsed.words.length; i++) {
+              const w = parsed.words[i];
+              const wordStr = typeof w === 'string' ? w : String(w.word || '');
               allWords.push({
-                word: String(w.word || ''),
+                word: wordStr,
                 start: typeof w.start === 'number' ? w.start : parseFloat(String(w.start)) || 0,
                 end: typeof w.end === 'number' ? w.end : parseFloat(String(w.end)) || 0,
                 confidence: 0.98,

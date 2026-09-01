@@ -98,10 +98,10 @@ export async function extractAudioFromMedia(
       '-i',
       inputName,
       '-vn',                      // No video
-      '-af', 'highpass=f=200,lowpass=f=7000,loudnorm=I=-16:TP=-1.5:LRA=11',
+      '-af', 'highpass=f=200,loudnorm=I=-16:TP=-1.5:LRA=11', // Removed lowpass to preserve high frequencies for LLM
       '-ar', '16000',             // 16kHz sample rate (STT standard)
       '-ac', '1',                 // Mono
-      '-b:a', '64k',              // 64kbps bitrate (compact but clear)
+      '-b:a', '128k',             // 128kbps bitrate for clearer high-frequencies
       outputName,
     ]);
 
