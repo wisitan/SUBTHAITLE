@@ -291,10 +291,7 @@ STRICT JSON OUTPUT SCHEMA:
 
   const candidateModels = [
     'gemini-3.5-flash',
-    'gemini-2.5-flash',
-    'gemini-3.6-flash',
-    'gemini-3.7-flash',
-    'gemini-flash-latest',
+    'gemini-3.5-flash-lite',
   ];
 
   for (const model of candidateModels) {
@@ -304,7 +301,7 @@ STRICT JSON OUTPUT SCHEMA:
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          signal: AbortSignal.timeout(25000),
+          signal: AbortSignal.timeout(7000),
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [
@@ -355,7 +352,7 @@ STRICT JSON OUTPUT SCHEMA:
         }
       }
     } catch (err) {
-      console.warn(`[Gemini Direct Transcribe] Model ${model} failed, trying next...`, err);
+      console.warn(`[Gemini Direct Transcribe] Model ${model} failed or timed out:`, err);
     }
   }
 
@@ -433,10 +430,7 @@ Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรม
   if (geminiApiKey) {
     const candidateModels = [
       'gemini-3.5-flash',
-      'gemini-2.5-flash',
-      'gemini-3.6-flash',
-      'gemini-3.7-flash',
-      'gemini-flash-latest',
+      'gemini-3.5-flash-lite',
     ];
 
     const userParts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> = [];
@@ -459,7 +453,7 @@ Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรม
             headers: {
               'Content-Type': 'application/json',
             },
-            signal: AbortSignal.timeout(10000),
+            signal: AbortSignal.timeout(6000),
             body: JSON.stringify({
               system_instruction: {
                 parts: [{ text: systemPrompt }],

@@ -285,13 +285,13 @@ export async function transcribeAudio(
     }
   } else {
     // Server API route for Cloud Free & Credit Modes
-    // Check if audio exceeds 3 minutes (> 180s) and needs smart parallel chunking
-    if (mediaDuration > 180) {
+    // Check if audio exceeds 1 minute (> 60s) and needs smart parallel chunking
+    if (mediaDuration > 60) {
       if (onProgress) {
         onProgress('กำลังตัดแบ่งไฟล์เสียงเพื่อส่งถอดเสียงคู่ขนาน (Parallel Turbo Engine)...');
       }
 
-      const chunks = await sliceAudioIntoChunks(audioBlob, mediaDuration, 150);
+      const chunks = await sliceAudioIntoChunks(audioBlob, mediaDuration, 60);
 
       if (chunks.length > 1) {
         let completedCount = 0;
