@@ -243,6 +243,161 @@ interface SubtitleSegment {
   words?: TranscribedWord[];
 }
 
+interface AcousticInterval {
+  start: number;
+  end: number;
+}
+
+// ⚡ Worker 1: Extract Real Acoustic Speech Intervals from Whisper (VAD / Speech Energy boundaries)
+async function fetchWhisperAcousticIntervals(audioBuffer: Buffer, language: string = 'th'): Promise<AcousticInterval[] | null> {
+  const groqApiKey = (process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY || '').trim();
+  const openAiApiKey = (process.env.OPENAI_API_KEY || '').trim();
+
+  // 1. Try Groq Cloud first (Ultra-fast ~600-800ms)
+  if (groqApiKey) {
+    try {
+      const groqBlob = new Blob([new Uint8Array(audioBuffer)], { type: 'audio/mp3' });
+      const groqForm = new FormData();
+      groqForm.append('file', groqBlob, 'audio.mp3');
+      groqForm.append('model', 'whisper-large-v3');
+      groqForm.append('response_format', 'verbose_json');
+      groqForm.append('language', language === 'th' ? 'th' : language);
+      groqForm.append('temperature', '0.0');
+
+      const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${groqApiKey}` },
+        signal: AbortSignal.timeout(6000),
+        body: groqForm,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.segments) && data.segments.length > 0) {
+          return data.segments
+            .map((s: { start?: number; end?: number }) => ({
+              start: typeof s.start === 'number' ? s.start : parseFloat(String(s.start)) || 0,
+              end: typeof s.end === 'number' ? s.end : parseFloat(String(s.end)) || 0,
+            }))
+            .filter((inv: AcousticInterval) => inv.end - inv.start >= 0.15);
+        }
+      }
+    } catch (err) {
+      console.warn('[Whisper Acoustic Intervals Groq Warning]:', err);
+    }
+  }
+
+  // 2. Secondary Fallback: OpenAI Whisper API
+  if (openAiApiKey) {
+    try {
+      const openAiBlob = new Blob([new Uint8Array(audioBuffer)], { type: 'audio/mp3' });
+      const openAiForm = new FormData();
+      openAiForm.append('file', openAiBlob, 'audio.mp3');
+      openAiForm.append('model', 'whisper-1');
+      openAiForm.append('response_format', 'verbose_json');
+      openAiForm.append('language', language === 'th' ? 'th' : language);
+      openAiForm.append('temperature', '0.0');
+
+      const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${openAiApiKey}` },
+        signal: AbortSignal.timeout(6000),
+        body: openAiForm,
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.segments) && data.segments.length > 0) {
+          return data.segments
+            .map((s: { start?: number; end?: number }) => ({
+              start: typeof s.start === 'number' ? s.start : parseFloat(String(s.start)) || 0,
+              end: typeof s.end === 'number' ? s.end : parseFloat(String(s.end)) || 0,
+            }))
+            .filter((inv: AcousticInterval) => inv.end - inv.start >= 0.15);
+        }
+      }
+    } catch (err) {
+      console.warn('[Whisper Acoustic Intervals OpenAI Warning]:', err);
+    }
+  }
+
+  return null;
+}
+
+// 🎯 VAD-Aware Smart Mapping: Maps Gemini's 100% accurate Thai segments strictly onto Whisper's acoustic speech intervals, preserving silence gaps!
+function mapGeminiSegmentsToAcousticIntervals(
+  geminiResult: { text: string; words: TranscribedWord[]; segments: SubtitleSegment[]; duration: number },
+  acousticIntervals: AcousticInterval[]
+): { text: string; words: TranscribedWord[]; segments: SubtitleSegment[]; duration: number } {
+  const geminiSegments = geminiResult.segments;
+  if (!geminiSegments || geminiSegments.length === 0 || !acousticIntervals || acousticIntervals.length === 0) {
+    return geminiResult;
+  }
+
+  const validIntervals = acousticIntervals.filter((inv) => inv.end - inv.start >= 0.15);
+  if (validIntervals.length === 0) return geminiResult;
+
+  const totalAcousticSpeechDuration = validIntervals.reduce((acc, inv) => acc + (inv.end - inv.start), 0);
+  const totalGeminiTextLength = geminiSegments.reduce((acc, s) => acc + Math.max(1, s.text.trim().length), 0);
+
+  const finalSegments: SubtitleSegment[] = [];
+  const finalWords: TranscribedWord[] = [];
+
+  let currentIntervalIdx = 0;
+  let currentIntervalOffset = 0;
+
+  for (let i = 0; i < geminiSegments.length; i++) {
+    const gSeg = geminiSegments[i];
+    const segText = gSeg.text.trim();
+    const segTextLen = Math.max(1, segText.length);
+
+    const neededDuration = (segTextLen / totalGeminiTextLength) * totalAcousticSpeechDuration;
+    const curInterval = validIntervals[currentIntervalIdx];
+    const segStart = parseFloat((curInterval.start + currentIntervalOffset).toFixed(2));
+    const remainingInInterval = curInterval.end - curInterval.start - currentIntervalOffset;
+
+    let segEnd: number;
+    if (neededDuration <= remainingInInterval || currentIntervalIdx === validIntervals.length - 1) {
+      segEnd = parseFloat((segStart + Math.min(remainingInInterval, neededDuration)).toFixed(2));
+      currentIntervalOffset += segEnd - segStart;
+      if (currentIntervalOffset >= curInterval.end - curInterval.start - 0.05 && currentIntervalIdx < validIntervals.length - 1) {
+        currentIntervalIdx++;
+        currentIntervalOffset = 0;
+      }
+    } else {
+      segEnd = parseFloat(curInterval.end.toFixed(2));
+      currentIntervalIdx++;
+      currentIntervalOffset = 0;
+    }
+
+    if (segEnd <= segStart) {
+      segEnd = parseFloat((segStart + 0.4).toFixed(2));
+    }
+
+    // Inside this speech interval, distribute words using Syllable Weighting
+    const rawWords = Array.isArray(gSeg.words) && gSeg.words.length > 0
+      ? gSeg.words
+      : segText.split(' ').filter(Boolean).map((w) => ({ word: w, start: segStart, end: segEnd }));
+
+    const segWords = computeSyllableWeightedWords(segText, segStart, segEnd, rawWords);
+    finalWords.push(...segWords);
+
+    finalSegments.push({
+      start: segStart,
+      end: segEnd,
+      text: segText,
+      words: segWords,
+    });
+  }
+
+  return {
+    text: geminiResult.text,
+    duration: finalWords.length > 0 ? finalWords[finalWords.length - 1].end : geminiResult.duration,
+    segments: finalSegments,
+    words: finalWords,
+  };
+}
+
 function computeSyllableWeightedWords(
   segText: string,
   segStart: number,
@@ -778,24 +933,33 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Route 2: Gemini AI Direct Multimodal Engine with Syllable-Weighted Acoustic Alignment
+    // Route 2: Gemini AI Direct Multimodal Engine with VAD Silence-Gap-Aware Acoustic Interval Mapping
     try {
       // Fetch dynamic custom & auto-learned vocabulary
       const dynamicDict = await getDynamicCustomDictionary();
 
-      // 🎯 Primary Engine: Direct Multimodal Gemini (Audio-to-Subtitle with Syllable-Weighted Acoustic Alignment)
-      const geminiDirectResult = await transcribeWithGeminiDirect(base64Audio, language, dynamicDict.rulesText);
+      // 🎯 Primary Engine: Run Whisper VAD Acoustics + Gemini 100% Thai Transcriber in parallel!
+      const [acousticIntervals, geminiDirectResult] = await Promise.all([
+        fetchWhisperAcousticIntervals(audioBuffer, language),
+        transcribeWithGeminiDirect(base64Audio, language, dynamicDict.rulesText),
+      ]);
+
       if (geminiDirectResult && geminiDirectResult.words.length > 0) {
+        let finalResult = geminiDirectResult;
+        if (acousticIntervals && acousticIntervals.length > 0) {
+          finalResult = mapGeminiSegmentsToAcousticIntervals(geminiDirectResult, acousticIntervals);
+        }
+
         // Record safety budget usage for free tier
         await recordSafetyBudgetUsage('google', isPaidUser);
 
         return NextResponse.json({
           success: true,
-          text: geminiDirectResult.text,
-          duration: geminiDirectResult.duration,
+          text: finalResult.text,
+          duration: finalResult.duration,
           language: language || 'th',
-          segments: geminiDirectResult.segments || [],
-          words: geminiDirectResult.words,
+          segments: finalResult.segments || [],
+          words: finalResult.words,
         });
       }
 
