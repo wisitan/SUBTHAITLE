@@ -257,16 +257,16 @@ async function transcribeWithGeminiDirect(
 
   if (!geminiApiKey) return null;
 
-  const systemPrompt = `You are the world's most accurate Thai speech-to-text transcriber and professional subtitle creator for short-form video (TikTok, YouTube Shorts, Reels).
+  const systemPrompt = `You are a high-precision Thai speech transcription and acoustic timing synchronization engine for video subtitles (TikTok, Reels, Shorts).
 
 TASK:
-Listen carefully to the provided audio file and transcribe the exact Thai speech with natural conversational phrasing, correct Thai spelling, and accurate English loanwords/brands/slang (e.g. Type-C, USB-C, Power Bank, Fast Charge, iPhone, iPad, Adapter, 60W, 100W, Vibe Coding, Affiliate).
+Listen carefully to the audio waveform and transcribe the exact Thai speech with natural conversational phrasing, accurate Thai spelling, and correct English loanwords/brands (e.g. Type-C, USB-C, Power Bank, Fast Charge, iPhone, iPad, Adapter, 60W, 100W, Vibe Coding, Affiliate).
 
-RULES:
-1. Capture every word accurately without hallucinating or omitting sentences.
-2. Group sentences into clean, readable subtitle segments suitable for mobile screens (1.5 - 4.0 seconds each).
-3. Return precise start and end timestamps in seconds (floats with 2 decimals).
-4. Provide word-level timestamps inside each segment and in the root "words" array for karaoke highlighting.${extraRulesText}
+CRITICAL ACOUSTIC TIMING RULES:
+1. Anchor the "start" and "end" timestamps of each subtitle segment and each word to the EXACT millisecond timestamp where the speaker begins and finishes pronouncing each sound.
+2. Pay close attention to pauses, silence, breaths, and speech pace. NEVER distribute timestamps evenly or guess linearly.
+3. Group into clean, readable subtitle segments (3-8 words per segment, 1.5 - 3.5 seconds each) that match the natural rhythm of speech.
+4. Word-level timestamps must accurately track the individual word pronunciation within each segment.${extraRulesText}
 
 STRICT JSON OUTPUT SCHEMA:
 {
@@ -315,14 +315,14 @@ STRICT JSON OUTPUT SCHEMA:
                     },
                   },
                   {
-                    text: `Please transcribe this audio clip into timed Thai subtitle segments and word timestamps (${language === 'en' ? 'English' : 'Thai'}).`,
+                    text: `Please transcribe this audio clip with millisecond-level acoustic timing synchronization (${language === 'en' ? 'English' : 'Thai'}).`,
                   },
                 ],
               },
             ],
             generationConfig: {
               responseMimeType: 'application/json',
-              temperature: 0.1,
+              temperature: 0.0,
             },
           }),
         }
