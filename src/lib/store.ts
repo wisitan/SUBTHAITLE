@@ -711,8 +711,6 @@ export const useAppStore = create<AppState>()(
         provider: state.provider,
         tier: state.tier,
         groqApiKey: state.groqApiKey,
-        creditsMinutes: state.creditsMinutes,
-        isLifetimeUnlocked: state.isLifetimeUnlocked,
         isAdmin: state.isAdmin,
         style: state.style,
         activePresetId: state.activePresetId,

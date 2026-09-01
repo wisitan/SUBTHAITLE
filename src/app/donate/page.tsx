@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { useAuth } from '@/context/auth-context';
@@ -15,8 +14,6 @@ import {
   Coins,
   Key,
   Flame,
-  CheckCircle2,
-  ArrowRight,
 } from 'lucide-react';
 
 interface CreditPackage {
@@ -70,11 +67,10 @@ const CREDIT_PACKAGES: CreditPackage[] = [
 
 export function DonatePage() {
   const { user, signInWithGoogle } = useAuth();
-  const { creditsMinutes, addCredits, isLifetimeUnlocked, setLifetimeUnlocked } = useAppStore();
+  const { creditsMinutes, isLifetimeUnlocked } = useAppStore();
 
   const [selectedPackageId, setSelectedPackageId] = useState<string>('credit_249');
   const [loadingItem, setLoadingItem] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const handleBuyCredits = async (pkg: CreditPackage) => {
     if (!user) {
@@ -88,6 +84,7 @@ export function DonatePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          packageId: pkg.id,
           tier: pkg.id,
           userId: user.id,
           userEmail: user.email,
@@ -98,17 +95,15 @@ export function DonatePage() {
       if (res.ok && data.url) {
         window.location.href = data.url;
         return;
+      } else {
+        alert(data.error || 'เกิดข้อผิดพลาดในการสร้างรายการชำระเงินผ่าน Stripe');
       }
-    } catch {
-      // Fallback: direct credit addition for preview / demo
-    }
-
-    // Direct sandbox / instant activation
-    setTimeout(() => {
-      addCredits(pkg.minutes);
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ชำระเงินได้ กรุณาลองใหม่อีกครั้ง');
+    } finally {
       setLoadingItem(null);
-      setSuccessMessage(`🎉 เติมเครดิตสำเร็จ! เพิ่ม ${pkg.minutes} นาทีเข้าสู่บัญชีของคุณเรียบร้อยแล้วค่ะ`);
-    }, 800);
+    }
   };
 
   const handleBuyLifetime = async () => {
@@ -123,6 +118,7 @@ export function DonatePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          packageId: 'tier_699',
           tier: 'tier_699',
           userId: user.id,
           userEmail: user.email,
@@ -133,17 +129,15 @@ export function DonatePage() {
       if (res.ok && data.url) {
         window.location.href = data.url;
         return;
+      } else {
+        alert(data.error || 'เกิดข้อผิดพลาดในการสร้างรายการชำระเงินผ่าน Stripe');
       }
-    } catch {
-      // Fallback
-    }
-
-    // Direct sandbox activation
-    setTimeout(() => {
-      setLifetimeUnlocked(true);
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert('ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ชำระเงินได้ กรุณาลองใหม่อีกครั้ง');
+    } finally {
       setLoadingItem(null);
-      setSuccessMessage('👑 ปลดล็อก Lifetime Pass 699฿ สำเร็จ! คุณสามารถใช้ BYOK และ Local AI ได้ตลอดชีพแล้วค่ะ');
-    }, 800);
+    }
   };
 
   return (
@@ -184,23 +178,6 @@ export function DonatePage() {
             )}
           </div>
         </section>
-
-        {/* Success Alert Banner */}
-        {successMessage && (
-          <div className="p-4 rounded-2xl bg-emerald-950/80 border border-emerald-500/60 text-emerald-200 text-sm flex items-center justify-between gap-3 animate-in fade-in duration-300 shadow-xl">
-            <div className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-              <span className="font-semibold">{successMessage}</span>
-            </div>
-            <Link
-              href="/"
-              className="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs flex items-center gap-1 transition-colors"
-            >
-              <span>ไปเริ่มทำซับ</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        )}
 
         {/* Section 1: Pay-as-you-go Credit Packages */}
         <section className="space-y-4">

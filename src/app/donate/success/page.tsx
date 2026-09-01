@@ -8,19 +8,26 @@ import { Sparkles, Crown, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react
 
 function SuccessContent() {
   const searchParams = useSearchParams();
-  const tierParam = searchParams.get('tier');
-  const { refreshProfile, tier } = useAuth();
+  const packageId = searchParams.get('packageId') || searchParams.get('tier');
+  const { refreshProfile, profile } = useAuth();
 
   useEffect(() => {
-    // Refresh user profile to fetch newly upgraded tier
+    // Refresh user profile to fetch newly credited balance from Supabase
     refreshProfile();
-    const timer = setTimeout(() => {
-      refreshProfile();
-    }, 2000);
-    return () => clearTimeout(timer);
+    const t1 = setTimeout(() => refreshProfile(), 1500);
+    const t2 = setTimeout(() => refreshProfile(), 3500);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [refreshProfile]);
 
-  const isPro = tierParam === 'tier_299' || tier === 'tier_299';
+  const isLifetime = packageId === 'tier_699' || packageId === 'lifetime_699' || profile?.is_lifetime_unlocked;
+  let packageName = 'เครดิตถอดเสียงภาษาไทย';
+  if (packageId === 'credit_99') packageName = 'Starter (+1 ชั่วโมง / 60 นาที)';
+  else if (packageId === 'credit_249') packageName = 'Creator (+3 ชั่วโมง / 180 นาที)';
+  else if (packageId === 'credit_599') packageName = 'Pro Studio (+8 ชั่วโมง / 480 นาที)';
+  else if (isLifetime) packageName = 'Lifetime Pass (ซื้อขาดตลอดชีพ)';
 
   return (
     <div className="relative w-full max-w-md p-8 sm:p-10 rounded-3xl bg-[#181824] border border-amber-500/40 shadow-2xl text-center space-y-6 overflow-hidden">
@@ -28,13 +35,13 @@ function SuccessContent() {
       <div className="absolute -top-12 -right-12 w-48 h-48 bg-amber-500/20 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-zinc-950 flex items-center justify-center mx-auto shadow-xl shadow-orange-500/25 animate-bounce">
-        {isPro ? <Crown className="w-9 h-9" /> : <Sparkles className="w-9 h-9" />}
+        {isLifetime ? <Crown className="w-9 h-9" /> : <Sparkles className="w-9 h-9" />}
       </div>
 
       <div className="space-y-2">
         <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-xs font-bold inline-flex items-center gap-1.5">
           <CheckCircle2 className="w-3.5 h-3.5" />
-          ชำระเงินผ่าน PromptPay สำเร็จแล้ว
+          ชำระเงินผ่าน Stripe สำเร็จแล้ว
         </span>
 
         <h2 className="text-2xl sm:text-3xl font-black text-white">
@@ -42,11 +49,11 @@ function SuccessContent() {
         </h2>
 
         <p className="text-sm text-zinc-300 leading-relaxed">
-          ระบบได้อัปเกรดสถานะบัญชีของคุณเป็น{' '}
+          ระบบได้เพิ่มแพ็กเกจ{' '}
           <strong className="text-amber-300 font-bold">
-            {isPro ? 'Pro Creator (299฿)' : 'Supporter (99฿)'}
+            {packageName}
           </strong>{' '}
-          เรียบร้อยแล้วค่ะ สิทธิ์การใช้งานทั้งหมดถูกปลดล็อกให้คุณทันที!
+          เข้าสู่บัญชีของคุณเรียบร้อยแล้วค่ะ สิทธิ์และเวลาทั้งหมดพร้อมใช้งานได้ทันที!
         </p>
       </div>
 

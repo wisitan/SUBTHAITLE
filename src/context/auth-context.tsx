@@ -94,9 +94,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = session?.user || null;
       setUser(currentUser);
 
+      const store = useAppStore.getState();
       if (currentUser) {
         const p = await fetchProfile(currentUser.id);
         setProfile(p);
+        store.setCreditsMinutes(p?.credits_minutes ?? 0);
+        store.setLifetimeUnlocked(p?.is_lifetime_unlocked ?? false);
+      } else {
+        setProfile(null);
+        store.setCreditsMinutes(0);
+        store.setLifetimeUnlocked(false);
       }
       setIsLoading(false);
     });
@@ -108,11 +115,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const currentUser = session?.user || null;
       setUser(currentUser);
 
+      const store = useAppStore.getState();
       if (currentUser) {
         const p = await fetchProfile(currentUser.id);
         setProfile(p);
+        store.setCreditsMinutes(p?.credits_minutes ?? 0);
+        store.setLifetimeUnlocked(p?.is_lifetime_unlocked ?? false);
       } else {
         setProfile(null);
+        store.setCreditsMinutes(0);
+        store.setLifetimeUnlocked(false);
       }
       setIsLoading(false);
     });
@@ -140,7 +152,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         },
         (payload) => {
           console.log('[AuthContext] Realtime profile update:', payload.new);
-          setProfile(payload.new as UserProfile);
+          const updatedProfile = payload.new as UserProfile;
+          setProfile(updatedProfile);
+          const store = useAppStore.getState();
+          if (typeof updatedProfile.credits_minutes === 'number') {
+            store.setCreditsMinutes(updatedProfile.credits_minutes);
+          }
+          if (typeof updatedProfile.is_lifetime_unlocked === 'boolean') {
+            store.setLifetimeUnlocked(updatedProfile.is_lifetime_unlocked);
+          }
         }
       )
       .subscribe();
@@ -163,6 +183,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (typeof profile.is_lifetime_unlocked === 'boolean') {
         store.setLifetimeUnlocked(profile.is_lifetime_unlocked);
       }
+    } else if (!user) {
+      store.setCreditsMinutes(0);
+      store.setLifetimeUnlocked(false);
     }
   }, [user, profile]);
 
@@ -184,11 +207,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     const supabase = getSupabase();
-    if (!supabase) return;
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
     setProfile(null);
-    useAppStore.getState().syncDailyUsage(undefined);
+    const store = useAppStore.getState();
+    store.setCreditsMinutes(0);
+    store.setLifetimeUnlocked(false);
+    store.syncDailyUsage(undefined);
+    store.syncQuotas(undefined);
+
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      window.location.href = '/';
+    }
   };
 
   const tier: UserTier = profile?.tier || 'free';
