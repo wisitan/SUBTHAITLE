@@ -210,11 +210,37 @@ function alignCorrectedWords(
   });
 }
 
+// 📚 Dynamic Dictionary & Auto-Learned Phrases Loader
+async function getDynamicCustomDictionary(): Promise<{ phrases: string[]; rulesText: string }> {
+  try {
+    const supabase = getSupabaseAdmin();
+    if (!supabase) return { phrases: [], rulesText: '' };
+
+    const { data } = await supabase
+      .from('custom_dictionary')
+      .select('wrong_word, correct_word')
+      .limit(100);
+
+    if (!data || data.length === 0) return { phrases: [], rulesText: '' };
+
+    const phrases = Array.from(new Set(data.map((d) => d.correct_word).filter(Boolean)));
+    const rules = data
+      .filter((d) => d.wrong_word && d.correct_word)
+      .map((d) => `- "${d.wrong_word}" → "${d.correct_word}"`);
+
+    const rulesText = rules.length > 0 ? `\n\n【AUTO-LEARNED & CUSTOM RULES】\n${rules.join('\n')}` : '';
+    return { phrases, rulesText };
+  } catch {
+    return { phrases: [], rulesText: '' };
+  }
+}
+
 // 🧠 AI Auto-Correction (Post-Processing Engine)
 // รองรับ Google Gemini (Flash / Pro) เป็นหลัก และ Fallback ไปยัง OpenAI (gpt-4o-mini)
 async function correctThaiWordsWithLLM(
   words: TranscribedWord[],
-  rawText: string
+  rawText: string,
+  extraRulesText: string = ''
 ): Promise<{ words: TranscribedWord[]; text: string }> {
   if (words.length === 0) {
     return { words, text: rawText };
@@ -252,7 +278,7 @@ CORRECTION RULES (organized by category):
 - Sound-alikes: "สักเช่นนึง" → "สักเส้นนึง", "ปะกัน" → "ประกัน"
 
 【BRANDS & PLATFORMS】
-- Fix known brand misspellings contextually (Samsung, iPhone, iPad, AirPods, Shopee, Lazada, etc.)
+- Fix known brand misspellings contextually (Samsung, iPhone, iPad, AirPods, Shopee, Lazada, etc.)${extraRulesText}
 
 STRICT OUTPUT FORMAT:
 Return JSON only: {"words": ["word1", "word2", ...], "text": "Full corrected sentence"}
@@ -536,8 +562,9 @@ export async function POST(request: NextRequest) {
         confidence: 0.95,
       }));
 
-      // Run AI Auto-Correction (Post-Processing with Gemini Flash)
-      const corrected = await correctThaiWordsWithLLM(rawWords, groqData.text || '');
+      // Run AI Auto-Correction (Post-Processing with Gemini Flash + Dynamic Dictionary Rules)
+      const dynamicDict = await getDynamicCustomDictionary();
+      const corrected = await correctThaiWordsWithLLM(rawWords, groqData.text || '', dynamicDict.rulesText);
 
       // Record safety budget usage for free tier
       await recordSafetyBudgetUsage('groq', isPaidUser);
@@ -578,6 +605,18 @@ export async function POST(request: NextRequest) {
       const buffer = Buffer.from(await audioFile.arrayBuffer());
       const base64Audio = buffer.toString('base64');
 
+      // Fetch dynamic custom & auto-learned vocabulary
+      const dynamicDict = await getDynamicCustomDictionary();
+      const basePhrases = [
+        'Type-C', 'USB-C', 'USB Type-C', 'USB-A', 'Type-A', 'Lightning', 'Micro USB',
+        'สายชาร์จ', 'หัวชาร์จ', 'เก้าสิบองศา', 'เล่นเกม', 'จ่ายไฟ', 'วัตต์', 'แอมป์', 'โวลต์',
+        'ฟาสต์ชาร์จ', 'พาวเวอร์แบงค์', 'แนะนำ', 'รีวิว', 'คลิปนี้', 'สวัสดีครับ', 'สวัสดีค่ะ',
+        'ตัวนี้', 'อันนี้', 'แบบนี้', 'ราคา', 'โปรโมชั่น', 'ส่งฟรี', 'ของแท้', 'ประกัน',
+        'สักเส้นนึง', 'ความยาว', 'ทนทาน', 'ชาร์จไว', 'ชาร์จเร็ว', 'ตัวเนี้ย', 'เล่นเกมไปด้วย',
+        '60W', '100W', '240W', 'Fast Charge', 'Power Bank', 'Adapter', 'iPhone', 'iPad', 'Kimiso'
+      ];
+      const mergedPhrases = Array.from(new Set([...basePhrases, ...dynamicDict.phrases])).slice(0, 100);
+
       const googleResponse = await fetch(
         `https://speech.googleapis.com/v1/speech:recognize?key=${googleApiKey}`,
         {
@@ -594,14 +633,7 @@ export async function POST(request: NextRequest) {
               useEnhanced: true,
               speechContexts: [
                 {
-                  phrases: [
-                    'Type-C', 'USB-C', 'USB Type-C', 'USB-A', 'Type-A', 'Lightning', 'Micro USB',
-                    'สายชาร์จ', 'หัวชาร์จ', 'เก้าสิบองศา', 'เล่นเกม', 'จ่ายไฟ', 'วัตต์', 'แอมป์', 'โวลต์',
-                    'ฟาสต์ชาร์จ', 'พาวเวอร์แบงค์', 'แนะนำ', 'รีวิว', 'คลิปนี้', 'สวัสดีครับ', 'สวัสดีค่ะ',
-                    'ตัวนี้', 'อันนี้', 'แบบนี้', 'ราคา', 'โปรโมชั่น', 'ส่งฟรี', 'ของแท้', 'ประกัน',
-                    'สักเส้นนึง', 'ความยาว', 'ทนทาน', 'ชาร์จไว', 'ชาร์จเร็ว', 'ตัวเนี้ย', 'เล่นเกมไปด้วย',
-                    '60W', '100W', '240W', 'Fast Charge', 'Power Bank', 'Adapter', 'iPhone', 'iPad', 'Kimiso'
-                  ],
+                  phrases: mergedPhrases,
                   boost: 20.0,
                 },
               ],
@@ -654,8 +686,8 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // Run AI Auto-Correction (Post-Processing)
-      const corrected = await correctThaiWordsWithLLM(words, fullText);
+      // Run AI Auto-Correction (Post-Processing with Gemini Flash + Dynamic Dictionary Rules)
+      const corrected = await correctThaiWordsWithLLM(words, fullText, dynamicDict.rulesText);
 
       // Record safety budget usage for free tier
       await recordSafetyBudgetUsage('google', isPaidUser);

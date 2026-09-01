@@ -16,6 +16,7 @@ import { THAI_SYSTEM_FONTS } from '@/lib/fonts';
 import { downloadFcpxml } from '@/lib/fcpxml';
 import { downloadPremiereXml } from '@/lib/xml';
 import { downloadAss } from '@/lib/ass';
+import { sendCorrectionFeedback } from '@/lib/diff-engine';
 import { BurnVideoModal } from './burn-video-modal';
 import { PremiumFontModal } from './premium-font-modal';
 
@@ -27,7 +28,7 @@ export function ExportMenu({ onShowToast }: Props) {
   const file = useAppStore((s) => s.file);
   const captions = useAppStore((s) => s.captions);
   const style = useAppStore((s) => s.style);
-  const { isPro } = useAuth();
+  const { isPro, user } = useAuth();
 
   const [isOpen, setIsOpen] = useState(false);
   const [burnModalOpen, setBurnModalOpen] = useState(false);
@@ -60,6 +61,10 @@ export function ExportMenu({ onShowToast }: Props) {
     return file?.name ? file.name.replace(/\.[^/.]+$/, '') : 'subthaitle_export';
   };
 
+  const triggerFeedback = () => {
+    sendCorrectionFeedback(captions, user?.id);
+  };
+
   const handleExportFcpxml = () => {
     setIsOpen(false);
     if (!checkPremiumFontGuard()) return;
@@ -68,6 +73,7 @@ export function ExportMenu({ onShowToast }: Props) {
       onShowToast?.('ไม่มีข้อมูลซับไตเติลสำหรับส่งออก');
       return;
     }
+    triggerFeedback();
     const filename = `${getBaseFilename()}.fcpxml`;
     downloadFcpxml(captions, style, filename);
     onShowToast?.(`ดาวน์โหลด ${filename} เรียบร้อย (แสดงผลตามฟอนต์ที่ลงใน Mac)`);
@@ -80,6 +86,7 @@ export function ExportMenu({ onShowToast }: Props) {
       onShowToast?.('ไม่มีข้อมูลซับไตเติลสำหรับส่งออก');
       return;
     }
+    triggerFeedback();
     const filename = `${getBaseFilename()}_premiere.xml`;
     downloadPremiereXml(captions, style, filename);
     onShowToast?.(`ดาวน์โหลด ${filename} เรียบร้อย (นำเข้าเป็น Video Clip ใน Premiere / DaVinci)`);
@@ -93,6 +100,7 @@ export function ExportMenu({ onShowToast }: Props) {
       onShowToast?.('ไม่มีข้อมูลซับไตเติลสำหรับส่งออก');
       return;
     }
+    triggerFeedback();
     const filename = `${getBaseFilename()}.ass`;
     downloadAss(captions, style, filename);
     onShowToast?.(`ดาวน์โหลด ${filename} เรียบร้อย`);
@@ -106,6 +114,7 @@ export function ExportMenu({ onShowToast }: Props) {
       onShowToast?.('ไม่มีข้อมูลซับไตเติลสำหรับส่งออก');
       return;
     }
+    triggerFeedback();
     
     let srtContent = '';
     captions.forEach((c, idx) => {
@@ -141,6 +150,7 @@ export function ExportMenu({ onShowToast }: Props) {
       onShowToast?.('ไม่มีข้อมูลซับไตเติลสำหรับส่งออก');
       return;
     }
+    triggerFeedback();
 
     let vttContent = 'WEBVTT\n\n';
     captions.forEach((c, idx) => {
@@ -195,6 +205,7 @@ export function ExportMenu({ onShowToast }: Props) {
             onClick={() => {
               setIsOpen(false);
               if (!checkPremiumFontGuard()) return;
+              triggerFeedback();
               setBurnModalOpen(true);
             }}
             className="w-full text-left p-3 rounded-2xl hover:bg-orange-500/10 border border-transparent hover:border-orange-500/30 transition-all flex items-start gap-3 cursor-pointer group"
