@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Thai } from "next/font/google";
 import { AuthProvider } from "@/context/auth-context";
-import { AdminDevToolbar } from "@/components/admin-dev-toolbar";
 import "./globals.css";
 
 const notoSansThai = Noto_Sans_Thai({
@@ -80,7 +79,6 @@ export default function RootLayout({
       <body className={`${notoSansThai.className} antialiased overflow-x-hidden max-w-full w-full bg-zinc-950 text-zinc-100`}>
         <AuthProvider>
           {children}
-          <AdminDevToolbar />
         </AuthProvider>
       </body>
     </html>
