@@ -469,23 +469,26 @@ export async function POST(request: NextRequest) {
       }
 
       const groqData = await groqRes.json();
-      const words: TranscribedWord[] = (groqData.words || []).map((w: { word: string; start: number; end: number }) => ({
+      const rawWords: TranscribedWord[] = (groqData.words || []).map((w: { word: string; start: number; end: number }) => ({
         word: w.word,
         start: w.start,
         end: w.end,
         confidence: 0.95,
       }));
 
+      // Run AI Auto-Correction (Post-Processing with Gemini Flash)
+      const corrected = await correctThaiWordsWithLLM(rawWords, groqData.text || '');
+
       // Record safety budget usage for free tier
       await recordSafetyBudgetUsage('groq', isPaidUser);
 
       return NextResponse.json({
         success: true,
-        text: groqData.text || '',
-        duration: groqData.duration || (words.length > 0 ? words[words.length - 1].end : 0),
+        text: corrected.text,
+        duration: corrected.words.length > 0 ? corrected.words[corrected.words.length - 1].end : 0,
         language: groqData.language || 'th',
         segments: groqData.segments || [],
-        words,
+        words: corrected.words,
       });
     }
 
