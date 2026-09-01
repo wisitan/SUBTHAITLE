@@ -46,26 +46,85 @@ export async function POST(request: NextRequest) {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.metadata?.userId || session.client_reference_id;
-      const tier = session.metadata?.tier;
+      const packageId = session.metadata?.packageId || session.metadata?.tier || '';
+      const minutesStr = session.metadata?.minutes;
+      const isLifetime = session.metadata?.isLifetime === 'true' || packageId === 'lifetime_699' || packageId === 'tier_699';
 
-      if (userId && (tier === 'tier_99' || tier === 'tier_299')) {
+      if (userId) {
         const supabase = getSupabaseAdmin();
         if (supabase) {
-          const { error } = await supabase
-            .from('profiles')
-            .update({
-              tier,
-              stripe_customer_id: typeof session.customer === 'string' ? session.customer : undefined,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', userId);
+          // 1. Case: Lifetime Pass Purchase (699฿)
+          if (isLifetime) {
+            try {
+              const { error: rpcError } = await supabase.rpc('unlock_lifetime_pass', {
+                p_user_id: userId,
+                p_stripe_session_id: session.id,
+              });
 
-          if (error) {
-            console.error('Error updating user tier in profiles table:', error);
-            return NextResponse.json({ error: error.message }, { status: 500 });
+              if (rpcError) {
+                console.warn('[Stripe Webhook] unlock_lifetime_pass RPC error, falling back to direct table update:', rpcError);
+                await supabase
+                  .from('profiles')
+                  .update({
+                    is_lifetime_unlocked: true,
+                    tier: 'tier_699',
+                    stripe_customer_id: typeof session.customer === 'string' ? session.customer : undefined,
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('id', userId);
+              }
+              console.log(`[Stripe Webhook] Successfully unlocked Lifetime Pass for user ${userId}`);
+            } catch (err) {
+              console.error('[Stripe Webhook] Error unlocking Lifetime Pass:', err);
+            }
+          } else {
+            // 2. Case: Pay-as-you-go Credit Package (99฿, 249฿, 599฿)
+            const minutes = parseInt(minutesStr || '0', 10) || (packageId === 'credit_99' ? 60 : packageId === 'credit_249' ? 180 : packageId === 'credit_599' ? 480 : 0);
+
+            if (minutes > 0) {
+              try {
+                const { error: rpcError } = await supabase.rpc('add_user_credits', {
+                  p_user_id: userId,
+                  p_minutes: minutes,
+                  p_description: `เติมเครดิตผ่าน Stripe (${packageId}) +${minutes} นาที`,
+                  p_stripe_session_id: session.id,
+                });
+
+                if (rpcError) {
+                  console.warn('[Stripe Webhook] add_user_credits RPC error, falling back to manual increment:', rpcError);
+                  const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('credits_minutes')
+                    .eq('id', userId)
+                    .single();
+
+                  const currentCredits = profile?.credits_minutes || 0;
+                  const newCredits = currentCredits + minutes;
+
+                  await supabase
+                    .from('profiles')
+                    .update({
+                      credits_minutes: newCredits,
+                      stripe_customer_id: typeof session.customer === 'string' ? session.customer : undefined,
+                      updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', userId);
+
+                  await supabase.from('credit_transactions').insert({
+                    user_id: userId,
+                    type: 'purchase',
+                    amount_minutes: minutes,
+                    balance_after: newCredits,
+                    description: `เติมเครดิตผ่าน Stripe (${packageId}) +${minutes} นาที`,
+                    stripe_session_id: session.id,
+                  });
+                }
+                console.log(`[Stripe Webhook] Successfully added ${minutes} credits for user ${userId}`);
+              } catch (err) {
+                console.error('[Stripe Webhook] Error adding credits:', err);
+              }
+            }
           }
-
-          console.log(`[Stripe Webhook] Successfully upgraded user ${userId} to ${tier}`);
         }
       }
     }

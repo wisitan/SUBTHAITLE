@@ -1,9 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Redis } from '@upstash/redis';
+import { createClient } from '@supabase/supabase-js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // 60 seconds max execution time for Vercel functions
+
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!url || !serviceKey) return null;
+
+  return createClient(url, serviceKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+}
+
+function calculateCreditUsage(durationSeconds: number): number {
+  const roundedSecs = Math.round(durationSeconds);
+  if (roundedSecs <= 0) return 0;
+  const fullMinutes = Math.floor(roundedSecs / 60);
+  const remainingSeconds = roundedSecs % 60;
+  if (fullMinutes === 0) return 1;
+  if (remainingSeconds > 40) return fullMinutes + 1;
+  return fullMinutes;
+}
 
 // 🛡️ Global Safety Budget Rules (Cost Protection Caps for Free Tiers)
 // 1. Google AI Free Tier: Max 300 THB / month (~357 minutes / 180 clips per month across all free users)
@@ -304,12 +329,13 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const audioFile = formData.get('file') as Blob | null;
     const language = (formData.get('language') as string) || 'th';
+    const userId = (formData.get('userId') as string) || null;
     const userTier = (formData.get('tier') as string) || 'free';
     const provider = (formData.get('provider') as string) || 'google';
     const mode = (formData.get('mode') as string) || 'google_free';
     const clientDuration = parseFloat((formData.get('duration') as string) || '0');
 
-    const isPaidUser = userTier === 'tier_99' || userTier === 'tier_299' || mode === 'credits';
+    const isPaidUser = userTier === 'tier_99' || userTier === 'tier_299' || userTier === 'tier_699' || mode === 'credits';
 
     // 1. Check Global Safety Budget Caps for Free Tiers
     const budgetCheck = await checkSafetyBudget(provider as 'google' | 'groq', isPaidUser);
@@ -322,6 +348,66 @@ export async function POST(request: NextRequest) {
         { error: 'ไม่พบไฟล์เสียงในคำร้องขอ (No audio file provided)' },
         { status: 400 }
       );
+    }
+
+    // 2. Server-side Supabase Credit & Quota Validation
+    const supabase = getSupabaseAdmin();
+    let creditsPreDeducted = 0;
+
+    const refundCreditsIfFailed = async () => {
+      if (creditsPreDeducted > 0 && supabase && userId) {
+        try {
+          await supabase.rpc('add_user_credits', {
+            p_user_id: userId,
+            p_minutes: creditsPreDeducted,
+            p_description: 'คืนเครดิตเนื่องจากการถอดเสียงล้มเหลว (Auto-Refund)',
+          });
+          console.log(`[Transcribe Route] Successfully refunded ${creditsPreDeducted} credits to user ${userId}`);
+        } catch (err) {
+          console.error('[Transcribe Route] Error auto-refunding credits:', err);
+        }
+      }
+    };
+
+    if (supabase && userId) {
+      // 2.1 Credit Mode: Pre-deduct credit atomically via RPC (Locks row & deducts)
+      if (mode === 'credits') {
+        const neededCredits = calculateCreditUsage(clientDuration);
+        const { error: deductErr } = await supabase.rpc('deduct_user_credits', {
+          p_user_id: userId,
+          p_minutes: neededCredits,
+          p_description: `ถอดเสียงคลิปวิดีโอ (${neededCredits} นาที)`,
+        });
+
+        if (deductErr) {
+          console.warn('[Transcribe Route] deduct_user_credits error:', deductErr.message);
+          return NextResponse.json(
+            {
+              error: `เครดิตคงเหลือไม่เพียงพอสำหรับการถอดเสียง (${neededCredits} นาที) กรุณาเติมเครดิตเพื่อใช้งานต่อค่ะ`,
+            },
+            { status: 402 }
+          );
+        }
+        creditsPreDeducted = neededCredits;
+      }
+
+      // 2.2 Google Free Mode: Consume monthly quota (5 clips / month)
+      if (mode === 'google_free') {
+        const { data: quotaRes } = await supabase.rpc('consume_google_free_quota', { p_user_id: userId });
+        const firstRow = Array.isArray(quotaRes) ? quotaRes[0] : quotaRes;
+        if (firstRow && firstRow.allowed === false) {
+          return NextResponse.json({ error: firstRow.message }, { status: 429 });
+        }
+      }
+
+      // 2.3 Groq Free Mode: Consume daily quota (3 clips / day)
+      if (mode === 'groq_free') {
+        const { data: quotaRes } = await supabase.rpc('consume_groq_free_quota', { p_user_id: userId });
+        const firstRow = Array.isArray(quotaRes) ? quotaRes[0] : quotaRes;
+        if (firstRow && firstRow.allowed === false) {
+          return NextResponse.json({ error: firstRow.message }, { status: 429 });
+        }
+      }
     }
 
     // Free Mode 2-Minute Length Check (120s + 5s tolerance)
@@ -338,6 +424,7 @@ export async function POST(request: NextRequest) {
     // Payload size check (Vercel Serverless Function limit = 4.5MB)
     const MAX_SERVER_AUDIO_BYTES = 4.2 * 1024 * 1024;
     if (audioFile.size > MAX_SERVER_AUDIO_BYTES) {
+      await refundCreditsIfFailed();
       return NextResponse.json(
         {
           error:
@@ -351,6 +438,7 @@ export async function POST(request: NextRequest) {
     if (provider === 'groq') {
       const groqApiKey = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
       if (!groqApiKey) {
+        await refundCreditsIfFailed();
         return NextResponse.json(
           { error: 'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า GROQ_API_KEY กรุณาตั้งค่าบน Vercel หรือใช้โหมด BYOK' },
           { status: 500 }
@@ -374,6 +462,7 @@ export async function POST(request: NextRequest) {
       });
 
       if (!groqRes.ok) {
+        await refundCreditsIfFailed();
         const errText = await groqRes.text();
         return NextResponse.json({ error: `Groq Whisper Error: ${errText}` }, { status: groqRes.status });
       }
@@ -411,6 +500,7 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_GOOGLE_STT_API_KEY;
 
     if (!googleApiKey) {
+      await refundCreditsIfFailed();
       return NextResponse.json(
         {
           error:
@@ -459,6 +549,7 @@ export async function POST(request: NextRequest) {
       );
 
       if (!googleResponse.ok) {
+        await refundCreditsIfFailed();
         const errorText = await googleResponse.text();
         console.error('[Google STT Error]:', googleResponse.status, errorText);
         let parsedError = errorText;

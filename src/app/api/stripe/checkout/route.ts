@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { stripe, TIER_PRICES } from '@/lib/stripe';
+import { stripe, STRIPE_PACKAGES } from '@/lib/stripe';
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,15 +11,18 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { tier, userId, userEmail } = body as {
-      tier: 'tier_99' | 'tier_299';
+    const { tier, packageId, userId, userEmail } = body as {
+      tier?: string;
+      packageId?: string;
       userId: string;
       userEmail?: string;
     };
 
-    if (!tier || !TIER_PRICES[tier]) {
+    const targetPackageId = packageId || tier;
+
+    if (!targetPackageId || !STRIPE_PACKAGES[targetPackageId]) {
       return NextResponse.json(
-        { error: 'กรุณาระบุแพ็กเกจที่ถูกต้อง (tier_99 หรือ tier_299)' },
+        { error: 'กรุณาระบุแพ็กเกจที่ถูกต้อง (credit_99, credit_249, credit_599 หรือ lifetime_699)' },
         { status: 400 }
       );
     }
@@ -31,20 +34,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const tierInfo = TIER_PRICES[tier];
+    const pkgInfo = STRIPE_PACKAGES[targetPackageId];
     const origin = request.headers.get('origin') || 'https://subthaitle.vercel.app';
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['promptpay'],
+      payment_method_types: ['promptpay', 'card'],
       line_items: [
         {
           price_data: {
             currency: 'thb',
             product_data: {
-              name: tierInfo.name,
-              description: tierInfo.description,
+              name: pkgInfo.name,
+              description: pkgInfo.description,
             },
-            unit_amount: tierInfo.amount,
+            unit_amount: pkgInfo.amount,
           },
           quantity: 1,
         },
@@ -54,9 +57,12 @@ export async function POST(request: NextRequest) {
       client_reference_id: userId,
       metadata: {
         userId,
-        tier,
+        packageId: targetPackageId,
+        tier: targetPackageId,
+        minutes: pkgInfo.minutes.toString(),
+        isLifetime: pkgInfo.isLifetime ? 'true' : 'false',
       },
-      success_url: `${origin}/donate/success?session_id={CHECKOUT_SESSION_ID}&tier=${tier}`,
+      success_url: `${origin}/donate/success?session_id={CHECKOUT_SESSION_ID}&packageId=${targetPackageId}`,
       cancel_url: `${origin}/donate`,
     });
 

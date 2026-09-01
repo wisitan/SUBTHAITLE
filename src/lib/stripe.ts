@@ -8,17 +8,60 @@ export const stripe = stripeSecretKey
     })
   : null;
 
-export const TIER_PRICES = {
-  tier_99: {
-    name: 'SUBTHAITLE Supporter (99฿)',
-    amount: 9900, // 99 THB in Satang
+export interface StripePackageConfig {
+  id: string;
+  name: string;
+  amount: number; // in Satang (100 Satang = 1 THB)
+  currency: string;
+  minutes: number;
+  isLifetime?: boolean;
+  description: string;
+}
+
+export const STRIPE_PACKAGES: Record<string, StripePackageConfig> = {
+  credit_99: {
+    id: 'credit_99',
+    name: 'SUBTHAITLE Starter เติม 99฿ (+60 นาที)',
+    amount: 9900,
     currency: 'thb',
-    description: 'ปลดล็อก BYOK ไม่จำกัด, โควต้า 5 คลิป/วัน, และ 5 Custom Presets',
+    minutes: 60,
+    description: 'เครดิตถอดเสียงภาษาไทย 1 ชั่วโมงเต็ม (~60 คลิป) ไม่มีวันหมดอายุ',
   },
-  tier_299: {
-    name: 'SUBTHAITLE Pro Creator (299฿)',
-    amount: 29900, // 299 THB in Satang
+  credit_249: {
+    id: 'credit_249',
+    name: 'SUBTHAITLE Creator เติม 249฿ (+180 นาที)',
+    amount: 24900,
     currency: 'thb',
-    description: 'ปลดล็อก BYOK ไม่จำกัด, โควต้า 5 คลิป/วัน, 20 Custom Presets, และฟอนต์พรีเมียม',
+    minutes: 180,
+    description: 'เครดิตถอดเสียงภาษาไทย 3 ชั่วโมงเต็ม (~180 คลิป) ไม่มีวันหมดอายุ',
   },
-} as const;
+  credit_599: {
+    id: 'credit_599',
+    name: 'SUBTHAITLE Pro Studio เติม 599฿ (+480 นาที)',
+    amount: 59900,
+    currency: 'thb',
+    minutes: 480,
+    description: 'เครดิตถอดเสียงภาษาไทย 8 ชั่วโมงเต็ม (~480 คลิป) ไม่มีวันหมดอายุ',
+  },
+  tier_699: {
+    id: 'tier_699',
+    name: 'SUBTHAITLE Lifetime Pass 699฿ (ซื้อขาดตลอดชีพ)',
+    amount: 69900,
+    currency: 'thb',
+    minutes: 0,
+    isLifetime: true,
+    description: 'ปลดล็อกสิทธิ์ใช้งาน BYOK (ใส่ API Key ตัวเอง) และ Local AI ตลอดชีพ',
+  },
+  lifetime_699: {
+    id: 'lifetime_699',
+    name: 'SUBTHAITLE Lifetime Pass 699฿ (ซื้อขาดตลอดชีพ)',
+    amount: 69900,
+    currency: 'thb',
+    minutes: 0,
+    isLifetime: true,
+    description: 'ปลดล็อกสิทธิ์ใช้งาน BYOK (ใส่ API Key ตัวเอง) และ Local AI ตลอดชีพ',
+  },
+};
+
+// Backward compatibility alias
+export const TIER_PRICES = STRIPE_PACKAGES;

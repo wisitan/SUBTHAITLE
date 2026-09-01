@@ -5,7 +5,7 @@ import { User } from '@supabase/supabase-js';
 import { getSupabase } from '@/lib/supabase';
 import { useAppStore } from '@/lib/store';
 
-export type UserTier = 'free' | 'tier_99' | 'tier_299';
+export type UserTier = 'free' | 'tier_99' | 'tier_299' | 'tier_699';
 
 export interface UserProfile {
   id: string;
@@ -13,6 +13,12 @@ export interface UserProfile {
   full_name: string;
   avatar_url: string;
   tier: UserTier;
+  credits_minutes?: number;
+  is_lifetime_unlocked?: boolean;
+  google_free_month?: string | null;
+  google_free_count?: number;
+  groq_free_day?: string | null;
+  groq_free_count?: number;
   stripe_customer_id?: string | null;
   created_at?: string;
   updated_at?: string;
@@ -144,10 +150,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user]);
 
-  // 4. Synchronize user-scoped daily quota
+  // 4. Synchronize user-scoped daily quota, credits, and lifetime status
   useEffect(() => {
-    useAppStore.getState().syncDailyUsage(user?.id);
-  }, [user]);
+    const store = useAppStore.getState();
+    store.syncDailyUsage(user?.id);
+    store.syncQuotas(user?.id);
+
+    if (profile) {
+      if (typeof profile.credits_minutes === 'number') {
+        store.setCreditsMinutes(profile.credits_minutes);
+      }
+      if (typeof profile.is_lifetime_unlocked === 'boolean') {
+        store.setLifetimeUnlocked(profile.is_lifetime_unlocked);
+      }
+    }
+  }, [user, profile]);
 
   const signInWithGoogle = async () => {
     const supabase = getSupabase();
