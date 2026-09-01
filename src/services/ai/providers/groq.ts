@@ -23,10 +23,10 @@ export class GroqSTTProvider implements STTProvider {
     formData.append('model', 'whisper-large-v3');
     formData.append('response_format', 'verbose_json');
     formData.append('language', lang);
-    formData.append('temperature', '0.2');
+    formData.append('temperature', '0.0');
     formData.append(
       'prompt',
-      'วิดีโอรีวิวภาษาไทย สินค้า ไอที แกดเจ็ต: Type-C, Lightning, USB-A, USB-C, Fast Charge, Power Bank, iPhone, iPad, Apple, สายชาร์จ, หัวชาร์จ, วัตต์, แอมป์, เล่นเกม, ประกัน, รีวิว, แนะนำ, ราคา, โปรโมชั่น, สักเส้นนึง, ตัวนี้, ทนทาน, ชาร์จไว, สวัสดีครับ, สวัสดีค่ะ'
+      'วิดีโอรีวิวสายชาร์จและอุปกรณ์ไอทีภาษาไทย: Type-C, Lightning, USB-A, USB-C, Fast Charge, Power Bank, iPhone, iPad, Apple, สายชาร์จ, หัวชาร์จ, 90 องศา, เล่นเกม, เล่นเกมไปด้วย, เล่นเกมชาร์จไปด้วย, จ่ายไฟ, วัตต์, แอมป์, ประกัน, รีวิว, แนะนำ, ราคา, โปรโมชั่น, สักเส้นนึง, ตัวนี้, ทนทาน, ชาร์จไว, สวัสดีครับ, สวัสดีค่ะ'
     );
     formData.append('timestamp_granularities[]', 'word');
 

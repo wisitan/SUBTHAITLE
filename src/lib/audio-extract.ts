@@ -90,18 +90,19 @@ export async function extractAudioFromMedia(
       });
     }
 
-    // STT-Optimized Audio Preprocessing Pipeline
-    // highpass 200Hz: cut low-freq rumble (fans, AC, traffic)
-    // lowpass 7000Hz: cut high-freq hiss (electronics, sibilance beyond speech range)
-    // loudnorm EBU R128: normalize perceived loudness for consistent STT input
+    // STT-Optimized Voice Isolation & Noise Suppression Pipeline:
+    // 1. afftdn=nf=-20  — ตัดเสียง Noise และดนตรีพื้นหลัง (FFT-based Denoiser)
+    // 2. highpass=f=180 — ตัดเสียง Bass และเสียงเคาะดนตรีความถี่ต่ำ
+    // 3. lowpass=f=4500 — ตัดเสียงแหลมสูง/เสียงฉาบดนตรีเหนือย่านเสียงมนุษย์
+    // 4. loudnorm       — ปรับระดับความดังเสียงพูดให้สม่ำเสมอ (EBU R128)
     await ffmpeg.exec([
       '-i',
       inputName,
       '-vn',                      // No video
-      '-af', 'highpass=f=200,loudnorm=I=-16:TP=-1.5:LRA=11', // Removed lowpass to preserve high frequencies for LLM
+      '-af', 'afftdn=nf=-20,highpass=f=180,lowpass=f=4500,loudnorm=I=-16:TP=-1.5:LRA=11',
       '-ar', '16000',             // 16kHz sample rate (STT standard)
       '-ac', '1',                 // Mono
-      '-b:a', '128k',             // 128kbps bitrate for clearer high-frequencies
+      '-b:a', '128k',             // 128kbps bitrate
       outputName,
     ]);
 
