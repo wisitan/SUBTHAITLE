@@ -1,19 +1,14 @@
 -- ==============================================================================
--- 🚀 SUBTHAITLE: USER FEEDBACK LOOP & AUTO-LEARN DICTIONARY SCHEMA
+-- 🚀 SUBTHAITLE: USER FEEDBACK LOOP & AUTO-LEARN MIGRATION SCRIPT
+-- (ปลอดภัย 100% ไม่กระทบข้อมูล 110 คำเดิมใน custom_dictionary)
 -- Run this script in the Supabase SQL Editor (Dashboard > SQL Editor)
 -- ==============================================================================
 
--- 1. Ensure custom_dictionary table exists
-CREATE TABLE IF NOT EXISTS public.custom_dictionary (
-  id BIGSERIAL PRIMARY KEY,
-  wrong_word TEXT NOT NULL UNIQUE,
-  correct_word TEXT NOT NULL,
-  category TEXT DEFAULT 'general',
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
+-- 1. เพิ่มคอลัมน์ updated_at ใน custom_dictionary (ถ้ายังไม่มี)
+ALTER TABLE public.custom_dictionary 
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
 
--- 2. Create correction_feedback table for logging user edits
+-- 2. สร้างตาราง correction_feedback สำหรับบันทึกประวัติการแก้คำจากผู้ใช้
 CREATE TABLE IF NOT EXISTS public.correction_feedback (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   original_phrase TEXT NOT NULL,
@@ -28,29 +23,34 @@ CREATE TABLE IF NOT EXISTS public.correction_feedback (
   UNIQUE(original_phrase, corrected_phrase)
 );
 
--- Indexing for fast queries
+-- สร้าง Indexes เพื่อความเร็วในการค้นหา
 CREATE INDEX IF NOT EXISTS idx_correction_feedback_status ON public.correction_feedback(status);
 CREATE INDEX IF NOT EXISTS idx_correction_feedback_vote_count ON public.correction_feedback(vote_count DESC);
 CREATE INDEX IF NOT EXISTS idx_correction_feedback_updated_at ON public.correction_feedback(updated_at DESC);
 
--- Enable RLS
+-- 3. เปิดใช้งาน Row Level Security (RLS)
 ALTER TABLE public.correction_feedback ENABLE ROW LEVEL SECURITY;
 
--- Anonymous and Authenticated users can insert feedback
+-- ลบ Policies เดิม (ถ้ามี) เพื่อป้องกัน Error ซ้ำซ้อน
+DROP POLICY IF EXISTS "Allow anon insert feedback" ON public.correction_feedback;
+DROP POLICY IF EXISTS "Allow public read approved feedback" ON public.correction_feedback;
+DROP POLICY IF EXISTS "Service role full access on correction_feedback" ON public.correction_feedback;
+
+-- อนุญาตให้ผู้ใช้ทั่วไป (Anon/Auth) ส่ง Feedback ได้
 CREATE POLICY "Allow anon insert feedback"
   ON public.correction_feedback
   FOR INSERT
   TO anon, authenticated
   WITH CHECK (true);
 
--- Anyone can read feedback with status 'approved' or 'auto_learned'
+-- อนุญาตให้อ่านคำที่ Approved หรือ Auto-Learned แล้ว
 CREATE POLICY "Allow public read approved feedback"
   ON public.correction_feedback
   FOR SELECT
   TO anon, authenticated
   USING (status IN ('approved', 'auto_learned'));
 
--- Service role has full access
+-- Service role มีสิทธิ์จัดการเต็มรูปแบบ
 CREATE POLICY "Service role full access on correction_feedback"
   ON public.correction_feedback
   FOR ALL
@@ -58,9 +58,9 @@ CREATE POLICY "Service role full access on correction_feedback"
   USING (true)
   WITH CHECK (true);
 
--- 3. Atomic Stored Procedure: Record Feedback & Auto-Promote
--- Rule: When vote_count >= 2 and status = 'pending', auto-promote to 'auto_learned'
--- and automatically insert into custom_dictionary table!
+-- 4. Atomic Stored Procedure: บันทึก Feedback & Auto-Promote
+-- กฎ: เมื่อคู่คำเดิมถูกแก้ซ้ำ >= 2 ครั้ง และสถานะเป็น 'pending'
+-- ระบบจะเปลี่ยนสถานะเป็น 'auto_learned' และเพิ่มเข้า custom_dictionary อัตโนมัติทันที
 CREATE OR REPLACE FUNCTION record_correction_feedback(
   p_original TEXT,
   p_corrected TEXT,
@@ -92,8 +92,8 @@ BEGIN
   VALUES (
     v_trimmed_orig,
     v_trimmed_corr,
-    p_context_before,
-    p_context_after,
+    COALESCE(p_context_before, ''),
+    COALESCE(p_context_after, ''),
     p_user_id,
     1,
     'pending',
@@ -107,13 +107,13 @@ BEGIN
     updated_at = now()
   RETURNING id, vote_count, status INTO v_id, v_count, v_status;
 
-  -- 🚀 Auto-Learn Trigger: If vote_count >= 2 and status is pending, auto-promote!
+  -- 🚀 Auto-Learn Trigger: ถ้าแก้ซ้ำ >= 2 ครั้ง และยัง pending -> auto-promote ทันที
   IF v_count >= 2 AND v_status = 'pending' THEN
     UPDATE public.correction_feedback
     SET status = 'auto_learned', updated_at = now()
     WHERE id = v_id;
 
-    -- Upsert directly into custom_dictionary
+    -- Upsert เข้าสู่ custom_dictionary โดยตรง
     INSERT INTO public.custom_dictionary (wrong_word, correct_word, category, updated_at)
     VALUES (v_trimmed_orig, v_trimmed_corr, 'auto_learned', now())
     ON CONFLICT (wrong_word)
