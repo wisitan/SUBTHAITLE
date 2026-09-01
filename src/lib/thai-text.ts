@@ -39,87 +39,44 @@ function getThaiSegmenter() {
 export function resegmentThaiWords<T extends { word: string; start: number; end: number }>(tokens: T[]): T[] {
   if (!tokens || tokens.length === 0) return [];
 
-  // Check if Intl.Segmenter is available (should be in all modern browsers and Node 16+)
   const segmenter = getThaiSegmenter();
   if (!segmenter) {
-    // Fallback: return tokens as-is with basic combining-character merge
     return mergeThaiSubwordsFallback(tokens);
   }
 
-  // Step 1: Build a continuous string with character-level timestamp mapping
-  const charTimestamps: Array<{ start: number; end: number; originalToken: T }> = [];
-  let fullText = '';
-
-  for (const token of tokens) {
-    const text = token.word;
-    const hasLeadingSpace = /^\s/.test(text);
-    const trimmed = text.trimStart();
-
-    // Preserve word-boundary spaces from Whisper (important for English words like " Samsung")
-    if (hasLeadingSpace && fullText.length > 0) {
-      fullText += ' ';
-      charTimestamps.push({ start: token.start, end: token.start, originalToken: token });
-    }
-
-    const len = trimmed.length;
-    for (let i = 0; i < len; i++) {
-      const cStart = token.start + (token.end - token.start) * (i / Math.max(len, 1));
-      const cEnd = token.start + (token.end - token.start) * ((i + 1) / Math.max(len, 1));
-      charTimestamps.push({ start: cStart, end: cEnd, originalToken: token });
-    }
-    fullText += trimmed;
-  }
-
-  // Step 2: Insert artificial space at Latin↔Thai script boundaries
-  // (prevents "Samsungของ" from being treated as one word by Segmenter)
-  let processedText = '';
-  const processedTimestamps: Array<{ start: number; end: number; originalToken: T }> = [];
-
-  for (let i = 0; i < fullText.length; i++) {
-    if (i > 0) {
-      const prevCh = fullText[i - 1];
-      const currCh = fullText[i];
-      const prevIsThai = /[\u0E00-\u0E7F]/.test(prevCh);
-      const currIsThai = /[\u0E00-\u0E7F]/.test(currCh);
-      const prevIsLatinOrNum = /[a-zA-Z0-9]/.test(prevCh);
-      const currIsLatinOrNum = /[a-zA-Z0-9]/.test(currCh);
-
-      if ((prevIsThai && currIsLatinOrNum) || (prevIsLatinOrNum && currIsThai)) {
-        processedText += ' ';
-        processedTimestamps.push({ 
-          start: charTimestamps[i].start, 
-          end: charTimestamps[i].start, 
-          originalToken: charTimestamps[i].originalToken 
-        });
-      }
-    }
-    processedText += fullText[i];
-    processedTimestamps.push(charTimestamps[i]);
-  }
-
-  // Step 3: Use Intl.Segmenter to properly tokenize Thai text
-  const segments = Array.from(segmenter.segment(processedText));
-
-  // Step 4: Map each segment back to timestamps
   const result: T[] = [];
 
-  for (const seg of segments) {
-    const word = seg.segment;
-    if (!word.trim()) continue; // Skip whitespace segments
+  for (const token of tokens) {
+    const text = token.word.trim();
+    if (!text) continue;
 
-    const startIdx = seg.index;
-    const endIdx = Math.min(startIdx + word.length - 1, processedTimestamps.length - 1);
-    if (startIdx >= processedTimestamps.length) continue;
+    // Segment each token independently to prevent cross-token corruption
+    const segs = Array.from(segmenter.segment(text)).filter((s) => s.segment.trim());
+    if (segs.length <= 1) {
+      result.push({
+        ...token,
+        word: text,
+      });
+    } else {
+      // Divide duration proportionally by character length
+      const dur = Math.max(0.1, token.end - token.start);
+      const totalLen = Math.max(1, text.length);
+      let curStart = token.start;
 
-    // Retrieve original metadata (confidence, speaker, etc.) from the token that covers the start of this segment
-    const baseToken = processedTimestamps[startIdx].originalToken;
+      for (const seg of segs) {
+        const segDur = dur * (seg.segment.length / totalLen);
+        const wStart = parseFloat(curStart.toFixed(2));
+        const wEnd = parseFloat((curStart + segDur).toFixed(2));
 
-    result.push({
-      ...baseToken,
-      word,
-      start: processedTimestamps[startIdx].start,
-      end: processedTimestamps[endIdx].end,
-    });
+        result.push({
+          ...token,
+          word: seg.segment,
+          start: wStart,
+          end: Math.max(wStart + 0.05, wEnd),
+        });
+        curStart += segDur;
+      }
+    }
   }
 
   return result;

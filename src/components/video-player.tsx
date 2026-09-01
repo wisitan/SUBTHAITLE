@@ -112,6 +112,19 @@ export function VideoPlayer({ className = '' }: Props) {
 
   const { activeCaption, formatTime } = useCaptionSync(videoRef, isPlaying);
 
+  // Calculate the single active word index (Guarantees only ONE word is highlighted at any time)
+  const activeWordIndex = useMemo(() => {
+    if (!activeCaption?.words || activeCaption.words.length === 0) return -1;
+    const strictIdx = activeCaption.words.findIndex(
+      (w) => w.start <= currentTime && currentTime < w.end
+    );
+    if (strictIdx !== -1) return strictIdx;
+
+    return activeCaption.words.findIndex(
+      (w) => w.start <= currentTime && currentTime <= w.end + 0.08
+    );
+  }, [activeCaption, currentTime]);
+
   const togglePlay = useCallback(() => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
@@ -534,8 +547,7 @@ export function VideoPlayer({ className = '' }: Props) {
                         aria-hidden="true"
                       >
                         {activeCaption.words.map((w: CaptionWord, idx: number) => {
-                          const isWordActive =
-                            w.start <= currentTime && currentTime <= w.end + 0.08;
+                          const isWordActive = idx === activeWordIndex;
 
                           let prefixSpace = '';
                           if (idx > 0) {
@@ -587,8 +599,7 @@ export function VideoPlayer({ className = '' }: Props) {
                         }}
                       >
                         {activeCaption.words.map((w: CaptionWord, idx: number) => {
-                          const isWordActive =
-                            w.start <= currentTime && currentTime <= w.end + 0.08;
+                          const isWordActive = idx === activeWordIndex;
 
                           let prefixSpace = '';
                           if (idx > 0) {
