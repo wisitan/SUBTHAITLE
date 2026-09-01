@@ -45,14 +45,27 @@ export async function POST(request: NextRequest) {
 
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object as Stripe.Checkout.Session;
-      const userId = session.metadata?.userId || session.client_reference_id;
+      const supabase = getSupabaseAdmin();
+      let userId = session.metadata?.userId || session.client_reference_id;
       const packageId = session.metadata?.packageId || session.metadata?.tier || '';
       const minutesStr = session.metadata?.minutes;
       const isLifetime = session.metadata?.isLifetime === 'true' || packageId === 'lifetime_699' || packageId === 'tier_699';
 
-      if (userId) {
-        const supabase = getSupabaseAdmin();
-        if (supabase) {
+      if (!userId && supabase) {
+        const email = session.customer_email || session.customer_details?.email;
+        if (email) {
+          const { data: userByEmail } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('email', email)
+            .maybeSingle();
+          if (userByEmail) {
+            userId = userByEmail.id;
+          }
+        }
+      }
+
+      if (userId && supabase) {
           // 1. Case: Lifetime Pass Purchase (699฿)
           if (isLifetime) {
             try {
@@ -127,7 +140,6 @@ export async function POST(request: NextRequest) {
           }
         }
       }
-    }
 
     return NextResponse.json({ received: true });
   } catch (error) {

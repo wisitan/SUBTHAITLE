@@ -327,3 +327,11 @@ CREATE TRIGGER on_auth_user_created
 
 -- 9. Enable Realtime Publications on profiles table
 ALTER PUBLICATION supabase_realtime ADD TABLE public.profiles;
+
+-- 10. Grant execute permissions to ensure RPC calls succeed
+GRANT EXECUTE ON FUNCTION public.add_user_credits TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.deduct_user_credits TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.unlock_lifetime_pass TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.consume_google_free_quota TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.consume_groq_free_quota TO anon, authenticated, service_role;
+

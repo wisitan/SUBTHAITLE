@@ -79,7 +79,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshProfile = useCallback(async () => {
     if (!user) return;
     const p = await fetchProfile(user.id);
-    if (p) setProfile(p);
+    if (p) {
+      setProfile(p);
+      const store = useAppStore.getState();
+      if (typeof p.credits_minutes === 'number') {
+        store.setCreditsMinutes(p.credits_minutes);
+      }
+      if (typeof p.is_lifetime_unlocked === 'boolean') {
+        store.setLifetimeUnlocked(p.is_lifetime_unlocked);
+      }
+    }
   }, [user, fetchProfile]);
 
   useEffect(() => {

@@ -41,7 +41,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const userId = session.metadata?.userId || session.client_reference_id;
+    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      return NextResponse.json({ error: 'Supabase admin client unavailable' }, { status: 500 });
+    }
+
+    let userId = session.metadata?.userId || session.client_reference_id;
     const packageId = session.metadata?.packageId || session.metadata?.tier || '';
     const minutesStr = session.metadata?.minutes;
     const isLifetime =
@@ -50,12 +55,21 @@ export async function POST(request: NextRequest) {
       packageId === 'tier_699';
 
     if (!userId) {
-      return NextResponse.json({ error: 'No userId associated with session' }, { status: 400 });
+      const email = session.customer_email || session.customer_details?.email;
+      if (email) {
+        const { data: userByEmail } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', email)
+          .maybeSingle();
+        if (userByEmail) {
+          userId = userByEmail.id;
+        }
+      }
     }
 
-    const supabase = getSupabaseAdmin();
-    if (!supabase) {
-      return NextResponse.json({ error: 'Supabase admin client unavailable' }, { status: 500 });
+    if (!userId) {
+      return NextResponse.json({ error: 'No userId or matching email found for session' }, { status: 400 });
     }
 
     // Check if transaction was already processed by Webhook
