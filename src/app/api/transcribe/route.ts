@@ -235,6 +235,133 @@ async function getDynamicCustomDictionary(): Promise<{ phrases: string[]; rulesT
   }
 }
 
+// 🧠 Direct Gemini Multimodal Transcription Engine (Direct Audio-to-Subtitle)
+interface SubtitleSegment {
+  start: number;
+  end: number;
+  text: string;
+  words?: TranscribedWord[];
+}
+
+async function transcribeWithGeminiDirect(
+  audioBase64: string,
+  language: string = 'th',
+  extraRulesText: string = ''
+): Promise<{ text: string; words: TranscribedWord[]; segments: SubtitleSegment[]; duration: number } | null> {
+  const geminiApiKey = (
+    process.env.GEMINI_API_KEY ||
+    process.env.GOOGLE_AI_KEY ||
+    process.env.GOOGLE_GENAI_API_KEY ||
+    ''
+  ).trim();
+
+  if (!geminiApiKey) return null;
+
+  const systemPrompt = `You are the world's most accurate Thai speech-to-text transcriber and professional subtitle creator for short-form video (TikTok, YouTube Shorts, Reels).
+
+TASK:
+Listen carefully to the provided audio file and transcribe the exact Thai speech with natural conversational phrasing, correct Thai spelling, and accurate English loanwords/brands/slang (e.g. Type-C, USB-C, Power Bank, Fast Charge, iPhone, iPad, Adapter, 60W, 100W, Vibe Coding, Affiliate).
+
+RULES:
+1. Capture every word accurately without hallucinating or omitting sentences.
+2. Group sentences into clean, readable subtitle segments suitable for mobile screens (1.5 - 4.0 seconds each).
+3. Return precise start and end timestamps in seconds (floats with 2 decimals).
+4. Provide word-level timestamps inside each segment and in the root "words" array for karaoke highlighting.${extraRulesText}
+
+STRICT JSON OUTPUT SCHEMA:
+{
+  "text": "Full transcribed text...",
+  "duration": 15.5,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 2.5,
+      "text": "ข้อความท่อนที่ 1",
+      "words": [
+        {"word": "ข้อความ", "start": 0.0, "end": 1.2},
+        {"word": "ท่อนที่ 1", "start": 1.2, "end": 2.5}
+      ]
+    }
+  ],
+  "words": [
+    {"word": "ข้อความ", "start": 0.0, "end": 1.2},
+    {"word": "ท่อนที่ 1", "start": 1.2, "end": 2.5}
+  ]
+}`;
+
+  const candidateModels = [
+    'gemini-3.5-flash',
+    'gemini-2.5-flash',
+    'gemini-3.6-flash',
+    'gemini-3.7-flash',
+    'gemini-flash-latest',
+  ];
+
+  for (const model of candidateModels) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: AbortSignal.timeout(25000),
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [
+              {
+                role: 'user',
+                parts: [
+                  {
+                    inline_data: {
+                      mime_type: 'audio/mp3',
+                      data: audioBase64,
+                    },
+                  },
+                  {
+                    text: `Please transcribe this audio clip into timed Thai subtitle segments and word timestamps (${language === 'en' ? 'English' : 'Thai'}).`,
+                  },
+                ],
+              },
+            ],
+            generationConfig: {
+              responseMimeType: 'application/json',
+              temperature: 0.1,
+            },
+          }),
+        }
+      );
+
+      if (res.ok) {
+        const data = await res.json();
+        const contentText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (contentText) {
+          const parsed = JSON.parse(contentText);
+          const rawWords = Array.isArray(parsed.words) ? parsed.words : [];
+          const words: TranscribedWord[] = rawWords
+            .map((w: { word?: string; start?: number | string; end?: number | string }) => ({
+              word: String(w.word || ''),
+              start: typeof w.start === 'number' ? w.start : parseFloat(String(w.start)) || 0,
+              end: typeof w.end === 'number' ? w.end : parseFloat(String(w.end)) || 0,
+              confidence: 0.98,
+            }))
+            .filter((w: TranscribedWord) => w.word.trim().length > 0);
+
+          return {
+            text: parsed.text || words.map((w) => w.word).join(' '),
+            words,
+            segments: Array.isArray(parsed.segments) ? parsed.segments : [],
+            duration: parsed.duration || (words.length > 0 ? words[words.length - 1].end : 0),
+          };
+        }
+      }
+    } catch (err) {
+      console.warn(`[Gemini Direct Transcribe] Model ${model} failed, trying next...`, err);
+    }
+  }
+
+  return null;
+}
+
 // 🧠 AI Auto-Correction (Post-Processing Engine)
 // รองรับ Google Gemini (Flash / Pro) Multimodal Audio Verification เป็นหลัก และ Fallback ไปยัง OpenAI (gpt-4o-mini)
 async function correctThaiWordsWithLLM(
@@ -305,9 +432,11 @@ Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรม
 
   if (geminiApiKey) {
     const candidateModels = [
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
+      'gemini-3.5-flash',
       'gemini-2.5-flash',
+      'gemini-3.6-flash',
+      'gemini-3.7-flash',
+      'gemini-flash-latest',
     ];
 
     const userParts: Array<{ text?: string; inline_data?: { mime_type: string; data: string } }> = [];
@@ -330,7 +459,7 @@ Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรม
             headers: {
               'Content-Type': 'application/json',
             },
-            signal: AbortSignal.timeout(7000),
+            signal: AbortSignal.timeout(10000),
             body: JSON.stringify({
               system_instruction: {
                 parts: [{ text: systemPrompt }],
@@ -364,11 +493,11 @@ Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรม
             }
           }
         } else if (geminiRes.status === 400 || geminiRes.status === 403 || geminiRes.status === 404) {
-          break;
+          continue;
         }
       } catch (err) {
         console.warn(`[Gemini Fallback]: Model ${model} failed, skipping...`, err);
-        break;
+        continue;
       }
     }
   }
@@ -602,31 +731,51 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Route 2: Google Cloud Speech-to-Text (+ AI Auto-Correction with GPT-4o-mini / Gemini Multimodal)
-    const googleApiKey =
-      process.env.GOOGLE_STT_API_KEY ||
-      process.env.GOOGLE_API_KEY ||
-      process.env.GOOGLE_SPEECH_API_KEY ||
-      process.env.GOOGLE_CLOUD_API_KEY ||
-      process.env.Google ||
-      process.env.GOOGLE ||
-      process.env.google ||
-      process.env.NEXT_PUBLIC_GOOGLE_STT_API_KEY;
-
-    if (!googleApiKey) {
-      await refundCreditsIfFailed();
-      return NextResponse.json(
-        {
-          error:
-            'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า Google API Key บน Vercel หรือใส่ API Key ในโหมด BYOK เพื่อใช้งาน',
-        },
-        { status: 500 }
-      );
-    }
-
+    // Route 2: Gemini AI Direct Multimodal Engine (Primary) + Google Cloud STT (Fallback)
     try {
       // Fetch dynamic custom & auto-learned vocabulary
       const dynamicDict = await getDynamicCustomDictionary();
+
+      // 🎯 Primary Engine: Direct Multimodal Gemini (Audio-to-Subtitle)
+      const geminiDirectResult = await transcribeWithGeminiDirect(base64Audio, language, dynamicDict.rulesText);
+      if (geminiDirectResult && geminiDirectResult.words.length > 0) {
+        // Record safety budget usage for free tier
+        await recordSafetyBudgetUsage('google', isPaidUser);
+
+        return NextResponse.json({
+          success: true,
+          text: geminiDirectResult.text,
+          duration: geminiDirectResult.duration,
+          language: language || 'th',
+          segments: geminiDirectResult.segments || [],
+          words: geminiDirectResult.words,
+        });
+      }
+
+      console.warn('[Transcribe Route]: Gemini Direct returned empty or failed, falling back to Google STT...');
+
+      // 🔄 Fallback Engine: Google Cloud Speech-to-Text
+      const googleApiKey =
+        process.env.GOOGLE_STT_API_KEY ||
+        process.env.GOOGLE_API_KEY ||
+        process.env.GOOGLE_SPEECH_API_KEY ||
+        process.env.GOOGLE_CLOUD_API_KEY ||
+        process.env.Google ||
+        process.env.GOOGLE ||
+        process.env.google ||
+        process.env.NEXT_PUBLIC_GOOGLE_STT_API_KEY;
+
+      if (!googleApiKey) {
+        await refundCreditsIfFailed();
+        return NextResponse.json(
+          {
+            error:
+              'เซิร์ฟเวอร์ยังไม่ได้ตั้งค่า Google/Gemini API Key บน Vercel หรือใส่ API Key ในโหมด BYOK เพื่อใช้งาน',
+          },
+          { status: 500 }
+        );
+      }
+
       const basePhrases = [
         'Type-C', 'USB-C', 'USB Type-C', 'USB-A', 'Type-A', 'Lightning', 'Micro USB',
         'สายชาร์จ', 'หัวชาร์จ', 'เก้าสิบองศา', 'เล่นเกม', 'จ่ายไฟ', 'วัตต์', 'แอมป์', 'โวลต์',
