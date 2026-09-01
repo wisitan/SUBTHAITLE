@@ -29,56 +29,129 @@ function getThaiSegmenter() {
 }
 
 /**
- * Re-segments Whisper's BPE subword tokens into linguistically correct Thai words
+ * Re-segments Whisper's BPE subword tokens into linguistically correct Thai & English words
  * using the browser's built-in Intl.Segmenter('th', { granularity: 'word' }).
  *
- * This is the definitive solution for Thai tokenization — it handles ALL cases where
- * Whisper splits mid-syllable (e.g. "คื"+"อ" → "คือ", "สา"+"มารถ" → "สามารถ",
- * "ต้"+"อง" → "ต้อง") by rebuilding from the full concatenated text.
+ * Concatenates continuous token clusters and re-segments the unified text so that
+ * mid-word splits like "เป็"+"น" -> "เป็น", "นะ"+"ครั"+"บ" -> "นะครับ", "Type"+"-C" -> "Type-C"
+ * are 100% fused into proper, grammatically intact words.
  */
 export function resegmentThaiWords<T extends { word: string; start: number; end: number }>(tokens: T[]): T[] {
   if (!tokens || tokens.length === 0) return [];
 
-  // 1. First Pass: Merge broken Thai subwords, floating vowels, and tone marks across tokens
-  const preMerged = mergeThaiSubwordsFallback(tokens);
-
   const segmenter = getThaiSegmenter();
   if (!segmenter) {
-    return preMerged;
+    return mergeThaiSubwordsFallback(tokens);
+  }
+
+  // 1. Group tokens into speech phrases (split on significant pauses >= 0.45s)
+  const phrases: T[][] = [];
+  let currentPhrase: T[] = [];
+
+  for (let i = 0; i < tokens.length; i++) {
+    const tok = tokens[i];
+    const prev = currentPhrase[currentPhrase.length - 1];
+    const isBigGap = prev ? (tok.start - prev.end) >= 0.45 : false;
+
+    if (isBigGap && currentPhrase.length > 0) {
+      phrases.push(currentPhrase);
+      currentPhrase = [tok];
+    } else {
+      currentPhrase.push(tok);
+    }
+  }
+  if (currentPhrase.length > 0) {
+    phrases.push(currentPhrase);
   }
 
   const result: T[] = [];
 
-  for (const token of preMerged) {
-    const text = cleanThaiText(token.word.trim());
-    if (!text) continue;
+  // 2. Process each phrase with global character-to-time projection
+  for (const phrase of phrases) {
+    let concatenatedText = '';
+    const charTimes: Array<{ start: number; end: number }> = [];
 
-    // Segment each token independently using Intl.Segmenter
-    const segs = Array.from(segmenter.segment(text)).filter((s) => s.segment.trim());
-    if (segs.length <= 1) {
-      result.push({
-        ...token,
-        word: text,
-      });
-    } else {
-      // Divide duration proportionally by character length
-      const dur = Math.max(0.1, token.end - token.start);
-      const totalLen = Math.max(1, text.length);
-      let curStart = token.start;
+    for (const tok of phrase) {
+      const cleaned = cleanThaiText(tok.word);
+      if (!cleaned) continue;
 
-      for (const seg of segs) {
-        const segDur = dur * (seg.segment.length / totalLen);
-        const wStart = parseFloat(curStart.toFixed(2));
-        const wEnd = parseFloat((curStart + segDur).toFixed(2));
+      const dur = Math.max(0.05, tok.end - tok.start);
+      const len = cleaned.length;
 
-        result.push({
-          ...token,
-          word: seg.segment,
-          start: wStart,
-          end: Math.max(wStart + 0.05, wEnd),
+      for (let c = 0; c < len; c++) {
+        const cStart = tok.start + (c / len) * dur;
+        const cEnd = tok.start + ((c + 1) / len) * dur;
+        charTimes.push({
+          start: parseFloat(cStart.toFixed(3)),
+          end: parseFloat(cEnd.toFixed(3)),
         });
-        curStart += segDur;
       }
+      concatenatedText += cleaned;
+    }
+
+    if (!concatenatedText || charTimes.length === 0) continue;
+
+    // Run Intl.Segmenter on the whole continuous phrase
+    const segs = Array.from(segmenter.segment(concatenatedText));
+
+    // Post-process segments: combine hyphens with surrounding words (e.g. Type + - + C -> Type-C)
+    const fusedSegments: Array<{ segment: string; index: number }> = [];
+
+    for (let s = 0; s < segs.length; s++) {
+      const seg = segs[s];
+      const txt = seg.segment.trim();
+      if (!txt) continue;
+
+      const prev = fusedSegments[fusedSegments.length - 1];
+
+      const isHyphen = txt === '-' || txt === '–' || txt === '—';
+      const isPrevHyphen = prev && (prev.segment.endsWith('-') || prev.segment.endsWith('–') || prev.segment.endsWith('—'));
+
+      // If current token is hyphen, glue to prev (e.g. "Type" + "-" -> "Type-")
+      if (prev && isHyphen) {
+        prev.segment += txt;
+        continue;
+      }
+
+      // If prev token ended with hyphen, glue current to prev (e.g. "Type-" + "C" -> "Type-C")
+      if (prev && isPrevHyphen) {
+        prev.segment += txt;
+        continue;
+      }
+
+      // If current token is a combining Thai mark with no consonant (safety fallback), glue to prev
+      if (prev && THAI_NON_INITIAL.test(txt)) {
+        prev.segment += txt;
+        continue;
+      }
+
+      // If previous ended with incomplete Thai vowel (เ, แ, โ, ใ, ไ), glue to prev
+      if (prev && THAI_TRAILING_INCOMPLETE.test(prev.segment)) {
+        prev.segment += txt;
+        continue;
+      }
+
+      fusedSegments.push({
+        segment: txt,
+        index: seg.index,
+      });
+    }
+
+    // Build the final timed words for this phrase
+    for (const item of fusedSegments) {
+      const wordText = item.segment;
+      const startCharIdx = item.index;
+      const endCharIdx = Math.min(startCharIdx + wordText.length - 1, charTimes.length - 1);
+
+      const wStart = charTimes[startCharIdx]?.start ?? phrase[0].start;
+      const wEnd = charTimes[endCharIdx]?.end ?? phrase[phrase.length - 1].end;
+
+      result.push({
+        ...phrase[0],
+        word: wordText,
+        start: parseFloat(wStart.toFixed(2)),
+        end: parseFloat(Math.max(wStart + 0.05, wEnd).toFixed(2)),
+      });
     }
   }
 
