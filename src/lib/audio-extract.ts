@@ -54,26 +54,17 @@ export async function getFFmpeg(
 }
 
 /**
- * Extracts audio from a video file in the browser (Cost: ฿0, 0 server bandwidth)
- * Converts to 16kHz mono MP3 optimized for Whisper transcription (ultra low file size).
+ * Extracts and preprocesses audio from any media file in the browser (Cost: ฿0)
+ * Applies STT-optimized Audio Preprocessing Pipeline:
+ *   1. highpass=f=200   — ตัดเสียงทุ้มรบกวน (พัดลม, แอร์, เสียงรถ)
+ *   2. lowpass=f=7000   — ตัดเสียงแหลมสูง (เสียงจี่, ไฟฟ้า)
+ *   3. loudnorm        — ปรับระดับเสียงให้สม่ำเสมอ (EBU R128)
+ * Output: 16kHz mono MP3 optimized for Google Cloud STT / Whisper
  */
 export async function extractAudioFromMedia(
   file: File,
   onProgress?: (p: AudioExtractProgress) => void
 ): Promise<Blob> {
-  // If it's already an MP3 audio file, return it directly!
-  const isMp3 = file.type === 'audio/mpeg' || file.type === 'audio/mp3' || file.name.toLowerCase().endsWith('.mp3');
-  if (isMp3) {
-    if (onProgress) {
-      onProgress({
-        ratio: 1,
-        stage: 'completed',
-        message: 'ไฟล์ MP3 พร้อมใช้งานทันที',
-      });
-    }
-    return file;
-  }
-
   try {
     const ffmpeg = await getFFmpeg(onProgress);
 
@@ -84,7 +75,7 @@ export async function extractAudioFromMedia(
       onProgress({
         ratio: 0.3,
         stage: 'processing',
-        message: 'กำลังเตรียมไฟล์วิดีโอ...',
+        message: 'กำลังเตรียมไฟล์...',
       });
     }
 
@@ -95,18 +86,22 @@ export async function extractAudioFromMedia(
       onProgress({
         ratio: 0.4,
         stage: 'processing',
-        message: 'กำลังสกัดเฉพาะเสียงและบีบอัดสำหรับ AI (16kHz Mono MP3)...',
+        message: 'กำลังปรับคุณภาพเสียงและลดเสียงรบกวนสำหรับ AI...',
       });
     }
 
-    // Convert to 16kHz mono 64kbps MP3 (Ideal for Groq / Whisper API)
+    // STT-Optimized Audio Preprocessing Pipeline
+    // highpass 200Hz: cut low-freq rumble (fans, AC, traffic)
+    // lowpass 7000Hz: cut high-freq hiss (electronics, sibilance beyond speech range)
+    // loudnorm EBU R128: normalize perceived loudness for consistent STT input
     await ffmpeg.exec([
       '-i',
       inputName,
-      '-vn',                // No video
-      '-ar', '16000',       // 16kHz sample rate
-      '-ac', '1',           // Mono
-      '-b:a', '64k',        // 64kbps bitrate
+      '-vn',                      // No video
+      '-af', 'highpass=f=200,lowpass=f=7000,loudnorm=I=-16:TP=-1.5:LRA=11',
+      '-ar', '16000',             // 16kHz sample rate (STT standard)
+      '-ac', '1',                 // Mono
+      '-b:a', '64k',              // 64kbps bitrate (compact but clear)
       outputName,
     ]);
 
@@ -126,7 +121,7 @@ export async function extractAudioFromMedia(
       onProgress({
         ratio: 1,
         stage: 'completed',
-        message: `สกัดเสียงสำเร็จ! ขนาดไฟล์ลดเหลือ ${(audioBlob.size / (1024 * 1024)).toFixed(2)} MB`,
+        message: `ปรับคุณภาพเสียงสำเร็จ! ขนาด ${(audioBlob.size / (1024 * 1024)).toFixed(2)} MB`,
       });
     }
 
@@ -134,7 +129,7 @@ export async function extractAudioFromMedia(
   } catch (error) {
     console.error('Audio extraction error:', error);
     throw new Error(
-      `ไม่สามารถสกัดเสียงจากไฟล์วิดีโอได้: ${error instanceof Error ? error.message : 'Unknown error'}`
+      `ไม่สามารถสกัดเสียงจากไฟล์ได้: ${error instanceof Error ? error.message : 'Unknown error'}`
     );
   }
 }

@@ -223,24 +223,50 @@ async function correctThaiWordsWithLLM(
   // Optimize payload: ส่งเฉพาะคำภาษาไทยแบบ string array เพื่อประหยัด Tokens 70%
   const wordStringsInput = words.map((w) => w.word);
 
-  const systemPrompt = `You are an elite Thai speech subtitle correction engine for video content (Shorts, TikTok, YouTube Reviews, Tech Gadgets).
-Your job is to fix phonetic speech recognition errors, sound-alikes, and garbled technical jargon based on the full sentence context:
+  const systemPrompt = `You are the world's most accurate Thai speech subtitle correction engine, specialized in video content (Shorts, TikTok, YouTube Reviews, Tech Gadgets, Cooking, Lifestyle).
 
-COMMON GADGET & PHONETIC CORRECTION RULES:
-- "วิธีใช้ สี" / "วิธีใช้สี" / "วิธีใช้ ซี" / "วิทีซี" / "ไทป์สี" / "ไทบซี" -> "Type-C" or "USB Type-C"
-- "usb แอมป์" / "usb แอม" / "ยูเอสบี แอมป์" / "ยูเอสบี เอ" -> "USB-A"
-- "ยูเอสบี ซี" / "usb ซี" -> "USB-C"
-- "ชาชาติ" / "ชาจ" / "ชาร์ท" -> "ชาร์จ" (or "สายชาร์จ" if next to "สาย")
-- "สักเช่นนึง" / "สักเส้นนึง" -> "สักเส้นนึง"
-- "ตัวเนีย" / "ตัวเนี้ย" -> "ตัวนี้" or "ตัวเนี้ย"
-- "ดีดี" -> "ดีๆ", "เร็วเร็ว" -> "เร็วๆ", "มากมาก" -> "มากๆ", "จริงจริง" -> "จริงๆ"
-- "พาวเวอร์แบง" / "พาเวอร์แบงค์" -> "Power Bank" or "พาวเวอร์แบงค์"
-- "ฟาสชาร์จ" / "ฟาสต์ชาร์ต" -> "Fast Charge"
-- "หกสิบ ดับเบิลยู" / "ร้อย ดับเบิลยู" -> "60W" / "100W"
+TASK: Given an array of Thai words from speech recognition and the full raw transcript, fix phonetic errors, sound-alikes, garbled English loanwords, and Thai-specific mistakes using full sentence context.
+
+CORRECTION RULES (organized by category):
+
+【CONNECTORS & CABLES】
+- "วิธีใช้ สี" / "วิธีใช้สี" / "วิธี ซี" / "วิทีซี" / "ไทป์สี" / "ไทบซี" / "ไทป์ ซี" → "Type-C"
+- "usb แอมป์" / "usb แอม" / "ยูเอสบี แอมป์" / "ยูเอสบีเอ" → "USB-A"
+- "ยูเอสบี ซี" / "usb ซี" / "ยูเอสบี ไทป์ซี" → "USB-C"
+- "ไมโคร ยูเอสบี" / "ไมโคร usb" → "Micro USB"
+- "ไลท์นิ่ง" / "ไลนิ่ง" / "ไลท์นิง" → "Lightning"
+
+【CHARGING & POWER】
+- "ชาชาติ" / "ชาจ" / "ชาร์ท" / "ชาช" → "ชาร์จ"
+- "สาย" + (ชาชาติ/ชาจ/ชาร์ท) → "สายชาร์จ"
+- "หัว" + (ชาชาติ/ชาจ/ชาร์ท) → "หัวชาร์จ"
+- "ฟาสชาร์จ" / "ฟาสต์ชาร์ต" / "ฟาสชาจ" → "Fast Charge"
+- "พาวเวอร์แบง" / "พาเวอร์แบงค์" / "เพาเวอร์แบงค์" → "Power Bank"
+- "หกสิบ ดับเบิลยู" → "60W", "ร้อย ดับเบิลยู" → "100W"
+- "แอมแปร์" / "แอมป์แปร์" → "แอมป์"
+
+【THAI PHONETIC PATTERNS】
+- Reduplication: "ดีดี" → "ดีๆ", "เร็วเร็ว" → "เร็วๆ", "มากมาก" → "มากๆ", "จริงจริง" → "จริงๆ", "ค่อยค่อย" → "ค่อยๆ", "ช้าช้า" → "ช้าๆ"
+- Colloquial: "ตัวเนีย" / "ตัวเนี้ย" → "ตัวนี้", "งี้" → "นี้", "เนี่ย" → "นี่", "ป่ะ" → "ไหม"
+- Particles: "น่ะ" → "นะ", "จ้า" → "จ้ะ", "คร้าบ" → "ครับ", "ค่า" → "ค่ะ"
+- Sound-alikes: "สักเช่นนึง" → "สักเส้นนึง", "ปะกัน" → "ประกัน"
+
+【BRANDS & PLATFORMS】
+- Fix known brand misspellings contextually (Samsung, iPhone, iPad, AirPods, Shopee, Lazada, etc.)
 
 STRICT OUTPUT FORMAT:
 Return JSON only: {"words": ["word1", "word2", ...], "text": "Full corrected sentence"}
-The "words" array should represent the corrected words in the exact same chronological sequence.`;
+The "words" array represents the corrected words in chronological order. You MAY merge or split tokens if the correction requires it.
+
+FEW-SHOT EXAMPLES:
+Input: ["ตัวนี้", "เป็น", "สาย", "ชาชาติ", "วิธีใช้", "สี", "ชาร์จ", "เร็ว", "หกสิบ", "วัตต์"]
+Output: {"words": ["ตัวนี้", "เป็น", "สายชาร์จ", "Type-C", "ชาร์จเร็ว", "60W"], "text": "ตัวนี้เป็นสายชาร์จ Type-C ชาร์จเร็ว 60W"}
+
+Input: ["มี", "ทั้ง", "แบบ", "usb", "แอมป์", "ธรรมดา", "ดึง", "ออก", "มา", "ก็", "สามารถ"]
+Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรมดา", "ดึง", "ออก", "มา", "ก็", "สามารถ"], "text": "มีทั้งแบบ USB-A ธรรมดา ดึงออกมาก็สามารถ"}`;
+
+  // Build user message with full context
+  const userMessage = `Full Transcript Context:\n"${rawText}"\n\nOriginal Words Array:\n${JSON.stringify(wordStringsInput)}`;
 
   // 1. Primary Attempt: Google Gemini API (Google AI Studio)
   const geminiApiKey = (
@@ -273,7 +299,7 @@ The "words" array should represent the corrected words in the exact same chronol
               contents: [
                 {
                   role: 'user',
-                  parts: [{ text: `Original Words Array:\n${JSON.stringify(wordStringsInput)}` }],
+                  parts: [{ text: userMessage }],
                 },
               ],
               generationConfig: {
@@ -328,7 +354,7 @@ The "words" array should represent the corrected words in the exact same chronol
             },
             {
               role: 'user',
-              content: `Original Words Array:\n${JSON.stringify(wordStringsInput)}`,
+              content: userMessage,
             },
           ],
           response_format: { type: 'json_object' },
