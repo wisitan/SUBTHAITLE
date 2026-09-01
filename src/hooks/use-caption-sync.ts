@@ -29,7 +29,7 @@ export function useCaptionSync(
 
     // 2. Tolerance match: for very end of cue or between close frames
     return captions.findIndex(
-      (c) => c.start <= currentTime && currentTime <= c.end + 0.04
+      (c) => c.start <= currentTime && currentTime <= c.end + 0.08
     );
   }, [captions, currentTime]);
 

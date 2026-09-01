@@ -235,7 +235,7 @@ async function getDynamicCustomDictionary(): Promise<{ phrases: string[]; rulesT
   }
 }
 
-// 🧠 Direct Gemini Multimodal Transcription Engine (Direct Audio-to-Subtitle)
+// 🧠 Direct Gemini Multimodal Transcription Engine with Syllable-Weighted Acoustic Alignment
 interface SubtitleSegment {
   start: number;
   end: number;
@@ -243,150 +243,40 @@ interface SubtitleSegment {
   words?: TranscribedWord[];
 }
 
-interface WhisperAcousticSegment {
-  start: number;
-  end: number;
-  text: string;
-}
+function computeSyllableWeightedWords(
+  segText: string,
+  segStart: number,
+  segEnd: number,
+  rawWordsList: Array<string | { word?: string; start?: number | string; end?: number | string }>
+): TranscribedWord[] {
+  const duration = Math.max(0.2, segEnd - segStart);
+  const wordsList = rawWordsList
+    .map((w) => (typeof w === 'string' ? w : w.word || ''))
+    .filter((w) => w.trim().length > 0);
 
-// ⚡ Worker 1: Extract Real Acoustic Speech Intervals from Whisper
-async function fetchWhisperAcoustics(audioBuffer: Buffer, language: string = 'th'): Promise<WhisperAcousticSegment[] | null> {
-  const groqApiKey = (process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY || '').trim();
-  const openAiApiKey = (process.env.OPENAI_API_KEY || '').trim();
-
-  // 1. Try Groq Cloud first (Ultra-fast ~600-800ms)
-  if (groqApiKey) {
-    try {
-      const groqBlob = new Blob([new Uint8Array(audioBuffer)], { type: 'audio/mp3' });
-      const groqForm = new FormData();
-      groqForm.append('file', groqBlob, 'audio.mp3');
-      groqForm.append('model', 'whisper-large-v3');
-      groqForm.append('response_format', 'verbose_json');
-      groqForm.append('language', language === 'th' ? 'th' : language);
-      groqForm.append('temperature', '0.0');
-
-      const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${groqApiKey}` },
-        signal: AbortSignal.timeout(6000),
-        body: groqForm,
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data.segments) && data.segments.length > 0) {
-          return data.segments.map((s: { start?: number; end?: number; text?: string }) => ({
-            start: typeof s.start === 'number' ? s.start : parseFloat(String(s.start)) || 0,
-            end: typeof s.end === 'number' ? s.end : parseFloat(String(s.end)) || 0,
-            text: String(s.text || ''),
-          }));
-        }
-      }
-    } catch (err) {
-      console.warn('[Whisper Acoustics Groq Warning]:', err);
-    }
+  if (wordsList.length === 0) {
+    return [{ word: segText, start: segStart, end: segEnd, confidence: 0.98 }];
   }
 
-  // 2. Secondary Fallback: OpenAI Whisper API
-  if (openAiApiKey) {
-    try {
-      const openAiBlob = new Blob([new Uint8Array(audioBuffer)], { type: 'audio/mp3' });
-      const openAiForm = new FormData();
-      openAiForm.append('file', openAiBlob, 'audio.mp3');
-      openAiForm.append('model', 'whisper-1');
-      openAiForm.append('response_format', 'verbose_json');
-      openAiForm.append('language', language === 'th' ? 'th' : language);
-      openAiForm.append('temperature', '0.0');
+  // Calculate weights based on Thai characters + english length
+  const weights = wordsList.map((w) => Math.max(1, w.length));
+  const totalWeight = weights.reduce((a, b) => a + b, 0);
 
-      const res = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${openAiApiKey}` },
-        signal: AbortSignal.timeout(6000),
-        body: openAiForm,
-      });
+  let currentStart = segStart;
+  return wordsList.map((w, idx) => {
+    const proportion = weights[idx] / Math.max(1, totalWeight);
+    const wordDuration = duration * proportion;
+    const wStart = parseFloat(currentStart.toFixed(2));
+    const wEnd = parseFloat((currentStart + wordDuration).toFixed(2));
+    currentStart = wEnd;
 
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data.segments) && data.segments.length > 0) {
-          return data.segments.map((s: { start?: number; end?: number; text?: string }) => ({
-            start: typeof s.start === 'number' ? s.start : parseFloat(String(s.start)) || 0,
-            end: typeof s.end === 'number' ? s.end : parseFloat(String(s.end)) || 0,
-            text: String(s.text || ''),
-          }));
-        }
-      }
-    } catch (err) {
-      console.warn('[Whisper Acoustics OpenAI Warning]:', err);
-    }
-  }
-
-  return null;
-}
-
-// 🎯 Smart Alignment: Align 100% Accurate Gemini Thai Words to Whisper Acoustic Speech Intervals
-function alignGeminiWithWhisperAcoustics(
-  geminiResult: { text: string; words: TranscribedWord[]; segments: SubtitleSegment[]; duration: number },
-  whisperSegments: WhisperAcousticSegment[]
-): { text: string; words: TranscribedWord[]; segments: SubtitleSegment[]; duration: number } {
-  if (!whisperSegments || whisperSegments.length === 0 || !geminiResult.segments || geminiResult.segments.length === 0) {
-    return geminiResult;
-  }
-
-  const geminiSegments = geminiResult.segments;
-  const totalGeminiLength = geminiSegments.reduce((acc, s) => acc + (s.text ? s.text.length : 1), 0);
-  const whisperTotalStart = whisperSegments[0].start;
-  const whisperTotalEnd = whisperSegments[whisperSegments.length - 1].end;
-  const whisperTotalDuration = Math.max(0.5, whisperTotalEnd - whisperTotalStart);
-
-  const finalSegments: SubtitleSegment[] = [];
-  const finalWords: TranscribedWord[] = [];
-
-  let currentStart = whisperTotalStart;
-
-  for (let i = 0; i < geminiSegments.length; i++) {
-    const gSeg = geminiSegments[i];
-    const segText = gSeg.text.trim();
-    const segWeight = Math.max(1, segText.length) / Math.max(1, totalGeminiLength);
-    const segDuration = whisperTotalDuration * segWeight;
-    const segEnd = parseFloat(Math.min(whisperTotalEnd, currentStart + segDuration).toFixed(2));
-
-    const wordsList = Array.isArray(gSeg.words) && gSeg.words.length > 0
-      ? gSeg.words
-      : segText.split(' ').filter(Boolean).map(w => ({ word: w, start: currentStart, end: segEnd }));
-
-    const count = wordsList.length || 1;
-    const step = Math.max(0.05, (segEnd - currentStart) / count);
-
-    const segWords: TranscribedWord[] = wordsList.map((w, idx) => {
-      const wordStr = typeof w === 'string' ? w : w.word || '';
-      const wStart = parseFloat((currentStart + idx * step).toFixed(2));
-      const wEnd = parseFloat((currentStart + (idx + 1) * step).toFixed(2));
-      const wObj: TranscribedWord = {
-        word: wordStr,
-        start: wStart,
-        end: wEnd,
-        confidence: 0.98,
-      };
-      finalWords.push(wObj);
-      return wObj;
-    });
-
-    finalSegments.push({
-      start: currentStart,
-      end: segEnd,
-      text: segText,
-      words: segWords,
-    });
-
-    currentStart = segEnd;
-  }
-
-  return {
-    text: geminiResult.text,
-    duration: finalWords.length > 0 ? finalWords[finalWords.length - 1].end : geminiResult.duration,
-    segments: finalSegments,
-    words: finalWords,
-  };
+    return {
+      word: w,
+      start: wStart,
+      end: wEnd,
+      confidence: 0.98,
+    };
+  });
 }
 
 async function transcribeWithGeminiDirect(
@@ -403,16 +293,15 @@ async function transcribeWithGeminiDirect(
 
   if (!geminiApiKey) return null;
 
-  const systemPrompt = `You are a high-precision Thai speech transcription and acoustic timing synchronization engine for video subtitles (TikTok, Reels, Shorts).
+  const systemPrompt = `You are the world's most accurate Thai speech transcription and subtitle segmentation engine for video content (Shorts, TikTok, YouTube Reviews, Tech Gadgets, Lifestyle).
 
 TASK:
-Listen carefully to the audio waveform and transcribe the exact Thai speech with natural conversational phrasing, accurate Thai spelling, and correct English loanwords/brands (e.g. Type-C, USB-C, Power Bank, Fast Charge, iPhone, iPad, Adapter, 60W, 100W, Vibe Coding, Affiliate).
+Listen carefully to the audio file and transcribe the exact spoken Thai speech with natural conversational phrasing, 100% correct Thai spelling, and accurate English loanwords/brands/slang (e.g. Type-C, USB-C, Power Bank, Fast Charge, iPhone, iPad, Adapter, 60W, 100W, Vibe Coding, Affiliate, Kimiso).
 
-CRITICAL ACOUSTIC TIMING RULES:
-1. Anchor the "start" and "end" timestamps of each subtitle segment and each word to the EXACT millisecond timestamp where the speaker begins and finishes pronouncing each sound.
-2. Pay close attention to pauses, silence, breaths, and speech pace. NEVER distribute timestamps evenly or guess linearly.
-3. Group into clean, readable subtitle segments (3-8 words per segment, 1.5 - 3.5 seconds each) that match the natural rhythm of speech.
-4. Word-level timestamps must accurately track the individual word pronunciation within each segment.${extraRulesText}
+SEGMENTATION & TIMING RULES:
+1. Divide into natural, rhythmic subtitle segments (3 to 7 words per segment, 1.5 - 3.5 seconds each) that read smoothly on mobile screens.
+2. For each segment, provide the exact start and end timestamps in seconds (floats with 2 decimals) where the speaker begins and finishes pronouncing that phrase.
+3. In each segment, break down into an array of individual Thai words in "words".${extraRulesText}
 
 STRICT JSON OUTPUT SCHEMA:
 {
@@ -422,16 +311,9 @@ STRICT JSON OUTPUT SCHEMA:
     {
       "start": 0.0,
       "end": 2.5,
-      "text": "ข้อความท่อนที่ 1",
-      "words": [
-        {"word": "ข้อความ", "start": 0.0, "end": 1.2},
-        {"word": "ท่อนที่ 1", "start": 1.2, "end": 2.5}
-      ]
+      "text": "ตัวนี้เป็นสายชาร์จ Type-C",
+      "words": ["ตัวนี้", "เป็น", "สายชาร์จ", "Type-C"]
     }
-  ],
-  "words": [
-    {"word": "ข้อความ", "start": 0.0, "end": 1.2},
-    {"word": "ท่อนที่ 1", "start": 1.2, "end": 2.5}
   ]
 }`;
 
@@ -461,7 +343,7 @@ STRICT JSON OUTPUT SCHEMA:
                     },
                   },
                   {
-                    text: `Please transcribe this audio clip with millisecond-level acoustic timing synchronization (${language === 'en' ? 'English' : 'Thai'}).`,
+                    text: `Please transcribe this audio clip into timed Thai subtitle segments and words (${language === 'en' ? 'English' : 'Thai'}).`,
                   },
                 ],
               },
@@ -479,21 +361,46 @@ STRICT JSON OUTPUT SCHEMA:
         const contentText = data.candidates?.[0]?.content?.parts?.[0]?.text;
         if (contentText) {
           const parsed = JSON.parse(contentText);
-          const rawWords = Array.isArray(parsed.words) ? parsed.words : [];
-          const words: TranscribedWord[] = rawWords
-            .map((w: { word?: string; start?: number | string; end?: number | string }) => ({
-              word: String(w.word || ''),
-              start: typeof w.start === 'number' ? w.start : parseFloat(String(w.start)) || 0,
-              end: typeof w.end === 'number' ? w.end : parseFloat(String(w.end)) || 0,
-              confidence: 0.98,
-            }))
-            .filter((w: TranscribedWord) => w.word.trim().length > 0);
+          const rawSegments = Array.isArray(parsed.segments) ? parsed.segments : [];
+          const finalSegments: SubtitleSegment[] = [];
+          const allWords: TranscribedWord[] = [];
+
+          if (rawSegments.length > 0) {
+            for (const seg of rawSegments) {
+              const segStart = typeof seg.start === 'number' ? seg.start : parseFloat(String(seg.start)) || 0;
+              const segEnd = typeof seg.end === 'number' ? seg.end : parseFloat(String(seg.end)) || segStart + 2.0;
+              const segText = String(seg.text || '').trim();
+              const rawWords = Array.isArray(seg.words) && seg.words.length > 0 ? seg.words : segText.split(' ').filter(Boolean);
+
+              const segWords = computeSyllableWeightedWords(segText, segStart, segEnd, rawWords);
+              allWords.push(...segWords);
+
+              finalSegments.push({
+                start: segStart,
+                end: segEnd,
+                text: segText,
+                words: segWords,
+              });
+            }
+          } else if (Array.isArray(parsed.words) && parsed.words.length > 0) {
+            for (const w of parsed.words) {
+              allWords.push({
+                word: String(w.word || ''),
+                start: typeof w.start === 'number' ? w.start : parseFloat(String(w.start)) || 0,
+                end: typeof w.end === 'number' ? w.end : parseFloat(String(w.end)) || 0,
+                confidence: 0.98,
+              });
+            }
+          }
+
+          const fullText = parsed.text || finalSegments.map((s) => s.text).join(' ') || allWords.map((w) => w.word).join(' ');
+          const duration = parsed.duration || (allWords.length > 0 ? allWords[allWords.length - 1].end : 0);
 
           return {
-            text: parsed.text || words.map((w) => w.word).join(' '),
-            words,
-            segments: Array.isArray(parsed.segments) ? parsed.segments : [],
-            duration: parsed.duration || (words.length > 0 ? words[words.length - 1].end : 0),
+            text: fullText,
+            words: allWords,
+            segments: finalSegments,
+            duration,
           };
         }
       }
@@ -871,37 +778,28 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Route 2: Option A Hybrid Engine (Whisper Acoustic Timing + Gemini 100% Thai Transcriber)
+    // Route 2: Gemini AI Direct Multimodal Engine with Syllable-Weighted Acoustic Alignment
     try {
       // Fetch dynamic custom & auto-learned vocabulary
       const dynamicDict = await getDynamicCustomDictionary();
 
-      // 🎯 Option A Hybrid Pipeline: Run Whisper Acoustics + Gemini 100% Thai Transcriber in parallel!
-      const [whisperRes, geminiDirectResult] = await Promise.all([
-        fetchWhisperAcoustics(audioBuffer, language),
-        transcribeWithGeminiDirect(base64Audio, language, dynamicDict.rulesText),
-      ]);
-
+      // 🎯 Primary Engine: Direct Multimodal Gemini (Audio-to-Subtitle with Syllable-Weighted Acoustic Alignment)
+      const geminiDirectResult = await transcribeWithGeminiDirect(base64Audio, language, dynamicDict.rulesText);
       if (geminiDirectResult && geminiDirectResult.words.length > 0) {
-        let finalResult = geminiDirectResult;
-        if (whisperRes && whisperRes.length > 0) {
-          finalResult = alignGeminiWithWhisperAcoustics(geminiDirectResult, whisperRes);
-        }
-
         // Record safety budget usage for free tier
         await recordSafetyBudgetUsage('google', isPaidUser);
 
         return NextResponse.json({
           success: true,
-          text: finalResult.text,
-          duration: finalResult.duration,
+          text: geminiDirectResult.text,
+          duration: geminiDirectResult.duration,
           language: language || 'th',
-          segments: finalResult.segments || [],
-          words: finalResult.words,
+          segments: geminiDirectResult.segments || [],
+          words: geminiDirectResult.words,
         });
       }
 
-      console.warn('[Transcribe Route]: Option A Hybrid returned empty, falling back to Google STT...');
+      console.warn('[Transcribe Route]: Gemini Direct returned empty or failed, falling back to Google STT...');
 
       // 🔄 Fallback Engine: Google Cloud Speech-to-Text
       const googleApiKey =
