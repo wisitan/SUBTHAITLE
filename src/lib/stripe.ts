@@ -19,21 +19,46 @@ export interface StripePackageConfig {
 }
 
 export const STRIPE_PACKAGES: Record<string, StripePackageConfig> = {
+  credit_59: {
+    id: 'credit_59',
+    name: 'SUBTHAITLE Mini เติม 59฿ (+45 นาที)',
+    amount: 5900,
+    currency: 'thb',
+    minutes: 45,
+    description: 'เครดิตถอดเสียงภาษาไทย 45 นาที (~30 คลิป) ไม่มีวันหมดอายุ',
+  },
   credit_99: {
     id: 'credit_99',
-    name: 'SUBTHAITLE Starter เติม 99฿ (+60 นาที)',
+    name: 'SUBTHAITLE Starter เติม 99฿ (+90 นาที)',
     amount: 9900,
     currency: 'thb',
-    minutes: 60,
-    description: 'เครดิตถอดเสียงภาษาไทย 1 ชั่วโมงเต็ม (~60 คลิป) ไม่มีวันหมดอายุ',
+    minutes: 90,
+    description: 'เครดิตถอดเสียงภาษาไทย 1.5 ชั่วโมง (~70 คลิป) ไม่มีวันหมดอายุ',
   },
+  credit_199: {
+    id: 'credit_199',
+    name: 'SUBTHAITLE Creator เติม 199฿ (+240 นาที)',
+    amount: 19900,
+    currency: 'thb',
+    minutes: 240,
+    description: 'เครดิตถอดเสียงภาษาไทย 4 ชั่วโมงเต็ม (~200 คลิป) ยอดนิยมสูงสุด ไม่มีวันหมดอายุ',
+  },
+  credit_399: {
+    id: 'credit_399',
+    name: 'SUBTHAITLE Pro Studio เติม 399฿ (+600 นาที)',
+    amount: 39900,
+    currency: 'thb',
+    minutes: 600,
+    description: 'เครดิตถอดเสียงภาษาไทย 10 ชั่วโมงเต็ม (~500 คลิป) คุ้มค่าสูงสุด ไม่มีวันหมดอายุ',
+  },
+  // Backward compatibility alias for legacy webhook callbacks
   credit_249: {
     id: 'credit_249',
     name: 'SUBTHAITLE Creator เติม 249฿ (+180 นาที)',
     amount: 24900,
     currency: 'thb',
     minutes: 180,
-    description: 'เครดิตถอดเสียงภาษาไทย 3 ชั่วโมงเต็ม (~180 คลิป) ไม่มีวันหมดอายุ',
+    description: 'เครดิตถอดเสียงภาษาไทย 3 ชั่วโมงเต็ม',
   },
   credit_599: {
     id: 'credit_599',
@@ -41,25 +66,7 @@ export const STRIPE_PACKAGES: Record<string, StripePackageConfig> = {
     amount: 59900,
     currency: 'thb',
     minutes: 480,
-    description: 'เครดิตถอดเสียงภาษาไทย 8 ชั่วโมงเต็ม (~480 คลิป) ไม่มีวันหมดอายุ',
-  },
-  tier_699: {
-    id: 'tier_699',
-    name: 'SUBTHAITLE Lifetime Pass 699฿ (ซื้อขาดตลอดชีพ)',
-    amount: 69900,
-    currency: 'thb',
-    minutes: 0,
-    isLifetime: true,
-    description: 'ปลดล็อกสิทธิ์ใช้งาน BYOK (ใส่ API Key ตัวเอง) และ Local AI ตลอดชีพ',
-  },
-  lifetime_699: {
-    id: 'lifetime_699',
-    name: 'SUBTHAITLE Lifetime Pass 699฿ (ซื้อขาดตลอดชีพ)',
-    amount: 69900,
-    currency: 'thb',
-    minutes: 0,
-    isLifetime: true,
-    description: 'ปลดล็อกสิทธิ์ใช้งาน BYOK (ใส่ API Key ตัวเอง) และ Local AI ตลอดชีพ',
+    description: 'เครดิตถอดเสียงภาษาไทย 8 ชั่วโมงเต็ม',
   },
 };
 

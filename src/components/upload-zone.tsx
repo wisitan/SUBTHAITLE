@@ -525,7 +525,7 @@ export function UploadZone() {
                       </div>
                     </div>
                     <Link
-                      href="/donate"
+                      href="/credittopup"
                       className="px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-zinc-950 font-bold text-xs flex items-center gap-1.5 shrink-0 transition-colors"
                     >
                       <Coins className="w-3.5 h-3.5" />

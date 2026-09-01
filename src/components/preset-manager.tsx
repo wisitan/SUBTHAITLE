@@ -188,10 +188,10 @@ export function PresetManager() {
               ร่วมสนับสนุน 99฿ เพื่อบันทึกได้ <strong>5 แบบ</strong> หรือ 299฿ เพื่อบันทึกได้ <strong>20 แบบ</strong> พร้อมซิงค์บน Cloud
             </p>
             <Link
-              href="/donate"
+              href="/credittopup"
               className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold text-xs shrink-0 whitespace-nowrap shadow hover:scale-105 transition-transform"
             >
-              ปลดล็อกเริ่มต้น 99฿
+              เติมเครดิตเริ่มต้น 59฿
             </Link>
           </div>
         )}

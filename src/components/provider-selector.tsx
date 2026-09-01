@@ -67,7 +67,7 @@ export function ProviderSelector() {
         {/* Current Balance / Quick Link */}
         <div className="flex items-center gap-2">
           <Link
-            href="/donate"
+            href="/credittopup"
             className="px-3 py-1.5 rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-300 hover:text-white hover:bg-orange-500/25 text-xs sm:text-sm font-semibold flex items-center gap-1.5 transition-all shadow-sm"
           >
             <Coins className="w-3.5 h-3.5 text-orange-400" />
@@ -213,7 +213,7 @@ export function ProviderSelector() {
 
           <div className="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between">
             <Link
-              href="/donate"
+              href="/credittopup"
               onClick={(e) => e.stopPropagation()}
               className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
             >

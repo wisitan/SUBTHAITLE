@@ -79,7 +79,7 @@ export default function Home() {
 
               <div className="pt-2">
                 <Link
-                  href="/donate"
+                  href="/credittopup"
                   className="inline-flex items-center justify-center gap-2 w-full sm:w-auto text-sm sm:text-base font-bold text-rose-200 hover:text-white bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 hover:border-rose-500/60 px-5 py-3 rounded-2xl transition-all shadow-md cursor-pointer"
                 >
                   <Heart className="w-4 h-4 text-rose-400 fill-rose-400/20" />
