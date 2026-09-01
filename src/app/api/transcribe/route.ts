@@ -507,6 +507,7 @@ STRICT JSON OUTPUT SCHEMA:
 }`;
 
   const candidateModels = [
+    'gemini-3.7-flash',
     'gemini-3.5-flash',
     'gemini-3.5-flash-lite',
   ];
@@ -671,6 +672,7 @@ Output: {"words": ["มี", "ทั้ง", "แบบ", "USB-A", "ธรรม
 
   if (geminiApiKey) {
     const candidateModels = [
+      'gemini-3.7-flash',
       'gemini-3.5-flash',
       'gemini-3.5-flash-lite',
     ];
