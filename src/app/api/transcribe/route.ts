@@ -327,96 +327,54 @@ async function fetchWhisperAcousticWords(audioBuffer: Buffer, language: string =
 }
 
 // 🎯 THE ULTIMATE DTW-STYLE BURST MAPPER (Just like Competitors)
-// Maps Gemini's perfect text onto STT's exact word timings. PRESERVES SILENCE GAPS 100%!
+// 🎯 Segment-Anchored Acoustic Snapper:
+// Snaps each of Gemini's semantic segments to the exact Whisper acoustic boundaries within its local time window.
+// This prevents ANY global drift while guaranteeing that subtitles stop exactly when speech stops!
 function mapPerfectTextToAcousticWords(
   geminiResult: { text: string; words: TranscribedWord[]; segments: SubtitleSegment[]; duration: number },
   acousticWords: AcousticWord[]
 ): { text: string; words: TranscribedWord[]; segments: SubtitleSegment[]; duration: number } {
-  if (!geminiResult.words || geminiResult.words.length === 0 || !acousticWords || acousticWords.length === 0) {
+  if (!geminiResult.segments || geminiResult.segments.length === 0 || !acousticWords || acousticWords.length === 0) {
     return geminiResult;
   }
 
-  const perfectWords = geminiResult.words.map(w => w.word);
-  const perfectWeights = perfectWords.map(w => Math.max(1, w.length));
-  const totalPerfectWeight = perfectWeights.reduce((a, b) => a + b, 0);
-
-  // Group acoustic words into Continuous Speech Bursts (Silence > 0.3s creates a gap!)
-  const bursts: { start: number; end: number; duration: number }[] = [];
-  let curBurst = { start: acousticWords[0].start, end: acousticWords[0].end };
-  
-  for (let i = 1; i < acousticWords.length; i++) {
-    const aw = acousticWords[i];
-    if (aw.start - curBurst.end > 0.3) {
-      bursts.push({ ...curBurst, duration: curBurst.end - curBurst.start });
-      curBurst = { start: aw.start, end: aw.end };
-    } else {
-      curBurst.end = Math.max(curBurst.end, aw.end);
-    }
-  }
-  bursts.push({ ...curBurst, duration: curBurst.end - curBurst.start });
-
-  const totalAcousticDuration = bursts.reduce((acc, b) => acc + Math.max(0.1, b.duration), 0);
-
-  const finalWords: TranscribedWord[] = [];
-  let currentBurstIdx = 0;
-  let currentBurstOffset = 0;
-
-  for (let i = 0; i < perfectWords.length; i++) {
-    const pWord = perfectWords[i];
-    const weightProp = perfectWeights[i] / Math.max(1, totalPerfectWeight);
-    const neededDuration = weightProp * totalAcousticDuration;
-
-    const curB = bursts[currentBurstIdx];
-    const wStart = curB.start + currentBurstOffset;
-    const remainingInBurst = curB.end - wStart;
-    
-    let wEnd: number;
-    if (neededDuration <= remainingInBurst || currentBurstIdx === bursts.length - 1) {
-      wEnd = wStart + Math.min(neededDuration, remainingInBurst);
-      currentBurstOffset += (wEnd - wStart);
-      if (currentBurstOffset >= curB.duration - 0.05 && currentBurstIdx < bursts.length - 1) {
-        currentBurstIdx++;
-        currentBurstOffset = 0;
-      }
-    } else {
-      wEnd = curB.end;
-      currentBurstIdx++;
-      currentBurstOffset = 0;
-    }
-
-    finalWords.push({
-      word: pWord,
-      start: parseFloat(wStart.toFixed(2)),
-      end: parseFloat(wEnd.toFixed(2)),
-      confidence: 0.98
-    });
-  }
-
-  // Group mapped words back into Mobile-friendly Segments (3-5 words each)
   const finalSegments: SubtitleSegment[] = [];
-  let currentSegWords: TranscribedWord[] = [];
-  
-  for (let i = 0; i < finalWords.length; i++) {
-    const fw = finalWords[i];
-    currentSegWords.push(fw);
-    
-    const isPause = i < finalWords.length - 1 && finalWords[i+1].start - fw.end > 0.4;
-    if (currentSegWords.length >= 5 || isPause) {
-      finalSegments.push({
-        start: currentSegWords[0].start,
-        end: currentSegWords[currentSegWords.length - 1].end,
-        text: currentSegWords.map(w => w.word).join(''),
-        words: [...currentSegWords]
-      });
-      currentSegWords = [];
+  const finalWords: TranscribedWord[] = [];
+
+  for (const seg of geminiResult.segments) {
+    const rawStart = typeof seg.start === 'number' ? seg.start : parseFloat(String(seg.start)) || 0;
+    const rawEnd = typeof seg.end === 'number' ? seg.end : parseFloat(String(seg.end)) || rawStart + 2.5;
+    const segText = seg.text.trim();
+
+    if (!segText) continue;
+
+    // Find all Whisper acoustic words that fall inside or near this segment [start - 0.6s, end + 0.6s]
+    const localAcousticWords = acousticWords.filter(
+      (aw) => aw.end >= rawStart - 0.6 && aw.start <= rawEnd + 0.6
+    );
+
+    let snappedStart = rawStart;
+    let snappedEnd = rawEnd;
+
+    if (localAcousticWords.length > 0) {
+      // Snap to actual acoustic boundaries
+      snappedStart = Math.max(0, localAcousticWords[0].start);
+      snappedEnd = Math.max(snappedStart + 0.3, localAcousticWords[localAcousticWords.length - 1].end);
     }
-  }
-  if (currentSegWords.length > 0) {
+
+    // Inside this local acoustic window, distribute the words using Syllable Weighting
+    const segRawWords = Array.isArray(seg.words) && seg.words.length > 0
+      ? seg.words.map(w => typeof w === 'string' ? w : w.word || '')
+      : segText.split(' ').filter(Boolean);
+
+    const segWords = computeSyllableWeightedWords(segText, snappedStart, snappedEnd, segRawWords);
+    finalWords.push(...segWords);
+
     finalSegments.push({
-      start: currentSegWords[0].start,
-      end: currentSegWords[currentSegWords.length - 1].end,
-      text: currentSegWords.map(w => w.word).join(''),
-      words: currentSegWords
+      start: parseFloat(snappedStart.toFixed(2)),
+      end: parseFloat(snappedEnd.toFixed(2)),
+      text: segText,
+      words: segWords,
     });
   }
 
@@ -477,7 +435,7 @@ async function transcribeWithGeminiDirect(
 
   if (!geminiApiKey) return null;
 
-  const systemPrompt = `You are the world's most accurate Thai speech transcription engine for video content (Shorts, TikTok, YouTube Reviews).
+  const systemPrompt = `You are the world's most accurate Thai speech transcription and subtitle segmentation engine for video content (Shorts, TikTok, YouTube Reviews).
 
 TASK:
 Listen carefully to the audio file and transcribe the exact spoken Thai speech with natural conversational phrasing, 100% correct Thai spelling, and accurate English loanwords/brands/slang (e.g. Type-C, USB-C, Power Bank, Fast Charge, iPhone, iPad, Adapter, 60W, 100W, Vibe Coding, Affiliate, Kimiso).
@@ -485,15 +443,24 @@ Listen carefully to the audio file and transcribe the exact spoken Thai speech w
 CRITICAL PHONETIC & ANTI-HALLUCINATION RULES:
 1. STRICTLY PREFER NATIVE THAI VOCABULARY OVER ENGLISH:
    - When the speaker is speaking native Thai words, NEVER hallucinate or phonetically convert them into random English words.
-   - Example: "ก็รองรับ" / "รองรับหัว" / "หัวต่อ" / "หลายแบบ" is 100% Thai ("ก็รองรับหัวได้หลายแบบ"), DO NOT transcribe as "android" or "upload" or "download"!
+   - Example: "ก็รองรับ" / "รองรับหัว" / "หัวต่อ" / "หลายแบบ" is 100% Thai ("ก็รองรับหัวได้หลายแบบ"), DO NOT transcribe as "android" or "upload" or "download" or "macbook"!
    - Example: "มีทั้งแบบ", "ดึงออกมา", "เสียบใช้งาน", "ปรับได้" are pure Thai phrases.
 2. English is ONLY for real tech standards and brands: "Type-C", "USB-C", "USB-A", "Lightning", "60W", "100W", "Fast Charge", "Kimiso", "iPhone", "iPad", "Power Bank", "Adapter".
-3. Break the transcript down into an array of individual short words or syllables in "words".${extraRulesText}
+3. Divide into natural, rhythmic subtitle segments (3 to 7 words per segment, 1.5 - 3.5 seconds each).
+4. Provide estimated start and end timestamps in seconds for each segment.${extraRulesText}
 
 STRICT JSON OUTPUT SCHEMA:
 {
   "text": "Full transcribed text...",
-  "words": ["ก็รองรับ", "หัว", "ได้", "หลายแบบ", "นะครับ"]
+  "duration": 47.2,
+  "segments": [
+    {
+      "start": 0.0,
+      "end": 3.2,
+      "text": "สายชาร์จแบบ 90 องศาที่เอาไว้",
+      "words": ["สายชาร์จ", "แบบ", "90", "องศา", "ที่เอาไว้"]
+    }
+  ]
 }`;
 
   const candidateModels = [
