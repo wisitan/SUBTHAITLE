@@ -61,7 +61,34 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message, projects: [] }, { status: 200 });
     }
 
-    return NextResponse.json({ projects: projects || [] });
+    // Auto-recover titles for any projects affected by legacy partial update
+    const sanitizedProjects = (projects || []).map((p: Record<string, unknown>) => {
+      let finalTitle = typeof p.title === 'string' ? p.title : '';
+      if (!finalTitle || finalTitle === 'โปรเจกต์ไม่มีชื่อ' || finalTitle.trim() === '') {
+        if (typeof p.original_filename === 'string' && p.original_filename && p.original_filename !== 'โปรเจกต์ไม่มีชื่อ' && p.original_filename.trim() !== '') {
+          finalTitle = p.original_filename;
+        } else if (typeof p.proxy_url === 'string' && p.proxy_url) {
+          try {
+            const parts = p.proxy_url.split('/');
+            const filename = parts[parts.length - 1].replace(/^\d+_/, '');
+            if (filename && !filename.includes('_thumb.jpg')) {
+              finalTitle = decodeURIComponent(filename);
+            }
+          } catch {}
+        } else if (Array.isArray(p.captions) && p.captions.length > 0 && (p.captions[0] as Record<string, unknown>)?.text) {
+          const capText = String((p.captions[0] as Record<string, unknown>).text).trim();
+          if (capText) {
+            finalTitle = capText.length > 30 ? capText.slice(0, 30) + '...' : capText;
+          }
+        }
+      }
+      return {
+        ...p,
+        title: finalTitle || 'SUBTHAITLE Project',
+      };
+    });
+
+    return NextResponse.json({ projects: sanitizedProjects });
   } catch (error) {
     console.error('[Projects API Exception]:', error);
     return NextResponse.json(

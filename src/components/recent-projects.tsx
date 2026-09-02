@@ -58,6 +58,31 @@ function formatRelativeTime(dateString?: string): string {
   return date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
 }
 
+export function getProjectDisplayTitle(project: UserProject): string {
+  if (project.title && project.title !== 'โปรเจกต์ไม่มีชื่อ' && project.title.trim() !== '') {
+    return project.title;
+  }
+  if (project.original_filename && project.original_filename !== 'โปรเจกต์ไม่มีชื่อ' && project.original_filename.trim() !== '') {
+    return project.original_filename;
+  }
+  if (project.proxy_url) {
+    try {
+      const parts = project.proxy_url.split('/');
+      const filename = parts[parts.length - 1].replace(/^\d+_/, '');
+      if (filename && !filename.includes('_thumb.jpg')) {
+        return decodeURIComponent(filename);
+      }
+    } catch {}
+  }
+  if (Array.isArray(project.captions) && project.captions.length > 0 && (project.captions[0] as unknown as Record<string, unknown>)?.text) {
+    const text = String((project.captions[0] as unknown as Record<string, unknown>).text).trim();
+    if (text) {
+      return text.length > 30 ? text.slice(0, 30) + '...' : text;
+    }
+  }
+  return 'SUBTHAITLE Project';
+}
+
 function ProjectThumbnailImage({
   project,
   className = 'w-full h-full object-cover',
@@ -96,12 +121,15 @@ function ProjectThumbnailImage({
               uploadProxyToR2(blob, 'thumb_' + project.id, `${project.id}_thumb.jpg`).then((uploadedUrl) => {
                 const targetUrl = uploadedUrl || dataUrl;
                 if (targetUrl) {
+                  const resolvedTitle = getProjectDisplayTitle(project);
                   fetch('/api/projects', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                       id: project.id,
                       userId: project.user_id,
+                      title: resolvedTitle,
+                      originalFilename: project.original_filename || resolvedTitle,
                       thumbnailUrl: targetUrl,
                     }),
                   }).catch(() => {});
@@ -120,7 +148,7 @@ function ProjectThumbnailImage({
     return () => {
       isMounted = false;
     };
-  }, [project.id, project.title, project.thumbnail_url, project.proxy_url, project.original_filename, project.user_id]);
+  }, [project]);
 
   if (thumbSrc) {
     return (
@@ -191,10 +219,17 @@ export function RecentProjects() {
   }, [searchQuery, timeFilter, customStartDate, customEndDate, sortMode, viewMode]);
 
   const handleOpenProject = async (project: UserProject) => {
-    loadProject(project);
+    const resolvedTitle = getProjectDisplayTitle(project);
+    loadProject({
+      ...project,
+      title: resolvedTitle,
+    });
 
     try {
-      const cachedVideo = (await getVideoFromCache(project.id)) || (await getVideoFromCache(project.title));
+      const cachedVideo =
+        (await getVideoFromCache(project.id)) ||
+        (await getVideoFromCache(resolvedTitle)) ||
+        (project.original_filename ? await getVideoFromCache(project.original_filename) : null);
       if (cachedVideo) {
         const url = URL.createObjectURL(cachedVideo);
         useAppStore.getState().setVideoUrl(url);
@@ -667,8 +702,8 @@ export function RecentProjects() {
 
               {/* Bottom Text Area: Project Title + Date Only */}
               <div className="p-3 space-y-1">
-                <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-400 transition-colors" title={project.title}>
-                  {project.title || 'โปรเจกต์ไม่มีชื่อ'}
+                <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-400 transition-colors" title={getProjectDisplayTitle(project)}>
+                  {getProjectDisplayTitle(project)}
                 </h4>
                 <p className="text-[11px] text-zinc-400 font-medium">
                   {formatRelativeTime(project.updated_at || project.created_at)}
@@ -707,8 +742,8 @@ export function RecentProjects() {
 
                 {/* Info */}
                 <div className="min-w-0 flex-1 space-y-0.5">
-                  <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-300 transition-colors">
-                    {project.title || 'โปรเจกต์ไม่มีชื่อ'}
+                  <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-300 transition-colors" title={getProjectDisplayTitle(project)}>
+                    {getProjectDisplayTitle(project)}
                   </h4>
                   <p className="text-[11px] text-zinc-400 font-medium">
                     {formatRelativeTime(project.updated_at || project.created_at)}
