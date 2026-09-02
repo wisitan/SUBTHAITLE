@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
-  Plus,
   Trash2,
   Check,
   Bookmark,
@@ -210,51 +209,50 @@ export function PresetManager() {
         <form onSubmit={handleSaveCurrent} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
           <input
             type="text"
-            placeholder="ตั้งชื่อ Preset เช่น สไตล์ช่อง TikTok ประจำตัว..."
+            placeholder="ตั้งชื่อ Preset เช่น สไตล์ช่อง TikTok ของฉัน..."
             value={presetNameInput}
             onChange={(e) => setPresetNameInput(e.target.value)}
             disabled={isPresetFull || isSaving}
-            className="w-full sm:flex-1 px-3.5 py-2.5 rounded-xl bg-[#0f0f18] border border-zinc-700 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 shadow-inner disabled:opacity-50"
-            required
+            className="w-full sm:flex-1 px-3.5 py-2 rounded-xl bg-[#0f0f18] border border-zinc-700 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-orange-500 shadow-inner disabled:opacity-50"
           />
           <button
             type="submit"
-            disabled={isPresetFull || isSaving || !presetNameInput.trim()}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm flex items-center justify-center gap-1.5 shadow transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isPresetFull || isSaving}
+            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm flex items-center justify-center gap-1.5 shadow transition-all shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Plus className="w-4 h-4" />
+              <Bookmark className="w-4 h-4" />
             )}
-            <span>{isPresetFull ? 'โควต้าเต็ม (6/6)' : '+ บันทึกสไตล์ปัจจุบัน'}</span>
+            <span>{isPresetFull ? 'โควต้าเต็ม (6/6)' : 'บันทึกสไตล์ปัจจุบัน'}</span>
           </button>
         </form>
 
-        {/* Custom Presets Grid (Visual Cards) */}
+        {/* Custom Presets Grid (Compact Visual Cards) */}
         {customPresets.length === 0 ? (
-          <div className="p-6 rounded-2xl bg-[#0f0f18] border border-dashed border-zinc-700 text-center space-y-1.5">
+          <div className="p-5 rounded-2xl bg-[#0f0f18] border border-dashed border-zinc-700 text-center space-y-1">
             <p className="text-sm text-zinc-300 font-bold">ยังไม่มี Custom Preset ที่คุณบันทึกไว้</p>
             <p className="text-xs text-zinc-400">
-              ปรับแต่งฟอนต์ สี และเอฟเฟกต์ในแท็บ &quot;ปรับแต่งฟอนต์&quot; แล้วพิมพ์ชื่อกดบันทึกด้านบนได้เลยค่ะ (บันทึกได้ฟรีสูงสุด 6 แบบ)
+              ปรับแต่งฟอนต์ สี และเอฟเฟกต์ในแท็บ &quot;ปรับแต่งฟอนต์&quot; แล้วกดปุ่มบันทึกด้านบนได้เลยค่ะ (บันทึกได้ฟรีสูงสุด 6 แบบ)
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-0.5">
             {customPresets.map((cp) => {
               const isSelected = activePresetId === cp.id;
 
               return (
                 <div
                   key={cp.id}
-                  className={`rounded-2xl border p-4 flex flex-col justify-between gap-3 transition-all ${
+                  className={`rounded-2xl border p-3.5 flex flex-col justify-between gap-2.5 transition-all ${
                     isSelected
                       ? 'bg-amber-500/10 border-orange-500 shadow-xl shadow-orange-500/10 ring-1 ring-orange-500/50'
                       : 'bg-[#0f0f18] hover:bg-[#151522] border-zinc-700/80 hover:border-zinc-600 shadow-md'
                   }`}
                 >
-                  <div className="space-y-2.5">
-                    {/* Card Header */}
+                  <div className="space-y-2">
+                    {/* Compact Card Header */}
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <Layers className="w-4 h-4 text-orange-400 shrink-0" />
@@ -274,7 +272,7 @@ export function PresetManager() {
                           e.stopPropagation();
                           handleDeletePreset(cp.id, cp.name);
                         }}
-                        className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer shrink-0"
+                        className="p-1 rounded-lg text-zinc-400 hover:text-rose-400 hover:bg-rose-500/15 transition-colors cursor-pointer shrink-0"
                         title="ลบ Preset นี้"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -283,31 +281,14 @@ export function PresetManager() {
 
                     {/* Live Visual Preview Box */}
                     {renderVisualPreviewBox(cp.style)}
-
-                    {/* Metadata tags */}
-                    <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                      <span className="px-2 py-0.5 rounded-md bg-zinc-800/90 text-zinc-300 text-[11px] font-mono">
-                        Font: {cp.style.fontFamily}
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md bg-zinc-800/90 text-zinc-300 text-[11px] font-mono">
-                        Size: {cp.style.fontSize}px
-                      </span>
-                      <span className="px-2 py-0.5 rounded-md bg-zinc-800/90 text-zinc-300 text-[11px] flex items-center gap-1">
-                        <span
-                          className="w-2.5 h-2.5 rounded-full inline-block border border-white/20"
-                          style={{ backgroundColor: cp.style.highlightColor }}
-                        />
-                        <span>Highlight</span>
-                      </span>
-                    </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="pt-2.5 border-t border-zinc-800/80 flex items-center justify-end">
+                  <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-end">
                     <button
                       type="button"
                       onClick={() => handleApplyPreset(cp.id, cp.style)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                         isSelected
                           ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
                           : 'bg-zinc-800 hover:bg-orange-500 hover:text-zinc-950 text-white'
@@ -325,7 +306,7 @@ export function PresetManager() {
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. SECTION: 10 Standard System Presets (Rich Visual Cards Matching Img 5) */}
+      {/* 2. SECTION: 10 Standard System Presets (Compact Visual Cards)             */}
       {/* ========================================================================= */}
       <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
         
@@ -342,73 +323,50 @@ export function PresetManager() {
           </span>
         </div>
 
-        {/* 10 Visual Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+        {/* 10 Compact Visual Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {SUBTITLE_PRESETS.map((preset) => {
             const isSelected = activePresetId === preset.id;
 
             return (
               <div
                 key={preset.id}
-                className={`rounded-2xl border p-4 flex flex-col justify-between gap-3 transition-all ${
+                className={`rounded-2xl border p-3.5 flex flex-col justify-between gap-2.5 transition-all ${
                   isSelected
                     ? 'bg-amber-500/10 border-orange-500 shadow-xl shadow-orange-500/10 ring-1 ring-orange-500/50'
                     : 'bg-[#0f0f18] hover:bg-[#151522] border-zinc-700/80 hover:border-zinc-600 shadow-md'
                 }`}
               >
-                <div className="space-y-2.5">
-                  {/* Card Header: Icon, Name, Badge, Description */}
-                  <div>
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <h5 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
-                          {preset.name}
-                        </h5>
-                        {isSelected && (
-                          <span className="px-2 py-0.5 rounded-full bg-orange-500 text-zinc-950 text-[10px] font-black">
-                            ใช้งานอยู่
-                          </span>
-                        )}
-                      </div>
-
-                      <span className="px-2 py-0.5 rounded-lg text-[11px] font-bold flex items-center gap-1 shrink-0 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                        <Check className="w-3 h-3" />
-                        <span>พร้อมใช้</span>
-                      </span>
+                <div className="space-y-2">
+                  {/* Compact Card Header: Name + Badge */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <h5 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors truncate">
+                        {preset.name}
+                      </h5>
+                      {isSelected && (
+                        <span className="px-2 py-0.5 rounded-full bg-orange-500 text-zinc-950 text-[10px] font-black shrink-0">
+                          ใช้งานอยู่
+                        </span>
+                      )}
                     </div>
 
-                    <p className="text-xs text-zinc-300 mt-1 line-clamp-2 leading-relaxed">
-                      {preset.description}
-                    </p>
+                    <span className="px-2 py-0.5 rounded-lg text-[11px] font-bold flex items-center gap-1 shrink-0 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                      <Check className="w-3 h-3" />
+                      <span>พร้อมใช้</span>
+                    </span>
                   </div>
 
                   {/* Live Visual Preview Box */}
                   {renderVisualPreviewBox(preset.style)}
-
-                  {/* Metadata tags */}
-                  <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-                    <span className="px-2 py-0.5 rounded-md bg-zinc-800/90 text-zinc-300 text-[11px] font-mono">
-                      Font: {preset.style.fontFamily}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-md bg-zinc-800/90 text-zinc-300 text-[11px] font-mono">
-                      Size: {preset.style.fontSize}px
-                    </span>
-                    <span className="px-2 py-0.5 rounded-md bg-zinc-800/90 text-zinc-300 text-[11px] flex items-center gap-1">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full inline-block border border-white/20"
-                        style={{ backgroundColor: preset.previewHighlightColor }}
-                      />
-                      <span>Highlight</span>
-                    </span>
-                  </div>
                 </div>
 
                 {/* Card Action Button */}
-                <div className="pt-2.5 border-t border-zinc-800/80 flex items-center justify-end">
+                <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-end">
                   <button
                     type="button"
                     onClick={() => handleApplyPreset(preset.id, preset.style)}
-                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                       isSelected
                         ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 shadow-md'
                         : 'bg-zinc-800 hover:bg-orange-500 hover:text-zinc-950 text-white'

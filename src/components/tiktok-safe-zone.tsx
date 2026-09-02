@@ -11,7 +11,7 @@ export function TikTokSafeZone({ visible }: TikTokSafeZoneProps) {
   if (!visible) return null;
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-30 select-none overflow-hidden font-sans flex flex-col justify-between p-1.5">
+    <div className="absolute inset-0 pointer-events-none z-30 select-none overflow-hidden font-sans flex flex-col justify-between p-2 scale-[1.05] origin-center">
       {/* 1. Top Navigation Bar (Realistic TikTok Search Pill & Back Arrow) */}
       <div className="w-full flex items-center gap-2 pt-0.5 px-1 drop-shadow-[0_1px_3px_rgba(0,0,0,0.85)]">
         {/* Back Arrow */}
@@ -93,8 +93,8 @@ export function TikTokSafeZone({ visible }: TikTokSafeZoneProps) {
 
       {/* 3. Bottom Area: Compact Low-Profile Yellow Basket + Creator Name + Caption */}
       <div className="w-full flex flex-col gap-0.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] pb-0">
-        {/* TikTok Shop Yellow Shopping Basket Badge (Ultra Compact Frosted Glass) */}
-        <div className="w-fit max-w-[74%] bg-black/35 backdrop-blur-md border border-white/10 rounded-md px-1.5 py-0.5 flex items-center gap-1.5 shadow-sm">
+        {/* TikTok Shop Yellow Shopping Basket Badge (49% Opacity Frosted Glass) */}
+        <div className="w-fit max-w-[74%] bg-black/[0.49] backdrop-blur-sm border border-white/15 rounded-md px-1.5 py-0.5 flex items-center gap-1.5 shadow-sm">
           {/* Yellow Shopping Bag Icon */}
           <div className="w-4 h-4 rounded bg-amber-400 flex items-center justify-center shrink-0 shadow-sm">
             <svg viewBox="0 0 24 24" className="w-2.5 h-2.5 fill-white stroke-white stroke-[0.8]">
