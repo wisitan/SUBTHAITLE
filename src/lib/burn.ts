@@ -3,7 +3,8 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 import { CaptionItem, CaptionStyle } from './store';
 import { generateCaptionImageSequence } from './canvas-subtitle';
 
-export type VideoResolution = '720p' | '1080p' | '4k' | 'original';
+export type VideoResolution = '720p' | '1080p' | '4k' | 'original' | 'source';
+export type VideoFps = 'auto' | 24 | 30 | 60;
 
 export interface BurnProgress {
   ratio: number; // 0 to 1
@@ -17,6 +18,7 @@ export interface BurnVideoOptions {
   captions: CaptionItem[];
   style: CaptionStyle;
   resolution?: VideoResolution;
+  fps?: VideoFps;
   onProgress?: (progress: BurnProgress) => void;
   aspectRatio?: '9:16' | '16:9' | '1:1';
 }
@@ -70,19 +72,21 @@ export async function getFFmpegInstance(onProgress?: (progress: BurnProgress) =>
 }
 
 /**
- * Helper to get exact video duration from File/Blob
+ * Helper to get exact video duration and dimensions from File/Blob
  */
-async function getVideoDuration(file: File | Blob): Promise<number> {
+async function getVideoMetadata(file: File | Blob): Promise<{ duration: number; width: number; height: number }> {
   return new Promise((resolve) => {
     const video = document.createElement('video');
     video.preload = 'metadata';
     video.onloadedmetadata = () => {
       const dur = video.duration || 60;
+      const width = video.videoWidth || 1080;
+      const height = video.videoHeight || 1920;
       URL.revokeObjectURL(video.src);
-      resolve(dur);
+      resolve({ duration: dur, width, height });
     };
     video.onerror = () => {
-      resolve(60);
+      resolve({ duration: 60, width: 1080, height: 1920 });
     };
     video.src = URL.createObjectURL(file);
   });
@@ -97,6 +101,7 @@ export async function burnSubtitlesToVideo({
   captions,
   style,
   resolution = '1080p',
+  fps = 'auto',
   onProgress,
   aspectRatio = '9:16',
 }: BurnVideoOptions): Promise<Blob> {
@@ -114,10 +119,19 @@ export async function burnSubtitlesToVideo({
     message: 'กำลังเตรียมไฟล์วิดีโอและคำนวณไทม์ไลน์...',
   });
 
+  // Step 2: Get media metadata (duration & native dimensions)
+  const videoMeta = await getVideoMetadata(videoFile);
+  const videoDuration = videoMeta.duration;
+
   // Calculate target canvas resolution
   let resWidth = 1080;
   let resHeight = 1920;
-  if (aspectRatio === '16:9') {
+
+  if (resolution === 'source' || resolution === 'original') {
+    // Keep exact native dimensions of the uploaded video
+    resWidth = videoMeta.width;
+    resHeight = videoMeta.height;
+  } else if (aspectRatio === '16:9') {
     resWidth = 1920;
     resHeight = 1080;
   } else if (aspectRatio === '1:1') {
@@ -125,7 +139,7 @@ export async function burnSubtitlesToVideo({
     resHeight = 1080;
   }
 
-  // Scale resolution if 720p or 4k selected
+  // Scale resolution if 720p or 4k selected (when not source)
   if (resolution === '720p') {
     resWidth = Math.round(resWidth * (720 / 1080));
     resHeight = Math.round(resHeight * (720 / 1080));
@@ -134,8 +148,9 @@ export async function burnSubtitlesToVideo({
     resHeight = Math.round(resHeight * 2);
   }
 
-  // Step 2: Get media duration
-  const videoDuration = await getVideoDuration(videoFile);
+  // Ensure dimensions are even numbers (required by libx264/yuv420p)
+  resWidth = resWidth % 2 !== 0 ? resWidth - 1 : resWidth;
+  resHeight = resHeight % 2 !== 0 ? resHeight - 1 : resHeight;
 
   // Step 3: Render Subtitle frames with Canvas (WYSIWYG)
   const imageSequence = await generateCaptionImageSequence(
@@ -223,6 +238,7 @@ export async function burnSubtitlesToVideo({
       'ultrafast',
       '-crf',
       '23',
+      ...(fps && fps !== 'auto' ? ['-r', String(fps)] : []),
       '-c:a',
       'aac',
       '-b:a',

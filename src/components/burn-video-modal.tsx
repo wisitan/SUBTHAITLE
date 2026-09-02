@@ -18,7 +18,7 @@ import {
   Cloud,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { burnSubtitlesToVideo, VideoResolution, BurnProgress } from '@/lib/burn';
+import { burnSubtitlesToVideo, VideoResolution, VideoFps, BurnProgress } from '@/lib/burn';
 import { saveVideoToCache } from '@/lib/video-cache';
 
 interface Props {
@@ -39,6 +39,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
 
   const [mounted, setMounted] = useState(false);
   const [resolution, setResolution] = useState<VideoResolution>('1080p');
+  const [fps, setFps] = useState<VideoFps>('auto');
   const [isBurning, setIsBurning] = useState(false);
   const [progress, setProgress] = useState<BurnProgress | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -129,6 +130,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
         captions,
         style,
         resolution: targetRes,
+        fps,
         onProgress: (prog) => setProgress(prog),
       });
 
@@ -193,7 +195,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                 {file
                   ? '⚡ เรนเดอร์ด้วยไฟล์ Master คมชัดเต็ม 100% ในเครื่อง'
                   : proxyUrl
-                  ? '☁️ เรนเดอร์ด้วย Cloudflare R2 Proxy หรือเชื่อมต่อไฟล์ 4K'
+                  ? '☁️ เรนเดอร์ด้วย Cloudflare R2 Proxy หรือเชื่อมต่อไฟล์ต้นฉบับ'
                   : 'ประมวลผลบน GPU เครื่องของคุณ 100% ปลอดภัย'}
               </p>
             </div>
@@ -235,7 +237,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                   <span>📂 เชื่อมต่อไฟล์ต้นฉบับ</span>
                 </span>
                 <span className="text-[10px] font-medium text-zinc-900 opacity-90">
-                  เลือกไฟล์เดิมเพื่อเรนเดอร์ 4K / 1080p
+                  เลือกไฟล์เดิมเพื่อเรนเดอร์ Source / 1080p
                 </span>
               </button>
 
@@ -267,76 +269,143 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
           </div>
         )}
 
-        {/* Step 1: Resolution Options (Shown when Master file is present) */}
+        {/* Step 1: Resolution & FPS Options (Shown when Master file is present) */}
         {!renderedBlob && !isBurning && file && (
-          <div className="space-y-3">
-            <label className="text-sm font-bold text-zinc-200 block">
-              เลือกความละเอียดของวิดีโอ (Video Resolution):
-            </label>
+          <div className="space-y-4">
+            {/* 1. Resolution */}
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-zinc-200 block">
+                คุณภาพความละเอียด (Video Resolution):
+              </label>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              {/* Option 1: 720p */}
-              <button
-                type="button"
-                onClick={() => setResolution('720p')}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  resolution === '720p'
-                    ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/40'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                }`}
-              >
-                <div className="flex items-center justify-between">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                {/* Option 1: 720p */}
+                <button
+                  type="button"
+                  onClick={() => setResolution('720p')}
+                  className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
+                    resolution === '720p'
+                      ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/40'
+                      : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                  }`}
+                >
                   <span className="font-bold text-sm flex items-center gap-1.5 text-zinc-100">
                     <Zap className="w-4 h-4 text-amber-400" />
                     720p HD
                   </span>
-                </div>
-                <p className="text-xs text-zinc-400 mt-1">เรนเดอร์ด่วน ไฟล์เบา ส่งงานไว</p>
-              </button>
+                  <p className="text-[11px] text-zinc-400">เรนเดอร์ด่วน ไฟล์เบา ส่งงานไว</p>
+                </button>
 
-              {/* Option 2: 1080p */}
-              <button
-                type="button"
-                onClick={() => setResolution('1080p')}
-                className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
-                  resolution === '1080p'
-                    ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/40'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                }`}
-              >
-                <div className="flex items-center justify-between">
+                {/* Option 2: 1080p */}
+                <button
+                  type="button"
+                  onClick={() => setResolution('1080p')}
+                  className={`p-3 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1 ${
+                    resolution === '1080p'
+                      ? 'bg-orange-500/15 border-orange-500 text-white shadow-md shadow-orange-500/10 ring-1 ring-orange-500/40'
+                      : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                  }`}
+                >
                   <span className="font-bold text-sm flex items-center gap-1.5 text-orange-300">
                     <Tv className="w-4 h-4 text-orange-400" />
                     1080p Full HD
                   </span>
-                </div>
-                <p className="text-xs text-zinc-400 mt-1">มาตรฐานคมชัด TikTok / Reels</p>
-              </button>
+                  <p className="text-[11px] text-zinc-400">มาตรฐานคมชัด TikTok / Reels</p>
+                </button>
 
-              {/* Option 3: 4K */}
-              <button
-                type="button"
-                onClick={() => setResolution('4k')}
-                className={`p-3.5 rounded-2xl border text-left transition-all relative flex flex-col justify-between gap-1.5 cursor-pointer ${
-                  resolution === '4k'
-                    ? 'bg-rose-500/15 border-rose-500 text-white shadow-md shadow-rose-500/10 ring-1 ring-rose-500/40'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-sm flex items-center gap-1.5 text-rose-300">
-                    <Film className="w-4 h-4 text-rose-400" />
-                    4K Ultra HD
+                {/* Option 3: Source */}
+                <button
+                  type="button"
+                  onClick={() => setResolution('source')}
+                  className={`p-3 rounded-2xl border text-left transition-all relative flex flex-col justify-between gap-1 cursor-pointer ${
+                    resolution === 'source'
+                      ? 'bg-amber-500/15 border-amber-500 text-white shadow-md shadow-amber-500/10 ring-1 ring-amber-500/40'
+                      : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                  }`}
+                >
+                  <span className="font-bold text-sm flex items-center gap-1.5 text-amber-300">
+                    <Sparkles className="w-4 h-4 text-amber-400" />
+                    Source (ต้นฉบับ)
                   </span>
-                </div>
-                <p className="text-xs text-zinc-400 mt-1">
-                  คมชัดสูงสุดสำหรับโปรดักชั่น
-                </p>
-              </button>
+                  <p className="text-[11px] text-zinc-400">
+                    ขนาดเดิม 100% ไม่ยืดสัดส่วน
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            {/* 2. FPS Selection */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-bold text-zinc-200">
+                  อัตราเฟรมเรต (FPS):
+                </label>
+                <span className="text-xs text-orange-400 font-mono font-semibold">
+                  {fps === 'auto' ? 'Auto (เท่าไฟล์ต้นฉบับ)' : `${fps} FPS`}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {/* Auto */}
+                <button
+                  type="button"
+                  onClick={() => setFps('auto')}
+                  className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                    fps === 'auto'
+                      ? 'bg-orange-500/20 border-orange-500 text-white font-bold ring-1 ring-orange-500/40'
+                      : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                  }`}
+                >
+                  <span className="text-xs font-bold text-zinc-100">Auto (ต้นฉบับ)</span>
+                  <span className="text-[10px] text-emerald-400 font-medium">แนะนำ</span>
+                </button>
+
+                {/* 24 fps */}
+                <button
+                  type="button"
+                  onClick={() => setFps(24)}
+                  className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                    fps === 24
+                      ? 'bg-orange-500/20 border-orange-500 text-white font-bold ring-1 ring-orange-500/40'
+                      : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                  }`}
+                >
+                  <span className="text-xs font-bold text-zinc-100">24 fps</span>
+                  <span className="text-[10px] text-zinc-500">Cinematic</span>
+                </button>
+
+                {/* 30 fps */}
+                <button
+                  type="button"
+                  onClick={() => setFps(30)}
+                  className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                    fps === 30
+                      ? 'bg-orange-500/20 border-orange-500 text-white font-bold ring-1 ring-orange-500/40'
+                      : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                  }`}
+                >
+                  <span className="text-xs font-bold text-zinc-100">30 fps</span>
+                  <span className="text-[10px] text-zinc-500">Social Media</span>
+                </button>
+
+                {/* 60 fps */}
+                <button
+                  type="button"
+                  onClick={() => setFps(60)}
+                  className={`p-2.5 rounded-xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-0.5 ${
+                    fps === 60
+                      ? 'bg-orange-500/20 border-orange-500 text-white font-bold ring-1 ring-orange-500/40'
+                      : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                  }`}
+                >
+                  <span className="text-xs font-bold text-zinc-100">60 fps</span>
+                  <span className="text-[10px] text-zinc-500">Smooth Video</span>
+                </button>
+              </div>
             </div>
 
             {/* Hint for typography retention */}
-            <div className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-200 space-y-1">
+            <div className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-200 space-y-1">
               <div className="flex items-center gap-1.5 text-amber-400 font-semibold">
                 <Sparkles className="w-4 h-4" />
                 <span>สไตล์และเอฟเฟกต์ที่จะฝังลงในวิดีโอ:</span>
@@ -368,22 +437,21 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
             </div>
 
             <p className="text-xs text-zinc-400 text-center">
-              💡 กรุณาอย่าปิดแท็บเบราว์เซอร์ขณะที่ระบบกำลังเรนเดอร์วิดีโอ
+              กำลังประมวลผลบนเครื่องของคุณ... กรุณาอย่าปิดแท็บนี้จนกว่าจะเสร็จสิ้น
             </p>
           </div>
         )}
 
-        {/* Step 3: Burning Completed */}
+        {/* Step 3: Render Complete (Show Download button) */}
         {renderedBlob && downloadUrl && (
-          <div className="space-y-4 py-2 text-center">
-            <div className="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
-              <CheckCircle2 className="w-6 h-6" />
+          <div className="p-5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-3 animate-in zoom-in-95">
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+              <CheckCircle2 className="w-7 h-7" />
             </div>
-
-            <div className="space-y-1">
-              <h4 className="text-base font-bold text-white">เรนเดอร์วิดีโอพร้อมซับไตเติลสำเร็จ! 🎉</h4>
-              <p className="text-sm text-zinc-300">
-                ขนาดไฟล์: {(renderedBlob.size / (1024 * 1024)).toFixed(2)} MB • ความละเอียด {resolution}
+            <div>
+              <h4 className="text-base font-bold text-white">เรนเดอร์วิดีโอสำเร็จเรียบร้อย! 🎉</h4>
+              <p className="text-xs text-zinc-300 mt-1">
+                ขนาดไฟล์: {(renderedBlob.size / (1024 * 1024)).toFixed(2)} MB • พร้อมดาวน์โหลดแล้วค่ะ
               </p>
             </div>
 
@@ -421,7 +489,9 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                   ) : (
                     <>
                       <Film className="w-4 h-4" />
-                      <span>เริ่มเรนเดอร์วิดีโอ ({resolution})</span>
+                      <span>
+                        เริ่มเรนเดอร์วิดีโอ ({resolution === 'source' ? 'Source' : resolution}{fps !== 'auto' ? ` • ${fps}fps` : ''})
+                      </span>
                     </>
                   )}
                 </button>
