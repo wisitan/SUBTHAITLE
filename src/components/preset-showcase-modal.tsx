@@ -239,7 +239,7 @@ export function PresetShowcaseModal({ isOpen, onClose, onSelectPreset }: Props) 
                       </button>
                     ) : (
                       <Link
-                        href="/credittopup"
+                        href="/donate"
                         onClick={onClose}
                         className="px-4 py-2 rounded-xl bg-zinc-900 hover:bg-amber-500/20 border border-zinc-800 hover:border-amber-500/40 text-zinc-300 hover:text-amber-300 text-xs font-bold transition-all flex items-center gap-1.5"
                       >

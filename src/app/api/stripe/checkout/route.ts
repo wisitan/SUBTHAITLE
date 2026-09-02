@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
         minutes: pkgInfo.minutes.toString(),
         isLifetime: pkgInfo.isLifetime ? 'true' : 'false',
       },
-      success_url: `${origin}/credittopup/success?session_id={CHECKOUT_SESSION_ID}&packageId=${targetPackageId}`,
-      cancel_url: `${origin}/credittopup`,
+      success_url: `${origin}/donate/success?session_id={CHECKOUT_SESSION_ID}&packageId=${targetPackageId}`,
+      cancel_url: `${origin}/donate`,
     });
 
     return NextResponse.json({ url: session.url });

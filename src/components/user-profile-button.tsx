@@ -104,6 +104,24 @@ export function UserProfileButton() {
             </div>
           </div>
 
+          {/* Credits Balance & Donate */}
+          <div className="py-2.5 px-1 border-b border-zinc-800 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-400">โควต้าถอดเสียง:</span>
+              <strong className="text-orange-400 font-mono font-bold">
+                {profile?.credits_minutes || 0} นาที
+              </strong>
+            </div>
+
+            <a
+              href="/donate"
+              onClick={() => setIsOpen(false)}
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-orange-500/15 hover:bg-orange-500/25 border border-orange-500/40 text-orange-300 hover:text-orange-200 text-xs font-bold transition-all cursor-pointer"
+            >
+              <span>☕ เลี้ยงกาแฟทีมงาน (+โควต้า)</span>
+            </a>
+          </div>
+
           <div className="pt-2">
             <button
               type="button"

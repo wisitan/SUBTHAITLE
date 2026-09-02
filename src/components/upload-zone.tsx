@@ -19,7 +19,6 @@ import {
   Loader2,
   Sparkles,
   LogIn,
-  Coins,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -526,18 +525,17 @@ export function UploadZone() {
                     <div className="flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
                       <div className="space-y-1">
-                        <span className="font-bold block text-white">เครดิตของคุณไม่เพียงพอ</span>
+                        <span className="font-bold block text-white">โควต้าของคุณไม่เพียงพอ</span>
                         <p>
-                          คลิปนี้ต้องใช้ <strong>{requiredCredits} นาที</strong> แต่คุณมีเครดิตคงเหลือ <strong>{creditsMinutes} นาที</strong>
+                          คลิปนี้ต้องใช้ <strong>{requiredCredits} นาที</strong> แต่คุณมีโควต้าคงเหลือ <strong>{creditsMinutes} นาที</strong>
                         </p>
                       </div>
                     </div>
                     <Link
-                      href="/credittopup"
-                      className="px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-zinc-950 font-bold text-xs flex items-center gap-1.5 shrink-0 transition-colors"
+                      href="/donate"
+                      className="px-3.5 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-zinc-950 font-bold text-xs flex items-center gap-1.5 shrink-0 transition-colors shadow-md"
                     >
-                      <Coins className="w-3.5 h-3.5" />
-                      <span>เติมเครดิต</span>
+                      <span>☕ เลี้ยงกาแฟทีมงาน</span>
                     </Link>
                   </div>
                 )}

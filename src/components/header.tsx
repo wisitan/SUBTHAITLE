@@ -33,8 +33,17 @@ export function Header() {
           </div>
         </Link>
 
-        {/* User Profile */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+        {/* Header Right Actions */}
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/donate"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-500/15 to-amber-500/15 hover:from-orange-500/25 hover:to-amber-500/25 border border-orange-500/40 text-orange-300 hover:text-orange-200 text-xs font-bold transition-all shadow-sm cursor-pointer"
+            title="ร่วมสนับสนุนค่าเซิร์ฟเวอร์ & เลี้ยงกาแฟทีมงาน"
+          >
+            <span>☕</span>
+            <span className="hidden sm:inline">เลี้ยงกาแฟทีมงาน</span>
+            <span className="sm:hidden">สนับสนุน</span>
+          </Link>
           <UserProfileButton />
         </div>
       </div>

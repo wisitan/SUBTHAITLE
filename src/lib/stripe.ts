@@ -19,56 +19,70 @@ export interface StripePackageConfig {
 }
 
 export const STRIPE_PACKAGES: Record<string, StripePackageConfig> = {
-  credit_59: {
-    id: 'credit_59',
-    name: 'SUBTHAITLE Mini เติม 59฿ (+45 นาที)',
+  coffee_59: {
+    id: 'coffee_59',
+    name: '☕ เลี้ยงกาแฟทีมงาน 59฿ (โควต้าขอบคุณ 60 นาที)',
     amount: 5900,
     currency: 'thb',
-    minutes: 45,
-    description: 'เครดิตถอดเสียงภาษาไทย 45 นาที (~30 คลิป) ไม่มีวันหมดอายุ',
+    minutes: 60,
+    description: 'ร่วมสนับสนุนค่าเซิร์ฟเวอร์ รับโควต้าถอดเสียง 60 นาที (~40 คลิป) ไม่มีวันหมดอายุ',
+  },
+  meal_99: {
+    id: 'meal_99',
+    name: '🍛 เลี้ยงข้าวทีมงาน 99฿ (โควต้าขอบคุณ 120 นาที)',
+    amount: 9900,
+    currency: 'thb',
+    minutes: 120,
+    description: 'ร่วมสนับสนุนค่าเซิร์ฟเวอร์ รับโควต้าถอดเสียง 2 ชั่วโมง (~90 คลิป) ไม่มีวันหมดอายุ',
+  },
+  starbucks_199: {
+    id: 'starbucks_199',
+    name: '🥤 เลี้ยง Starbucks ทีมงาน 199฿ (โควต้าขอบคุณ 300 นาที)',
+    amount: 19900,
+    currency: 'thb',
+    minutes: 300,
+    description: 'ร่วมสนับสนุนค่าเซิร์ฟเวอร์ รับโควต้าถอดเสียง 5 ชั่วโมงเต็ม (~250 คลิป) ยอดนิยมสูงสุด ไม่มีวันหมดอายุ',
+  },
+
+  // Backward compatibility aliases
+  credit_59: {
+    id: 'credit_59',
+    name: '☕ เลี้ยงกาแฟทีมงาน 59฿ (โควต้าขอบคุณ 60 นาที)',
+    amount: 5900,
+    currency: 'thb',
+    minutes: 60,
+    description: 'ร่วมสนับสนุนค่าเซิร์ฟเวอร์ รับโควต้าถอดเสียง 60 นาที (~40 คลิป) ไม่มีวันหมดอายุ',
   },
   credit_99: {
     id: 'credit_99',
-    name: 'SUBTHAITLE Starter เติม 99฿ (+90 นาที)',
+    name: '🍛 เลี้ยงข้าวทีมงาน 99฿ (โควต้าขอบคุณ 120 นาที)',
     amount: 9900,
     currency: 'thb',
-    minutes: 90,
-    description: 'เครดิตถอดเสียงภาษาไทย 1.5 ชั่วโมง (~70 คลิป) ไม่มีวันหมดอายุ',
+    minutes: 120,
+    description: 'ร่วมสนับสนุนค่าเซิร์ฟเวอร์ รับโควต้าถอดเสียง 120 นาที (~90 คลิป) ไม่มีวันหมดอายุ',
   },
   credit_199: {
     id: 'credit_199',
-    name: 'SUBTHAITLE Creator เติม 199฿ (+240 นาที)',
+    name: '🥤 เลี้ยง Starbucks ทีมงาน 199฿ (โควต้าขอบคุณ 300 นาที)',
     amount: 19900,
     currency: 'thb',
-    minutes: 240,
-    description: 'เครดิตถอดเสียงภาษาไทย 4 ชั่วโมงเต็ม (~200 คลิป) ยอดนิยมสูงสุด ไม่มีวันหมดอายุ',
+    minutes: 300,
+    description: 'ร่วมสนับสนุนค่าเซิร์ฟเวอร์ รับโควต้าถอดเสียง 300 นาที (~250 คลิป) ไม่มีวันหมดอายุ',
   },
   credit_399: {
     id: 'credit_399',
-    name: 'SUBTHAITLE Pro Studio เติม 399฿ (+600 นาที)',
+    name: '🏆 Super Supporter 399฿ (โควต้าขอบคุณ 600 นาที)',
     amount: 39900,
     currency: 'thb',
     minutes: 600,
-    description: 'เครดิตถอดเสียงภาษาไทย 10 ชั่วโมงเต็ม (~500 คลิป) คุ้มค่าสูงสุด ไม่มีวันหมดอายุ',
+    description: 'ร่วมสนับสนุนค่าเซิร์ฟเวอร์ รับโควต้าถอดเสียง 10 ชั่วโมงเต็ม (~500 คลิป) ไม่มีวันหมดอายุ',
   },
-  // Backward compatibility alias for legacy webhook callbacks
   credit_249: {
     id: 'credit_249',
-    name: 'SUBTHAITLE Creator เติม 249฿ (+180 นาที)',
+    name: 'SUBTHAITLE Supporter 249฿ (+180 นาที)',
     amount: 24900,
     currency: 'thb',
     minutes: 180,
-    description: 'เครดิตถอดเสียงภาษาไทย 3 ชั่วโมงเต็ม',
-  },
-  credit_599: {
-    id: 'credit_599',
-    name: 'SUBTHAITLE Pro Studio เติม 599฿ (+480 นาที)',
-    amount: 59900,
-    currency: 'thb',
-    minutes: 480,
-    description: 'เครดิตถอดเสียงภาษาไทย 8 ชั่วโมงเต็ม',
+    description: 'เครดิตถอดเสียงภาษาไทย 180 นาที ไม่มีวันหมดอายุ',
   },
 };
-
-// Backward compatibility alias
-export const TIER_PRICES = STRIPE_PACKAGES;

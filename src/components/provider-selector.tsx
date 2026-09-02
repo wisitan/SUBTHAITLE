@@ -189,7 +189,7 @@ export function ProviderSelector() {
                 </div>
                 <div className="min-w-0">
                   <span className="font-bold text-base text-zinc-100 block">
-                    Credit ที่มี
+                    โควต้าผู้สนับสนุน
                   </span>
                   <span className="text-xs font-semibold text-emerald-400">
                     คงเหลือ {creditsMinutes} นาที
@@ -206,18 +206,18 @@ export function ProviderSelector() {
                 💎 คลิปยาวเท่าไหร่ก็ได้
               </p>
               <p className="text-xs text-zinc-400">
-                หักเครดิตตามความยาวจริงของคลิป
+                หักเวลาตามความยาวจริงของคลิป (นาที)
               </p>
             </div>
           </div>
 
           <div className="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between">
             <Link
-              href="/credittopup"
+              href="/donate"
               onClick={(e) => e.stopPropagation()}
-              className="inline-flex items-center gap-1 text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
+              className="inline-flex items-center gap-1 text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors"
             >
-              <span>+ เติมเครดิต</span>
+              <span>☕ เลี้ยงกาแฟทีมงาน (+โควต้า)</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
             <span className="text-[11px] text-zinc-400">ไม่มีวันหมดอายุ</span>
