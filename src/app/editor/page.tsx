@@ -26,6 +26,7 @@ import { StyleEditor } from '@/components/style-editor';
 import { PresetManager } from '@/components/preset-manager';
 import { ExportMenu } from '@/components/export-menu';
 import { UserProfileButton } from '@/components/user-profile-button';
+import { Tooltip } from '@/components/ui/tooltip';
 
 export default function EditorPage() {
   const { user } = useAuth();
@@ -263,13 +264,14 @@ export default function EditorPage() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           {/* Left: Back button & File info */}
           <div className="flex items-center gap-3 min-w-0">
-            <Link
-              href="/"
-              className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer"
-              title="กลับสู่หน้าหลัก"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
+            <Tooltip content="กลับสู่หน้าหลัก">
+              <Link
+                href="/"
+                className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </Link>
+            </Tooltip>
 
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-400 flex items-center justify-center shrink-0">
@@ -281,13 +283,14 @@ export default function EditorPage() {
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={projectTitle || file?.name || 'SUBTHAITLE Project'}
-                    onChange={(e) => setProjectTitle(e.target.value)}
-                    className="text-sm sm:text-base font-bold text-white bg-transparent border-b border-transparent hover:border-zinc-700 focus:border-orange-500 focus:outline-none transition-colors truncate max-w-[180px] sm:max-w-md py-0.5"
-                    title="คลิกเพื่อแก้ไขชื่อโปรเจกต์"
-                  />
+                  <Tooltip content="คลิกเพื่อพิมพ์เปลี่ยนชื่อโปรเจกต์">
+                    <input
+                      type="text"
+                      value={projectTitle || file?.name || 'SUBTHAITLE Project'}
+                      onChange={(e) => setProjectTitle(e.target.value)}
+                      className="text-sm sm:text-base font-bold text-white bg-transparent border-b border-transparent hover:border-zinc-700 focus:border-orange-500 focus:outline-none transition-colors truncate max-w-[180px] sm:max-w-md py-0.5"
+                    />
+                  </Tooltip>
 
                   {/* Cloud Sync Indicator */}
                   {user && (
@@ -333,29 +336,31 @@ export default function EditorPage() {
           <div className="flex items-center gap-2">
             {/* Undo / Redo Toolbar */}
             <div className="flex items-center bg-zinc-900 border border-zinc-800 p-0.5 rounded-xl shadow-sm">
-              <button
-                type="button"
-                onClick={() => {
-                  useAppStore.getState().undo();
-                  showToast('ย้อนกลับ (Undo)');
-                }}
-                className="p-1.5 sm:p-2 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
-                title="ย้อนกลับการแก้ไข (Undo) • คีย์ลัด: Cmd+Z (Mac) / Ctrl+Z (Windows)"
-              >
-                <Undo2 className="w-4 h-4" />
-              </button>
+              <Tooltip content="ย้อนกลับการแก้ไข (Undo) • Cmd+Z / Ctrl+Z">
+                <button
+                  type="button"
+                  onClick={() => {
+                    useAppStore.getState().undo();
+                    showToast('ย้อนกลับ (Undo)');
+                  }}
+                  className="p-1.5 sm:p-2 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                >
+                  <Undo2 className="w-4 h-4" />
+                </button>
+              </Tooltip>
               <div className="w-px h-4 bg-zinc-800" />
-              <button
-                type="button"
-                onClick={() => {
-                  useAppStore.getState().redo();
-                  showToast('ทำซ้ำ (Redo)');
-                }}
-                className="p-1.5 sm:p-2 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
-                title="ทำซ้ำการแก้ไข (Redo) • คีย์ลัด: Cmd+Shift+Z (Mac) / Ctrl+Y (Windows)"
-              >
-                <Redo2 className="w-4 h-4" />
-              </button>
+              <Tooltip content="ทำซ้ำการแก้ไข (Redo) • Cmd+Shift+Z / Ctrl+Y">
+                <button
+                  type="button"
+                  onClick={() => {
+                    useAppStore.getState().redo();
+                    showToast('ทำซ้ำ (Redo)');
+                  }}
+                  className="p-1.5 sm:p-2 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                >
+                  <Redo2 className="w-4 h-4" />
+                </button>
+              </Tooltip>
             </div>
 
             <UserProfileButton />

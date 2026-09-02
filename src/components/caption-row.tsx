@@ -8,21 +8,26 @@ import {
   Link as LinkIcon,
   Plus,
   Trash2,
+  ChevronUp,
+  ChevronDown,
 } from 'lucide-react';
 import { CaptionItem } from '@/lib/store';
+import { Tooltip } from '@/components/ui/tooltip';
 
 interface CaptionRowProps {
   caption: CaptionItem;
   actualIndex: number;
   isActive: boolean;
+  isFirst: boolean;
   isLast: boolean;
   cardRef?: React.Ref<HTMLDivElement>;
   onPlayCue?: (start: number) => void;
-  onSelectCue?: (start: number) => void;
+  onSelectCue?: (start: number, index: number) => void;
   onTimingChange: (id: string, start: number, end: number) => void;
   onTextChange: (id: string, text: string) => void;
   onSplit: (id: string) => void;
   onMerge: (id: string, direction: 'next' | 'prev') => void;
+  onMove?: (id: string, direction: 'up' | 'down') => void;
   onAdd: (afterId?: string) => void;
   onDelete: (id: string) => void;
 }
@@ -31,6 +36,7 @@ export const CaptionRow = memo(function CaptionRow({
   caption,
   actualIndex,
   isActive,
+  isFirst,
   isLast,
   cardRef,
   onPlayCue,
@@ -39,6 +45,7 @@ export const CaptionRow = memo(function CaptionRow({
   onTextChange,
   onSplit,
   onMerge,
+  onMove,
   onAdd,
   onDelete,
 }: CaptionRowProps) {
@@ -49,7 +56,7 @@ export const CaptionRow = memo(function CaptionRow({
       id={`caption-card-${actualIndex}`}
       ref={cardRef}
       onClick={() => {
-        if (onSelectCue) onSelectCue(caption.start);
+        if (onSelectCue) onSelectCue(caption.start, actualIndex);
       }}
       className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 relative group/card max-w-full overflow-hidden cursor-pointer ${
         isActive
@@ -61,56 +68,64 @@ export const CaptionRow = memo(function CaptionRow({
       <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 sm:gap-2 pb-2.5 border-b border-zinc-700/70 text-sm">
         {/* Left: Index + Play Button + Timings */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
-          <span
-            className={`w-6 h-6 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
-              isActive
-                ? 'bg-orange-500 text-zinc-950'
-                : 'bg-[#242434] text-zinc-300 border border-zinc-700'
-            }`}
-          >
-            {actualIndex + 1}
-          </span>
+          <Tooltip content={`ท่อนซับลำดับที่ #${actualIndex + 1}`}>
+            <span
+              className={`w-6 h-6 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
+                isActive
+                  ? 'bg-orange-500 text-zinc-950'
+                  : 'bg-[#242434] text-zinc-300 border border-zinc-700'
+              }`}
+            >
+              {actualIndex + 1}
+            </span>
+          </Tooltip>
 
           {/* Play this cue button */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onPlayCue) onPlayCue(caption.start);
-            }}
-            className="p-1.5 rounded-lg bg-[#242434] hover:bg-orange-500 hover:text-zinc-950 text-zinc-200 border border-zinc-700 transition-colors cursor-pointer shrink-0"
-            title="เล่นวิดีโอตั้งแต่ท่อนนี้"
-          >
-            <Play className="w-3.5 h-3.5 fill-current" />
-          </button>
+          <Tooltip content="เล่นวิดีโอตั้งแต่ท่อนนี้">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onPlayCue) onPlayCue(caption.start);
+                if (onSelectCue) onSelectCue(caption.start, actualIndex);
+              }}
+              className="p-1.5 rounded-lg bg-[#242434] hover:bg-orange-500 hover:text-zinc-950 text-zinc-200 border border-zinc-700 transition-colors cursor-pointer shrink-0"
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+            </button>
+          </Tooltip>
 
           {/* Timestamp Editor Controls */}
           <div className="flex items-center gap-1 font-mono text-xs">
             {/* Start Time Input */}
-            <input
-              type="number"
-              step="0.1"
-              value={caption.start}
-              onChange={(e) => {
-                const newStart = parseFloat(e.target.value) || 0;
-                onTimingChange(caption.id, newStart, caption.end);
-              }}
-              className="w-14 sm:w-16 px-1 py-0.5 rounded bg-[#0e0e16] border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
-              title="เวลาเริ่มพูด (วินาที) • ดับเบิ้ลคลิกเพื่อพิมพ์เวลาใหม่"
-            />
+            <Tooltip content="เวลาเริ่มพูด (วินาที) • ดับเบิ้ลคลิกแก้ไข">
+              <input
+                type="number"
+                step="0.1"
+                value={caption.start}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  const newStart = parseFloat(e.target.value) || 0;
+                  onTimingChange(caption.id, newStart, caption.end);
+                }}
+                className="w-14 sm:w-16 px-1 py-0.5 rounded bg-[#0e0e16] border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
+              />
+            </Tooltip>
             <span className="text-zinc-500 text-[11px]">➔</span>
             {/* End Time Input */}
-            <input
-              type="number"
-              step="0.1"
-              value={caption.end}
-              onChange={(e) => {
-                const newEnd = parseFloat(e.target.value) || 0;
-                onTimingChange(caption.id, caption.start, newEnd);
-              }}
-              className="w-14 sm:w-16 px-1 py-0.5 rounded bg-[#0e0e16] border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
-              title="เวลาจบประโยค (วินาที) • ดับเบิ้ลคลิกเพื่อพิมพ์เวลาใหม่"
-            />
+            <Tooltip content="เวลาจบประโยค (วินาที) • ดับเบิ้ลคลิกแก้ไข">
+              <input
+                type="number"
+                step="0.1"
+                value={caption.end}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => {
+                  const newEnd = parseFloat(e.target.value) || 0;
+                  onTimingChange(caption.id, caption.start, newEnd);
+                }}
+                className="w-14 sm:w-16 px-1 py-0.5 rounded bg-[#0e0e16] border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
+              />
+            </Tooltip>
             <span className="text-[11px] sm:text-xs text-zinc-300 font-medium">
               ({duration}s)
             </span>
@@ -118,55 +133,106 @@ export const CaptionRow = memo(function CaptionRow({
 
           {/* Low Confidence AI Warning Flag */}
           {caption.lowConfidence && (
-            <span
-              className="px-1.5 py-0.5 text-[10px] sm:text-xs rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center gap-1 font-medium shrink-0"
-              title="AI ไม่มั่นใจจุดนี้ กรุณาตรวจสอบความถูกต้องของคำ"
-            >
-              <AlertTriangle className="w-3 h-3 text-amber-400" />
-              AI Low Conf
-            </span>
+            <Tooltip content="AI ไม่มั่นใจจุดนี้ กรุณาตรวจสอบคำ">
+              <span className="px-1.5 py-0.5 text-[10px] sm:text-xs rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center gap-1 font-medium shrink-0">
+                <AlertTriangle className="w-3 h-3 text-amber-400" />
+                AI Low Conf
+              </span>
+            </Tooltip>
           )}
         </div>
 
-        {/* Right Actions: Split, Merge, Add, Delete */}
+        {/* Right Actions: Move Up, Move Down, Split, Merge, Add, Delete */}
         <div className="flex items-center gap-1 opacity-90 group-hover/card:opacity-100 transition-opacity ml-auto sm:ml-0 shrink-0">
-          <button
-            type="button"
-            onClick={() => onSplit(caption.id)}
-            className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
-            title="ตัดแบ่งซับท่อนนี้ออกเป็น 2 ท่อน (Split)"
-          >
-            <Scissors className="w-3.5 h-3.5" />
-          </button>
-
-          {!isLast && (
-            <button
-              type="button"
-              onClick={() => onMerge(caption.id, 'next')}
-              className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
-              title="รวมท่อนนี้เข้ากับท่อนถัดไป (Merge with Next)"
-            >
-              <LinkIcon className="w-3.5 h-3.5" />
-            </button>
+          {/* Move Up */}
+          {!isFirst && onMove && (
+            <Tooltip content="เลื่อนกล่องซับนี้ขึ้น (Move Up)">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMove(caption.id, 'up');
+                }}
+                className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
+              >
+                <ChevronUp className="w-3.5 h-3.5" />
+              </button>
+            </Tooltip>
           )}
 
-          <button
-            type="button"
-            onClick={() => onAdd(caption.id)}
-            className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
-            title="เพิ่มกล่องซับใหม่ต่อจากท่อนนี้ (Add Next)"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
+          {/* Move Down */}
+          {!isLast && onMove && (
+            <Tooltip content="เลื่อนกล่องซับนี้ลง (Move Down)">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMove(caption.id, 'down');
+                }}
+                className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
+              >
+                <ChevronDown className="w-3.5 h-3.5" />
+              </button>
+            </Tooltip>
+          )}
 
-          <button
-            type="button"
-            onClick={() => onDelete(caption.id)}
-            className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-rose-500/20 hover:border-rose-500/50 text-zinc-400 hover:text-rose-400 transition-all cursor-pointer"
-            title="ลบกล่องซับนี้ (Delete • ย้อนกลับได้ด้วย Cmd+Z / Ctrl+Z)"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          {/* Split */}
+          <Tooltip content="ตัดแบ่งซับท่อนนี้ออกเป็น 2 ท่อน (Split)">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSplit(caption.id);
+              }}
+              className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
+            >
+              <Scissors className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
+
+          {/* Merge */}
+          {!isLast && (
+            <Tooltip content="รวมท่อนนี้เข้ากับท่อนถัดไป (Merge)">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onMerge(caption.id, 'next');
+                }}
+                className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
+              >
+                <LinkIcon className="w-3.5 h-3.5" />
+              </button>
+            </Tooltip>
+          )}
+
+          {/* Add */}
+          <Tooltip content="เพิ่มกล่องซับใหม่ต่อจากท่อนนี้ (Add)">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdd(caption.id);
+              }}
+              className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
+
+          {/* Delete */}
+          <Tooltip content="ลบกล่องซับนี้ (Delete • ย้อนกลับได้ด้วย Cmd+Z)">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(caption.id);
+              }}
+              className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-rose-500/20 hover:border-rose-500/50 text-zinc-400 hover:text-rose-400 transition-all cursor-pointer"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
@@ -175,6 +241,13 @@ export const CaptionRow = memo(function CaptionRow({
         <textarea
           rows={Math.max(1, Math.ceil(caption.text.length / 38))}
           value={caption.text}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onSelectCue) onSelectCue(caption.start, actualIndex);
+          }}
+          onFocus={() => {
+            if (onSelectCue) onSelectCue(caption.start, actualIndex);
+          }}
           onChange={(e) => onTextChange(caption.id, e.target.value)}
           className="w-full bg-transparent text-base text-zinc-100 placeholder-zinc-500 resize-none focus:outline-none focus:ring-0 leading-relaxed font-sans font-medium"
           placeholder="พิมพ์ข้อความซับไตเติล..."

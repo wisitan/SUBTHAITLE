@@ -75,6 +75,8 @@ export interface CaptionSlice {
   deleteCaption: (id: string) => void;
   splitCaption: (id: string, splitWordIndex?: number) => void;
   mergeCaption: (id: string, direction: 'next' | 'prev') => void;
+  moveCaption: (id: string, direction: 'up' | 'down') => void;
+  autoAlignAllCaptions: () => void;
   shiftAllCaptions: (offsetSeconds: number) => void;
   findAndReplace: (findText: string, replaceText: string, caseSensitive?: boolean) => void;
   setActiveCaptionIndex: (activeCaptionIndex: number | null) => void;
@@ -190,16 +192,142 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
     })),
 
   updateCaptionTiming: (id, start, end) =>
-    set((state) => ({
-      ...pushSnapshot(state),
-      captions: state.captions.map((c) => {
-        if (c.id === id) {
-          const newWords = c.text ? distributeTextToWords(c.text, start, end) : c.words;
-          return { ...c, start, end, words: newWords };
+    set((state) => {
+      const index = state.captions.findIndex((c) => c.id === id);
+      if (index === -1) return state;
+
+      const history = pushSnapshot(state);
+      const newCaptions = [...state.captions];
+      const safeStart = Math.max(0, Number(start.toFixed(2)));
+      let safeEnd = Math.max(safeStart + 0.1, Number(end.toFixed(2)));
+
+      // 1. Check Previous Caption (No Overlap)
+      if (index > 0) {
+        const prev = newCaptions[index - 1];
+        if (safeStart < prev.end) {
+          // If start encroaches on previous card, shrink previous end to eliminate overlap
+          if (safeStart >= prev.start + 0.1) {
+            const updatedPrevEnd = Number(safeStart.toFixed(2));
+            newCaptions[index - 1] = {
+              ...prev,
+              end: updatedPrevEnd,
+              words: prev.text ? distributeTextToWords(prev.text, prev.start, updatedPrevEnd) : prev.words,
+            };
+          } else {
+            // Cannot shrink previous below 0.1s duration, so clamp safeStart
+            safeEnd = Math.max(prev.end + 0.1, safeEnd);
+          }
         }
-        return c;
-      }),
-    })),
+      }
+
+      // 2. Check Next Caption (No Overlap)
+      if (index < newCaptions.length - 1) {
+        const next = newCaptions[index + 1];
+        if (safeEnd > next.start) {
+          // If end encroaches on next card, push next card's start
+          if (next.end > safeEnd + 0.1) {
+            const updatedNextStart = Number(safeEnd.toFixed(2));
+            newCaptions[index + 1] = {
+              ...next,
+              start: updatedNextStart,
+              words: next.text ? distributeTextToWords(next.text, updatedNextStart, next.end) : next.words,
+            };
+          } else {
+            // Next card has no space, clamp current safeEnd to next.start
+            safeEnd = Number(next.start.toFixed(2));
+          }
+        }
+      }
+
+      const curr = newCaptions[index];
+      newCaptions[index] = {
+        ...curr,
+        start: safeStart,
+        end: safeEnd,
+        words: curr.text ? distributeTextToWords(curr.text, safeStart, safeEnd) : curr.words,
+      };
+
+      return {
+        ...history,
+        captions: newCaptions,
+      };
+    }),
+
+  moveCaption: (id, direction) =>
+    set((state) => {
+      const index = state.captions.findIndex((c) => c.id === id);
+      if (index === -1) return state;
+
+      const targetIndex = direction === 'up' ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= state.captions.length) return state;
+
+      const history = pushSnapshot(state);
+      const newCaptions = [...state.captions];
+
+      // Swap elements
+      const firstIdx = Math.min(index, targetIndex);
+      const secondIdx = Math.max(index, targetIndex);
+
+      const cardA = newCaptions[firstIdx];
+      const cardB = newCaptions[secondIdx];
+
+      // Smart timestamp swap/alignment so order changes smoothly without collision
+      const durA = Number((cardA.end - cardA.start).toFixed(2));
+      const durB = Number((cardB.end - cardB.start).toFixed(2));
+      const baseStart = cardA.start;
+
+      const reorderedFirst = {
+        ...cardB,
+        start: baseStart,
+        end: Number((baseStart + durB).toFixed(2)),
+        words: cardB.text ? distributeTextToWords(cardB.text, baseStart, baseStart + durB) : cardB.words,
+      };
+
+      const reorderedSecond = {
+        ...cardA,
+        start: Number((baseStart + durB).toFixed(2)),
+        end: Number((baseStart + durB + durA).toFixed(2)),
+        words: cardA.text ? distributeTextToWords(cardA.text, baseStart + durB, baseStart + durB + durA) : cardA.words,
+      };
+
+      newCaptions[firstIdx] = reorderedFirst;
+      newCaptions[secondIdx] = reorderedSecond;
+
+      return {
+        ...history,
+        captions: newCaptions,
+        activeCaptionIndex: targetIndex,
+      };
+    }),
+
+  autoAlignAllCaptions: () =>
+    set((state) => {
+      if (state.captions.length <= 1) return state;
+      const history = pushSnapshot(state);
+      const aligned = [...state.captions];
+
+      for (let i = 1; i < aligned.length; i++) {
+        const prev = aligned[i - 1];
+        const curr = aligned[i];
+        if (curr.start < prev.end) {
+          // Adjust overlap by aligning start to prev.end
+          const dur = Math.max(0.2, curr.end - curr.start);
+          const newStart = Number(prev.end.toFixed(2));
+          const newEnd = Number((newStart + dur).toFixed(2));
+          aligned[i] = {
+            ...curr,
+            start: newStart,
+            end: newEnd,
+            words: curr.text ? distributeTextToWords(curr.text, newStart, newEnd) : curr.words,
+          };
+        }
+      }
+
+      return {
+        ...history,
+        captions: aligned,
+      };
+    }),
 
   addCaption: (afterId) =>
     set((state) => {

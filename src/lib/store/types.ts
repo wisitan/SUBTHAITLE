@@ -161,6 +161,8 @@ export interface AppState {
   deleteCaption: (id: string) => void;
   splitCaption: (id: string, splitWordIndex?: number) => void;
   mergeCaption: (id: string, direction: 'next' | 'prev') => void;
+  moveCaption: (id: string, direction: 'up' | 'down') => void;
+  autoAlignAllCaptions: () => void;
   shiftAllCaptions: (offsetSeconds: number) => void;
   findAndReplace: (findText: string, replaceText: string, caseSensitive?: boolean) => void;
   // History (Undo / Redo)

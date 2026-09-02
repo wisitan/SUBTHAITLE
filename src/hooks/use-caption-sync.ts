@@ -23,11 +23,20 @@ export function useCaptionSync(
   const activeIndex = useMemo(() => {
     if (!captions || captions.length === 0) return -1;
 
-    // 1. Strict match: currentTime is within [start, end)
-    const strictIndex = captions.findIndex(
-      (c) => c.start <= currentTime && currentTime < c.end
-    );
-    if (strictIndex !== -1) return strictIndex;
+    // 1. Gather all matching cues within [start, end)
+    const matches: { index: number; dist: number }[] = [];
+    captions.forEach((c, idx) => {
+      if (c.start <= currentTime && currentTime < c.end) {
+        matches.push({ index: idx, dist: currentTime - c.start });
+      }
+    });
+
+    if (matches.length === 1) return matches[0].index;
+    if (matches.length > 1) {
+      // Pick the cue that started most recently / closest to currentTime
+      matches.sort((a, b) => a.dist - b.dist);
+      return matches[0].index;
+    }
 
     // 2. Tolerance match: for very end of cue or between close frames
     return captions.findIndex(
