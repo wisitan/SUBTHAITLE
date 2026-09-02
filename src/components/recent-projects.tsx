@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useAppStore, UserProject } from '@/lib/store';
 import { getVideoFromCache } from '@/lib/video-cache';
-import { fetchProjectsFromCloud, deleteProjectFromCloud } from '@/lib/projects-client';
+import { fetchProjectsFromCloud, deleteProjectFromCloud, uploadProxyToR2 } from '@/lib/projects-client';
+import { generateVideoThumbnail } from '@/lib/video-thumbnail';
 import {
   Clock,
   Cloud,
@@ -57,6 +58,92 @@ function formatRelativeTime(dateString?: string): string {
   if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} ชั่วโมงที่แล้ว`;
   if (diffSec < 2592000) return `${Math.floor(diffSec / 86400)} วันที่แล้ว`;
   return date.toLocaleDateString('th-TH', { month: 'short', day: 'numeric' });
+}
+
+function ProjectThumbnailImage({
+  project,
+  className = 'w-full h-full object-cover',
+  iconSize = 'w-7 h-7',
+}: {
+  project: UserProject;
+  className?: string;
+  iconSize?: string;
+}) {
+  const [thumbSrc, setThumbSrc] = useState<string | null>(project.thumbnail_url || null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  useEffect(() => {
+    if (project.thumbnail_url) {
+      setThumbSrc(project.thumbnail_url);
+      return;
+    }
+
+    let isMounted = true;
+    (async () => {
+      try {
+        const cachedBlob =
+          (await getVideoFromCache(project.id)) ||
+          (await getVideoFromCache(project.title)) ||
+          (project.original_filename ? await getVideoFromCache(project.original_filename) : null);
+
+        const videoSource = cachedBlob || project.proxy_url;
+        if (videoSource) {
+          setIsGenerating(true);
+          const { dataUrl, blob } = await generateVideoThumbnail(videoSource, 0.5);
+          if (isMounted && dataUrl) {
+            setThumbSrc(dataUrl);
+
+            // In background, upload to R2 and save to project
+            if (blob && project.user_id) {
+              uploadProxyToR2(blob, 'thumb_' + project.id, `${project.id}_thumb.jpg`).then((uploadedUrl) => {
+                const targetUrl = uploadedUrl || dataUrl;
+                if (targetUrl) {
+                  fetch('/api/projects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      id: project.id,
+                      userId: project.user_id,
+                      thumbnailUrl: targetUrl,
+                    }),
+                  }).catch(() => {});
+                }
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('[Thumbnail Auto-Generate Error]:', err);
+      } finally {
+        if (isMounted) setIsGenerating(false);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [project.id, project.title, project.thumbnail_url, project.proxy_url, project.original_filename, project.user_id]);
+
+  if (thumbSrc) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={thumbSrc}
+        alt={project.title}
+        className={className}
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center text-zinc-600 group-hover:text-orange-400 transition-colors">
+      {isGenerating ? (
+        <Loader2 className="w-5 h-5 animate-spin text-orange-400" />
+      ) : (
+        <FileVideo className={iconSize} />
+      )}
+    </div>
+  );
 }
 
 export function RecentProjects() {
@@ -531,18 +618,11 @@ export function RecentProjects() {
               <div className="flex items-start gap-3">
                 {/* Thumbnail Snapshot or Icon */}
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden group-hover:border-orange-500/40 transition-colors">
-                  {project.thumbnail_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={project.thumbnail_url}
-                      alt={project.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-zinc-600 group-hover:text-orange-400 transition-colors">
-                      <FileVideo className="w-7 h-7" />
-                    </div>
-                  )}
+                  <ProjectThumbnailImage
+                    project={project}
+                    className="w-full h-full object-cover"
+                    iconSize="w-7 h-7"
+                  />
 
                   {/* Play Overlay on Hover */}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
@@ -639,18 +719,11 @@ export function RecentProjects() {
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 {/* Thumbnail */}
                 <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden group-hover:border-orange-500/40 transition-colors">
-                  {project.thumbnail_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={project.thumbnail_url}
-                      alt={project.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-zinc-600 group-hover:text-orange-400 transition-colors">
-                      <FileVideo className="w-5 h-5" />
-                    </div>
-                  )}
+                  <ProjectThumbnailImage
+                    project={project}
+                    className="w-full h-full object-cover"
+                    iconSize="w-5 h-5"
+                  />
 
                   {/* Play Overlay */}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">

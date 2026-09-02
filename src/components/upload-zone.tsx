@@ -8,6 +8,7 @@ import { extractAudioFromMedia, AudioExtractProgress } from '@/lib/audio-extract
 import { transcribeAudio } from '@/lib/transcribe';
 import { saveVideoToCache } from '@/lib/video-cache';
 import { saveProjectToCloud, uploadProxyToR2 } from '@/lib/projects-client';
+import { generateVideoThumbnail } from '@/lib/video-thumbnail';
 import {
   UploadCloud,
   FileVideo,
@@ -228,12 +229,28 @@ export function UploadZone() {
         try {
           const storeState = useAppStore.getState();
           let proxyUrl: string | null = null;
+          let thumbnailUrl: string | null = null;
 
           if (file) {
-            setStatus('uploading', 88, 'กำลังซิงค์วิดีโอขึ้น Cloudflare R2...');
+            setStatus('uploading', 88, 'กำลังสร้างรูปตัวอย่าง Thumbnail และซิงค์วิดีโอขึ้น Cloudflare R2...');
             setTranscribeMessage('กำลังบันทึกวิดีโอขึ้น Cloudflare R2 (720p Proxy)...');
             setTranscribeProgressPercent(88);
-            proxyUrl = await uploadProxyToR2(file, 'initial', file.name);
+
+            // Generate thumbnail and upload proxy in parallel
+            try {
+              const thumbPromise = generateVideoThumbnail(file, 0.5).then(async ({ blob, dataUrl }) => {
+                const uploadedThumb = await uploadProxyToR2(blob, 'thumb_' + user.id, `${Date.now()}_thumb.jpg`);
+                return uploadedThumb || dataUrl;
+              }).catch(() => null);
+
+              const proxyPromise = uploadProxyToR2(file, 'initial', file.name);
+
+              const [thumbResult, proxyResult] = await Promise.all([thumbPromise, proxyPromise]);
+              thumbnailUrl = thumbResult;
+              proxyUrl = proxyResult;
+            } catch (mediaErr) {
+              console.warn('[Thumbnail / Proxy Generation Warning]:', mediaErr);
+            }
           }
 
           setStatus('uploading', 96, 'กำลังบันทึกโปรเจกต์ลงคลาวด์...');
@@ -244,6 +261,7 @@ export function UploadZone() {
             userId: user.id,
             title: projectName,
             duration: mediaDuration,
+            thumbnailUrl,
             captions: results,
             rawWords: storeState.rawWords,
             style: storeState.style,

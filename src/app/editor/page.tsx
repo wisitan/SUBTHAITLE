@@ -17,6 +17,7 @@ import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/context/auth-context';
 import { getVideoFromCache, saveVideoToCache } from '@/lib/video-cache';
 import { saveProjectToCloud, uploadProxyToR2 } from '@/lib/projects-client';
+import { generateVideoThumbnail } from '@/lib/video-thumbnail';
 import { VideoPlayer } from '@/components/video-player';
 import { CaptionTable } from '@/components/caption-table';
 import { StyleEditor } from '@/components/style-editor';
@@ -138,24 +139,40 @@ export default function EditorPage() {
       }
       showToast('เชื่อมต่อไฟล์วิดีโอสำเร็จ!');
 
-      // Upload proxy to Cloudflare R2 in background
+      // Upload proxy and generate thumbnail in background
       if (user && currentProjectId) {
-        uploadProxyToR2(selectedFile, currentProjectId, selectedFile.name).then((url) => {
-          if (url) {
-            useAppStore.getState().setProxyUrl(url);
+        (async () => {
+          try {
+            let thumbnailUrl: string | null = null;
+            try {
+              const { blob, dataUrl } = await generateVideoThumbnail(selectedFile, 0.5);
+              const uploadedThumb = await uploadProxyToR2(blob, 'thumb_' + currentProjectId, `${currentProjectId}_thumb.jpg`);
+              thumbnailUrl = uploadedThumb || dataUrl;
+            } catch (thumbErr) {
+              console.warn('[Reconnect Thumbnail Error]:', thumbErr);
+            }
+
+            const proxyUrl = await uploadProxyToR2(selectedFile, currentProjectId, selectedFile.name);
+            if (proxyUrl) {
+              useAppStore.getState().setProxyUrl(proxyUrl);
+            }
+
             saveProjectToCloud({
               id: currentProjectId,
               userId: user.id,
               title: projectTitle || selectedFile.name,
-              proxyUrl: url,
+              thumbnailUrl,
+              proxyUrl: proxyUrl || undefined,
               originalFilename: selectedFile.name,
               captions,
               rawWords,
               style,
               aspectRatio,
             });
+          } catch (e) {
+            console.warn('[Background Reconnect Sync Error]:', e);
           }
-        });
+        })();
       }
     }
   };
