@@ -255,17 +255,17 @@ export function SubtitleOverlay({
                       )}
                       {/* Zero-Layout-Shift Sticker Container */}
                       <span
-                        className="relative inline-block origin-center"
+                        className={`inline-block origin-center ${isWordActive ? 'relative z-30 isolate' : 'relative z-10'}`}
                         style={{
                           opacity: isVisible ? 1 : 0,
                           visibility: isVisible ? 'visible' : 'hidden',
                           marginRight: gapRight > 0 ? `${gapRight}px` : undefined,
                         }}
                       >
-                        {/* Absolute Sticker Pill Backdrop - Never pushes surrounding words or line wraps */}
+                        {/* Absolute Sticker Pill Backdrop - Never pushes surrounding words or line wraps & stays on top */}
                         {isWordActive && (
                           <span
-                            className="absolute -inset-x-2 -inset-y-0.5 rounded-lg pointer-events-none -z-10"
+                            className="absolute -inset-x-2 -inset-y-1 rounded-lg pointer-events-none z-0"
                             style={{
                               backgroundColor: style.highlightColor || '#FACC15',
                               border: '1px solid rgba(255, 255, 255, 0.7)',
@@ -275,6 +275,7 @@ export function SubtitleOverlay({
                         )}
                         {/* Word Text (Fixed metrics across all frames) */}
                         <span
+                          className={isWordActive ? 'relative z-10' : ''}
                           style={{
                             color: isWordActive
                               ? '#121216'

@@ -336,7 +336,7 @@ export default function EditorPage() {
           <div className="flex items-center gap-2">
             {/* Undo / Redo Toolbar */}
             <div className="flex items-center bg-zinc-900 border border-zinc-800 p-0.5 rounded-xl shadow-sm">
-              <Tooltip content="ย้อนกลับการแก้ไข (Undo) • Cmd+Z / Ctrl+Z">
+              <Tooltip content="ย้อนกลับการแก้ไข (Undo) • Cmd+Z / Ctrl+Z" position="bottom">
                 <button
                   type="button"
                   onClick={() => {
@@ -349,7 +349,7 @@ export default function EditorPage() {
                 </button>
               </Tooltip>
               <div className="w-px h-4 bg-zinc-800" />
-              <Tooltip content="ทำซ้ำการแก้ไข (Redo) • Cmd+Shift+Z / Ctrl+Y">
+              <Tooltip content="ทำซ้ำการแก้ไข (Redo) • Cmd+Shift+Z / Ctrl+Y" position="bottom">
                 <button
                   type="button"
                   onClick={() => {

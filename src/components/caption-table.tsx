@@ -142,7 +142,7 @@ export function CaptionTable({ onPlayCue }: Props) {
           <div className="flex flex-wrap items-center gap-1.5">
             {/* Undo / Redo Buttons */}
             <div className="flex items-center bg-[#0f0f18] border border-zinc-700/80 rounded-xl p-0.5 shadow-sm">
-              <Tooltip content="ย้อนกลับการแก้ไข (Undo) • Cmd+Z / Ctrl+Z">
+              <Tooltip content="ย้อนกลับการแก้ไข (Undo) • Cmd+Z / Ctrl+Z" position="bottom">
                 <button
                   type="button"
                   onClick={() => {
@@ -155,7 +155,7 @@ export function CaptionTable({ onPlayCue }: Props) {
                 </button>
               </Tooltip>
               <div className="w-px h-3.5 bg-zinc-700" />
-              <Tooltip content="ทำซ้ำการแก้ไข (Redo) • Cmd+Shift+Z / Ctrl+Y">
+              <Tooltip content="ทำซ้ำการแก้ไข (Redo) • Cmd+Shift+Z / Ctrl+Y" position="bottom">
                 <button
                   type="button"
                   onClick={() => {
@@ -170,7 +170,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             </div>
 
             {/* Auto-scroll toggle */}
-            <Tooltip content="เปิด/ปิดเลื่อนหน้าจอตามวิดีโอ (Auto-Scroll)">
+            <Tooltip content="เปิด/ปิดเลื่อนหน้าจอตามวิดีโอ (Auto-Scroll)" position="bottom">
               <button
                 type="button"
                 onClick={() => setAutoScroll(!autoScroll)}
@@ -185,7 +185,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             </Tooltip>
 
             {/* Auto-Align Timestamps */}
-            <Tooltip content="จัดระเบียบเวลาซับทั้งหมด ป้องกันเวลาซ้อนกัน (Auto-Align)">
+            <Tooltip content="จัดระเบียบเวลาซับทั้งหมด ป้องกันเวลาซ้อนกัน (Auto-Align)" position="bottom">
               <button
                 type="button"
                 onClick={() => {
@@ -200,7 +200,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             </Tooltip>
 
             {/* Time Shift Button */}
-            <Tooltip content="ขยับเวลาซับไตเติลทั้งหมดพร้อมกัน (+- Offset Seconds)">
+            <Tooltip content="ขยับเวลาซับไตเติลทั้งหมดพร้อมกัน (+- Offset Seconds)" position="bottom">
               <button
                 type="button"
                 onClick={() => setTimeShiftModalOpen(true)}
@@ -212,7 +212,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             </Tooltip>
 
             {/* Find & Replace Button */}
-            <Tooltip content="ค้นหาและแทนที่คำผิดทั้งหมดในคลิป (Find & Replace)">
+            <Tooltip content="ค้นหาและแทนที่คำผิดทั้งหมดในคลิป (Find & Replace)" position="bottom">
               <button
                 type="button"
                 onClick={() => setFindReplaceModalOpen(true)}
@@ -224,7 +224,7 @@ export function CaptionTable({ onPlayCue }: Props) {
             </Tooltip>
 
             {/* Add new row */}
-            <Tooltip content="เพิ่มกล่องซับไตเติลใหม่ต่อท้าย (Add Caption)">
+            <Tooltip content="เพิ่มกล่องซับไตเติลใหม่ต่อท้าย (Add Caption)" position="bottom" align="right">
               <button
                 type="button"
                 onClick={() => addCaption()}
