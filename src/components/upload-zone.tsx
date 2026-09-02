@@ -20,7 +20,6 @@ import {
   Loader2,
   Sparkles,
   LogIn,
-  X,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -192,17 +191,6 @@ export function UploadZone() {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };
-
-  const handleCancelTranscribe = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    setIsTranscribing(false);
-    setStatus('idle', 0, '');
-    setTranscribeMessage('');
-    setErrorMessage('ยกเลิกการถอดเสียงเรียบร้อยแล้ว');
   };
 
   const handleStartTranscribe = async () => {
@@ -455,20 +443,9 @@ export function UploadZone() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2.5">
-                  <span className="text-lg font-black font-mono text-orange-400">
-                    {Math.round(transcribeProgressPercent)}%
-                  </span>
-                  <button
-                    type="button"
-                    onClick={handleCancelTranscribe}
-                    className="px-2.5 py-1 rounded-xl bg-zinc-800/90 hover:bg-rose-950 border border-zinc-700 hover:border-rose-700/80 text-zinc-300 hover:text-rose-300 text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
-                    title="ยกเลิกการถอดเสียง"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                    <span>ยกเลิก</span>
-                  </button>
-                </div>
+                <span className="text-lg font-black font-mono text-orange-400">
+                  {Math.round(transcribeProgressPercent)}%
+                </span>
               </div>
 
               {/* Progress Track */}
