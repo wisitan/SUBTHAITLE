@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { CaptionItem, CaptionStyle, CaptionWord } from '@/lib/store';
-import { formatCaptionWordsText, expandWordsToFineGrained } from '@/lib/thai-text';
+import { formatCaptionWordsText, expandWordsToFineGrained, getTypewriterSlice } from '@/lib/thai-text';
 
 interface SubtitleOverlayProps {
   activeCaption: CaptionItem | null;
@@ -216,8 +216,14 @@ export function SubtitleOverlay({
                   const isWordActive = idx === activeWordIndex;
 
                   let isVisible = true;
-                  if (animMode === 'pop') {
+                  if (animMode === 'pop' || animMode === 'typewriter') {
                     isVisible = currentTime >= w.start || isWordActive;
+                  }
+
+                  let displayWordText = w.word;
+                  if (animMode === 'typewriter' && isWordActive) {
+                    const slice = getTypewriterSlice(w.word, w.start, w.end, currentTime);
+                    displayWordText = slice.visibleText;
                   }
 
                   let prefixSpace = '';
@@ -234,7 +240,7 @@ export function SubtitleOverlay({
                   const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
 
                   const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
-                  const isScaled = isWordActive && scaleMultiplier > 1;
+                  const isScaled = isWordActive && scaleMultiplier > 1 && animMode !== 'typewriter';
 
                   return (
                     <React.Fragment key={idx}>
@@ -265,7 +271,10 @@ export function SubtitleOverlay({
                           marginRight: isScaled ? `${wordBufferPx + gapRight}px` : (gapRight > 0 ? `${gapRight}px` : undefined),
                         }}
                       >
-                        {w.word}
+                        {displayWordText}
+                        {animMode === 'typewriter' && isWordActive && (
+                          <span className="opacity-0">|</span>
+                        )}
                       </span>
                     </React.Fragment>
                   );
@@ -289,8 +298,16 @@ export function SubtitleOverlay({
                 const isWordActive = idx === activeWordIndex;
 
                 let isVisible = true;
-                if (animMode === 'pop' || animMode === 'sticker') {
+                if (animMode === 'pop' || animMode === 'sticker' || animMode === 'typewriter') {
                   isVisible = currentTime >= w.start || isWordActive;
+                }
+
+                let displayWordText = w.word;
+                let isCurrentlyTyping = false;
+                if (animMode === 'typewriter' && isWordActive) {
+                  const slice = getTypewriterSlice(w.word, w.start, w.end, currentTime);
+                  displayWordText = slice.visibleText;
+                  isCurrentlyTyping = slice.isTyping && !slice.isComplete;
                 }
 
                 let prefixSpace = '';
@@ -307,7 +324,7 @@ export function SubtitleOverlay({
                 const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
 
                 const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
-                const isScaled = isWordActive && scaleMultiplier > 1;
+                const isScaled = isWordActive && scaleMultiplier > 1 && animMode !== 'typewriter';
 
                 if (isStickerMode) {
                   return (
@@ -378,7 +395,12 @@ export function SubtitleOverlay({
                         textShadow: isWordActive ? activeWordShadowCss : (shadowsCss !== 'none' ? shadowsCss : 'none'),
                       }}
                     >
-                      {w.word}
+                      {displayWordText}
+                      {animMode === 'typewriter' && isWordActive && (
+                        <span className={`inline-block font-mono font-bold ml-0.5 ${isCurrentlyTyping ? 'animate-pulse text-orange-400' : 'text-amber-300'}`}>
+                          |
+                        </span>
+                      )}
                     </span>
                   </React.Fragment>
                 );

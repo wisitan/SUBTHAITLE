@@ -411,15 +411,18 @@ export function StyleEditor() {
                       ? 'ทั้งประโยค (Classic)'
                       : (style.wordAnimationMode || 'classic') === 'pop'
                       ? 'เด้งทีละคำ (Pop-in)'
-                      : 'สติกเกอร์ (Sticker Pill)'}
+                      : (style.wordAnimationMode || 'classic') === 'sticker'
+                      ? 'สติกเกอร์ (Sticker Pill)'
+                      : 'พิมพ์ดีด (Typewriter |)'}
                   </span>
                 </div>
 
-                <div className="grid grid-cols-3 gap-2 pt-1">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                   {[
                     { id: 'classic', label: '📺 คลาสสิก', desc: 'ทั้งประโยค' },
                     { id: 'pop', label: '💥 เด้งทีละคำ', desc: 'Pop-in Reveal' },
                     { id: 'sticker', label: '🏷️ สติกเกอร์', desc: 'Sticker Pill' },
+                    { id: 'typewriter', label: '⌨️ พิมพ์ดีด', desc: 'ตัวอักษร |' },
                   ].map((mode) => {
                     const isSelected = (style.wordAnimationMode || 'classic') === mode.id;
                     return (
@@ -427,14 +430,14 @@ export function StyleEditor() {
                         key={mode.id}
                         type="button"
                         onClick={() => setStyle({ wordAnimationMode: mode.id as WordAnimationMode })}
-                        className={`p-2.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[52px] transition-all cursor-pointer ${
+                        className={`p-2 rounded-xl border text-center flex flex-col items-center justify-center min-h-[48px] transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40 scale-[1.02]'
                             : 'bg-[#181824] border-zinc-700/80 hover:bg-[#222232] hover:border-orange-400/60 text-zinc-200 shadow-sm'
                         }`}
                       >
                         <span className="block text-xs font-bold leading-tight">{mode.label}</span>
-                        <span className={`block text-[10px] leading-tight mt-1 ${isSelected ? 'text-zinc-900 font-medium' : 'text-zinc-400'}`}>
+                        <span className={`block text-[10px] leading-tight mt-0.5 ${isSelected ? 'text-zinc-900 font-medium' : 'text-zinc-400'}`}>
                           {mode.desc}
                         </span>
                       </button>

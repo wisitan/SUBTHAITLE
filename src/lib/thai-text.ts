@@ -458,3 +458,71 @@ export function thaiDigitsToArabic(text: string): string {
   });
   return result;
 }
+
+let thaiGraphemeSegmenter: Intl.Segmenter | null = null;
+
+/**
+ * Returns grapheme clusters (combining marks + vowels glued to consonants)
+ * to prevent floating Thai vowels when typing letter-by-letter.
+ */
+export function getGraphemeClusters(text: string): string[] {
+  if (!text) return [];
+  if (typeof Intl !== 'undefined' && 'Segmenter' in Intl) {
+    if (!thaiGraphemeSegmenter) {
+      thaiGraphemeSegmenter = new Intl.Segmenter('th', { granularity: 'grapheme' });
+    }
+    return Array.from(thaiGraphemeSegmenter.segment(text)).map((s) => s.segment);
+  }
+  return Array.from(text);
+}
+
+export interface TypewriterSliceResult {
+  visibleText: string;
+  isComplete: boolean;
+  isTyping: boolean;
+  totalClusters: number;
+  shownClusters: number;
+}
+
+/**
+ * Calculates the exact visible substring of a word during letter-by-letter typewriter animation.
+ */
+export function getTypewriterSlice(
+  word: string,
+  start: number,
+  end: number,
+  currentTime: number
+): TypewriterSliceResult {
+  if (!word) {
+    return { visibleText: '', isComplete: false, isTyping: false, totalClusters: 0, shownClusters: 0 };
+  }
+
+  const clusters = getGraphemeClusters(word);
+  const totalClusters = clusters.length;
+
+  if (currentTime < start) {
+    return { visibleText: '', isComplete: false, isTyping: false, totalClusters, shownClusters: 0 };
+  }
+
+  if (currentTime >= end) {
+    return { visibleText: word, isComplete: true, isTyping: false, totalClusters, shownClusters: totalClusters };
+  }
+
+  // Active typing phase
+  const duration = Math.max(0.05, end - start);
+  const elapsed = Math.max(0, currentTime - start);
+  const progress = Math.min(1, elapsed / duration);
+
+  const shownClusters = Math.max(1, Math.min(totalClusters, Math.ceil(progress * totalClusters)));
+  const visibleText = clusters.slice(0, shownClusters).join('');
+  const isComplete = shownClusters >= totalClusters;
+
+  return {
+    visibleText,
+    isComplete,
+    isTyping: true,
+    totalClusters,
+    shownClusters,
+  };
+}
+

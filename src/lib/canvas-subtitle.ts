@@ -461,6 +461,8 @@ export async function renderSubtitleCanvas(
 
         restoreScaleTransform();
       } else {
+        const textToDraw = animMode === 'typewriter' ? `${pw.text} |` : pw.text;
+
         // 1. Active Word Shadow
         if (style.hasShadow) {
           applyScaleTransform();
@@ -470,7 +472,7 @@ export async function renderSubtitleCanvas(
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 4 * scale;
           ctx.fillStyle = pw.color;
-          ctx.fillText(pw.text, pw.x, startY);
+          ctx.fillText(textToDraw, pw.x, startY);
           ctx.restore();
           restoreScaleTransform();
         }
@@ -483,7 +485,7 @@ export async function renderSubtitleCanvas(
           ctx.lineWidth = style.outlineWidth * scale * 2.2;
           ctx.lineJoin = 'round';
           ctx.lineCap = 'round';
-          ctx.strokeText(pw.text, pw.x, startY);
+          ctx.strokeText(textToDraw, pw.x, startY);
           ctx.restore();
           restoreScaleTransform();
         }
@@ -497,7 +499,7 @@ export async function renderSubtitleCanvas(
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
         ctx.fillStyle = pw.color;
-        ctx.fillText(pw.text, pw.x, startY);
+        ctx.fillText(textToDraw, pw.x, startY);
         ctx.restore();
         restoreScaleTransform();
 
@@ -505,7 +507,7 @@ export async function renderSubtitleCanvas(
         applyScaleTransform();
         ctx.save();
         ctx.fillStyle = pw.color;
-        ctx.fillText(pw.text, pw.x, startY);
+        ctx.fillText(textToDraw, pw.x, startY);
         ctx.restore();
         restoreScaleTransform();
       }

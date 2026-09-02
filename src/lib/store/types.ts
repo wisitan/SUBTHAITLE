@@ -22,7 +22,7 @@ export interface CaptionItem {
   lowConfidence?: boolean;
 }
 
-export type WordAnimationMode = 'classic' | 'pop' | 'sticker';
+export type WordAnimationMode = 'classic' | 'pop' | 'sticker' | 'typewriter';
 
 export interface CaptionStyle {
   fontFamily: string;
