@@ -16,7 +16,7 @@ import {
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/context/auth-context';
 import { getVideoFromCache, saveVideoToCache } from '@/lib/video-cache';
-import { saveProjectToCloud } from '@/lib/projects-client';
+import { saveProjectToCloud, uploadProxyToR2 } from '@/lib/projects-client';
 import { VideoPlayer } from '@/components/video-player';
 import { CaptionTable } from '@/components/caption-table';
 import { StyleEditor } from '@/components/style-editor';
@@ -137,6 +137,26 @@ export default function EditorPage() {
         saveVideoToCache(currentProjectId, selectedFile);
       }
       showToast('เชื่อมต่อไฟล์วิดีโอสำเร็จ!');
+
+      // Upload proxy to Cloudflare R2 in background
+      if (user && currentProjectId) {
+        uploadProxyToR2(selectedFile, currentProjectId, selectedFile.name).then((url) => {
+          if (url) {
+            useAppStore.getState().setProxyUrl(url);
+            saveProjectToCloud({
+              id: currentProjectId,
+              userId: user.id,
+              title: projectTitle || selectedFile.name,
+              proxyUrl: url,
+              originalFilename: selectedFile.name,
+              captions,
+              rawWords,
+              style,
+              aspectRatio,
+            });
+          }
+        });
+      }
     }
   };
 

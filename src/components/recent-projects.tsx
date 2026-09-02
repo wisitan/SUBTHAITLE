@@ -14,7 +14,6 @@ import {
   Play,
   ArrowRight,
   Loader2,
-  CheckCircle2,
   LogIn,
   Search,
   X,
@@ -428,10 +427,17 @@ export function RecentProjects() {
                 <div className="flex-1 min-w-0 space-y-1">
                   {/* Status Badge */}
                   <div className="flex items-center justify-between gap-1">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 text-[10px] font-semibold">
-                      <CheckCircle2 className="w-3 h-3" />
-                      ซิงค์แล้ว
-                    </span>
+                    {project.proxy_url ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-950/60 border border-amber-800/60 text-amber-300 text-[10px] font-semibold">
+                        <Cloud className="w-3 h-3 text-amber-400" />
+                        <span>Cloud Proxy 720p</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-800/80 border border-zinc-700/80 text-zinc-400 text-[10px] font-medium">
+                        <HardDrive className="w-3 h-3 text-zinc-400" />
+                        <span>เครื่องนี้เท่านั้น</span>
+                      </span>
+                    )}
 
                     {/* Delete Button */}
                     <button
