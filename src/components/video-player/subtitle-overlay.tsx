@@ -367,7 +367,7 @@ export function SubtitleOverlay({
                         </span>
                       )}
                       <span
-                        className={`inline-block origin-center transition-[transform,color,background-color] duration-150 ease-out ${
+                        className={`inline-block origin-center transition-[transform] duration-120 ease-out ${
                           isWordActive ? 'relative z-30' : 'relative z-10'
                         }`}
                         style={{
@@ -477,7 +477,7 @@ export function SubtitleOverlay({
                       </span>
                     )}
                     <span
-                      className={`inline-block origin-center transition-[transform,color] duration-150 ease-out ${
+                      className={`inline-block origin-center transition-[transform] duration-120 ease-out ${
                         isWordActive ? 'relative z-20' : 'relative z-10'
                       }`}
                       style={{
