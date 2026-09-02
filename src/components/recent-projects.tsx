@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useAppStore, UserProject } from '@/lib/store';
 import { getVideoFromCache } from '@/lib/video-cache';
+import { fetchProjectsFromCloud, deleteProjectFromCloud } from '@/lib/projects-client';
 import {
   Clock,
   Cloud,
@@ -67,11 +68,8 @@ export function RecentProjects() {
 
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/projects?userId=${encodeURIComponent(user.id)}`);
-      if (res.ok) {
-        const data = await res.json();
-        setProjects(data.projects || []);
-      }
+      const data = await fetchProjectsFromCloud(user.id);
+      setProjects(data);
     } catch (err) {
       console.warn('Could not fetch user projects:', err);
     } finally {
@@ -107,10 +105,8 @@ export function RecentProjects() {
 
     setDeletingId(id);
     try {
-      const res = await fetch(`/api/projects?id=${encodeURIComponent(id)}&userId=${encodeURIComponent(user.id)}`, {
-        method: 'DELETE',
-      });
-      if (res.ok) {
+      const ok = await deleteProjectFromCloud(id, user.id);
+      if (ok) {
         setProjects((prev) => prev.filter((p) => p.id !== id));
       }
     } catch (err) {

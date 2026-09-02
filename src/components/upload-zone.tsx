@@ -7,6 +7,7 @@ import { useAuth } from '@/context/auth-context';
 import { extractAudioFromMedia, AudioExtractProgress } from '@/lib/audio-extract';
 import { transcribeAudio } from '@/lib/transcribe';
 import { saveVideoToCache } from '@/lib/video-cache';
+import { saveProjectToCloud } from '@/lib/projects-client';
 import {
   UploadCloud,
   FileVideo,
@@ -222,30 +223,29 @@ export function UploadZone() {
       const projectName = file?.name || 'SUBTHAITLE Project';
       useAppStore.getState().setProjectTitle(projectName);
 
-      // Auto-save initial project to Supabase
+      // Auto-save initial project to Cloud (Supabase + Cloudflare R2 Proxy)
       if (user?.id) {
         try {
           const storeState = useAppStore.getState();
-          const saveRes = await fetch('/api/projects', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              userId: user.id,
-              title: projectName,
-              duration: mediaDuration,
-              captions: results,
-              rawWords: storeState.rawWords,
-              style: storeState.style,
-              aspectRatio: storeState.aspectRatio,
-            }),
+          const savedProject = await saveProjectToCloud({
+            userId: user.id,
+            title: projectName,
+            duration: mediaDuration,
+            captions: results,
+            rawWords: storeState.rawWords,
+            style: storeState.style,
+            aspectRatio: storeState.aspectRatio,
+            originalFilename: file?.name,
+            file,
           });
-          if (saveRes.ok) {
-            const saveJson = await saveRes.json();
-            if (saveJson.project?.id) {
-              useAppStore.getState().setCurrentProjectId(saveJson.project.id);
-              if (file) {
-                saveVideoToCache(saveJson.project.id, file);
-              }
+
+          if (savedProject?.id) {
+            useAppStore.getState().setCurrentProjectId(savedProject.id);
+            if (savedProject.proxy_url) {
+              useAppStore.getState().setProxyUrl(savedProject.proxy_url);
+            }
+            if (file) {
+              saveVideoToCache(savedProject.id, file);
             }
           }
         } catch (saveErr) {

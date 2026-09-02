@@ -123,6 +123,8 @@ export interface AppState {
   // Actions
   setFile: (file: File | null) => void;
   setVideoUrl: (url: string | null) => void;
+  setProxyUrl: (proxyUrl: string | null) => void;
+  setOriginalFilename: (filename: string | null) => void;
   setAudioBlob: (blob: Blob | null) => void;
   setMediaDuration: (duration: number) => void;
   setCurrentProjectId: (id: string | null) => void;

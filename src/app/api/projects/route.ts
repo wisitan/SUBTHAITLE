@@ -5,7 +5,7 @@ import { deleteR2Object } from '@/lib/r2';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const RETENTION_DAYS = 60; // Auto-purge projects inactive for > 60 days
+const RETENTION_DAYS = 60;
 
 function getSupabaseAdmin() {
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
@@ -36,9 +36,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Database service unavailable' }, { status: 500 });
     }
 
-    // 1. Passive Auto-Purge: Clean up projects with updated_at older than 60 days for this user
-    const cutoffDate = new Date(Date.now() - RETENTION_DAYS * 86400 * 1000).toISOString();
+    // 1. Passive Auto-Purge: Clean up projects with updated_at older than 60 days
     try {
+      const cutoffDate = new Date(Date.now() - RETENTION_DAYS * 86400 * 1000).toISOString();
       await supabase
         .from('user_projects')
         .delete()
@@ -48,24 +48,24 @@ export async function GET(request: NextRequest) {
       console.warn('[Passive Purge Notice]:', cleanupErr);
     }
 
-    // 2. Fetch active projects within 60-day retention window
+    // 2. Fetch active projects with select('*') for maximum schema resilience
     const { data: projects, error } = await supabase
       .from('user_projects')
-      .select('id, user_id, title, duration, thumbnail_url, proxy_url, original_filename, captions, raw_words, style, aspect_ratio, created_at, updated_at')
+      .select('*')
       .eq('user_id', userId)
       .order('updated_at', { ascending: false })
-      .limit(30);
+      .limit(50);
 
     if (error) {
       console.warn('[Projects API GET Error]:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message, projects: [] }, { status: 200 });
     }
 
     return NextResponse.json({ projects: projects || [] });
   } catch (error) {
     console.error('[Projects API Exception]:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal Server Error' },
+      { error: error instanceof Error ? error.message : 'Internal Server Error', projects: [] },
       { status: 500 }
     );
   }
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
       raw_words: rawWords || [],
       style: style || {},
       aspect_ratio: aspectRatio || '9:16',
-      updated_at: new Date().toISOString(), // Reset the 60-day clock
+      updated_at: new Date().toISOString(),
     };
 
     if (proxyUrl) projectPayload.proxy_url = proxyUrl;
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     let resultProject;
 
     if (id) {
-      // Update existing project -> resets updated_at
+      // Update existing project
       const { data, error } = await supabase
         .from('user_projects')
         .update(projectPayload)
@@ -126,10 +126,25 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-        console.warn('[Projects API Update Error]:', error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        // Fallback: If error relates to missing proxy_url or original_filename column, retry without them
+        if (error.message?.includes('proxy_url') || error.message?.includes('original_filename') || error.code === '42703') {
+          delete projectPayload.proxy_url;
+          delete projectPayload.original_filename;
+          const retry = await supabase
+            .from('user_projects')
+            .update(projectPayload)
+            .eq('id', id)
+            .eq('user_id', userId)
+            .select()
+            .single();
+          resultProject = retry.data;
+        } else {
+          console.warn('[Projects API Update Error]:', error.message);
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+      } else {
+        resultProject = data;
       }
-      resultProject = data;
     } else {
       // Insert new project
       const { data, error } = await supabase
@@ -142,10 +157,26 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-        console.warn('[Projects API Insert Error]:', error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        // Fallback: If error relates to missing column, retry without them
+        if (error.message?.includes('proxy_url') || error.message?.includes('original_filename') || error.code === '42703') {
+          delete projectPayload.proxy_url;
+          delete projectPayload.original_filename;
+          const retry = await supabase
+            .from('user_projects')
+            .insert({
+              ...projectPayload,
+              created_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+          resultProject = retry.data;
+        } else {
+          console.warn('[Projects API Insert Error]:', error.message);
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+      } else {
+        resultProject = data;
       }
-      resultProject = data;
     }
 
     return NextResponse.json({ success: true, project: resultProject });
@@ -174,22 +205,22 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Database service unavailable' }, { status: 500 });
     }
 
-    // Optional: fetch project to check if proxy needs deletion in R2
-    const { data: project } = await supabase
-      .from('user_projects')
-      .select('proxy_url')
-      .eq('id', id)
-      .eq('user_id', userId)
-      .single();
+    // Try deleting R2 proxy file if present
+    try {
+      const { data: project } = await supabase
+        .from('user_projects')
+        .select('proxy_url')
+        .eq('id', id)
+        .eq('user_id', userId)
+        .single();
 
-    if (project?.proxy_url) {
-      try {
+      if (project?.proxy_url) {
         const urlParts = new URL(project.proxy_url);
         const r2Key = urlParts.pathname.replace(/^\//, '');
         if (r2Key) await deleteR2Object(r2Key);
-      } catch (r2Err) {
-        console.warn('[R2 Proxy Delete Warning]:', r2Err);
       }
+    } catch {
+      // Non-blocking
     }
 
     const { error } = await supabase

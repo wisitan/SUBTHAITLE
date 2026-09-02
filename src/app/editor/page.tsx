@@ -16,6 +16,7 @@ import {
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/context/auth-context';
 import { getVideoFromCache, saveVideoToCache } from '@/lib/video-cache';
+import { saveProjectToCloud } from '@/lib/projects-client';
 import { VideoPlayer } from '@/components/video-player';
 import { CaptionTable } from '@/components/caption-table';
 import { StyleEditor } from '@/components/style-editor';
@@ -59,25 +60,27 @@ export default function EditorPage() {
     setSaveStatus('saving');
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch('/api/projects', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: currentProjectId || undefined,
-            userId: user.id,
-            title: projectTitle || file?.name || 'SUBTHAITLE Project',
-            duration: mediaDuration,
-            captions,
-            rawWords,
-            style,
-            aspectRatio,
-          }),
+        const storeState = useAppStore.getState();
+        const savedProject = await saveProjectToCloud({
+          id: currentProjectId || undefined,
+          userId: user.id,
+          title: projectTitle || file?.name || 'SUBTHAITLE Project',
+          duration: mediaDuration,
+          proxyUrl: storeState.proxyUrl || undefined,
+          originalFilename: storeState.originalFilename || file?.name || undefined,
+          captions,
+          rawWords,
+          style,
+          aspectRatio,
+          file,
         });
 
-        if (res.ok) {
-          const data = await res.json();
-          if (data.project?.id && !currentProjectId) {
-            setCurrentProjectId(data.project.id);
+        if (savedProject?.id) {
+          if (!currentProjectId) {
+            setCurrentProjectId(savedProject.id);
+          }
+          if (savedProject.proxy_url && !storeState.proxyUrl) {
+            useAppStore.getState().setProxyUrl(savedProject.proxy_url);
           }
           setSaveStatus('saved');
         } else {
