@@ -33,60 +33,60 @@ export function TikTokSafeZone({ visible }: TikTokSafeZoneProps) {
         </div>
       </div>
 
-      {/* 2. Right Action Column (Compact & Positioned Lower matching real TikTok) */}
-      <div className="absolute right-1 bottom-1.5 flex flex-col items-center gap-1.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
+      {/* 2. Right Action Column (Slightly larger icons & readable badges) */}
+      <div className="absolute right-1.5 bottom-1.5 flex flex-col items-center gap-1.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
         {/* Profile Avatar with Overlapping + Badge */}
         <div className="relative mb-0.5">
-          <div className="w-7 h-7 rounded-full border border-white bg-gradient-to-tr from-amber-500 via-orange-500 to-rose-500 flex items-center justify-center text-white text-[10px] font-black shadow-md">
+          <div className="w-7.5 h-7.5 rounded-full border-1.5 border-white bg-gradient-to-tr from-amber-500 via-orange-500 to-rose-500 flex items-center justify-center text-white text-[10.5px] font-black shadow-md">
             ✨
           </div>
-          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-rose-500 text-white flex items-center justify-center border border-white shadow-sm">
-            <span className="text-[8px] font-black leading-none">+</span>
+          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-rose-500 text-white flex items-center justify-center border border-white shadow-sm">
+            <span className="text-[8.5px] font-black leading-none">+</span>
           </div>
         </div>
 
         {/* Like Heart */}
         <div className="flex flex-col items-center">
-          <div className="w-5 h-5 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-white drop-shadow">
+          <div className="w-5.5 h-5.5 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white drop-shadow">
               <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
             </svg>
           </div>
-          <span className="text-[8.5px] font-extrabold text-white tracking-tight">1.2k</span>
+          <span className="text-[9px] font-extrabold text-white tracking-tight">1.2k</span>
         </div>
 
         {/* Comment Bubble */}
         <div className="flex flex-col items-center">
-          <div className="w-5 h-5 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-white drop-shadow">
+          <div className="w-5.5 h-5.5 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white drop-shadow">
               <path d="M12 2C6.48 2 2 6.03 2 11c0 2.87 1.5 5.44 3.86 7.08-.24 1.35-.91 2.9-2.3 3.88 1.95.12 4.12-.47 5.76-1.52.86.36 1.76.56 2.68.56 5.52 0 10-4.03 10-9s-4.48-9-10-9zm-4 10c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm4 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm4 0c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z" />
             </svg>
           </div>
-          <span className="text-[8px] font-bold text-white tracking-tight">คนแรก</span>
+          <span className="text-[8.5px] font-bold text-white tracking-tight">คนแรก</span>
         </div>
 
         {/* Bookmark Ribbon */}
         <div className="flex flex-col items-center">
-          <div className="w-5 h-5 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-white drop-shadow">
+          <div className="w-5.5 h-5.5 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white drop-shadow">
               <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" />
             </svg>
           </div>
-          <span className="text-[8.5px] font-extrabold text-white tracking-tight">340</span>
+          <span className="text-[9px] font-extrabold text-white tracking-tight">340</span>
         </div>
 
         {/* Curved Share Arrow */}
         <div className="flex flex-col items-center">
-          <div className="w-5 h-5 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 fill-white drop-shadow">
+          <div className="w-5.5 h-5.5 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white drop-shadow">
               <path d="M14 9V5l7 7-7 7v-4.1c-5 0-8.5 1.6-11 5.1 1-5 4-10 11-11z" />
             </svg>
           </div>
-          <span className="text-[8px] font-bold text-white tracking-tight">แชร์</span>
+          <span className="text-[8.5px] font-bold text-white tracking-tight">แชร์</span>
         </div>
 
         {/* Spinning Vinyl / Music Disc */}
-        <div className="w-6 h-6 rounded-full bg-zinc-950 border border-zinc-700 flex items-center justify-center animate-spin duration-3000 shadow-md">
+        <div className="w-6.5 h-6.5 rounded-full bg-zinc-950 border border-zinc-700 flex items-center justify-center animate-spin duration-3000 shadow-md">
           <div className="w-3 h-3 rounded-full bg-gradient-to-tr from-rose-500 to-amber-500 border border-white" />
         </div>
       </div>
