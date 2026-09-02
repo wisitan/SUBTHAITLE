@@ -486,12 +486,15 @@ export interface TypewriterSliceResult {
 
 /**
  * Calculates the exact visible substring of a word during letter-by-letter typewriter animation.
+ * Typing speed is accelerated (finishes at ~68% of word duration) so the entire sentence completes
+ * early before the audio ends, leaving ample hold time for the viewer to read the complete subtitle.
  */
 export function getTypewriterSlice(
   word: string,
   start: number,
   end: number,
-  currentTime: number
+  currentTime: number,
+  finishRatio = 0.68
 ): TypewriterSliceResult {
   if (!word) {
     return { visibleText: '', isComplete: false, isTyping: false, totalClusters: 0, shownClusters: 0 };
@@ -504,15 +507,16 @@ export function getTypewriterSlice(
     return { visibleText: '', isComplete: false, isTyping: false, totalClusters, shownClusters: 0 };
   }
 
-  if (currentTime >= end) {
+  const rawDuration = Math.max(0.06, end - start);
+  const typingDuration = Math.max(0.04, rawDuration * finishRatio);
+  const elapsed = Math.max(0, currentTime - start);
+
+  if (elapsed >= typingDuration || currentTime >= end) {
     return { visibleText: word, isComplete: true, isTyping: false, totalClusters, shownClusters: totalClusters };
   }
 
-  // Active typing phase
-  const duration = Math.max(0.05, end - start);
-  const elapsed = Math.max(0, currentTime - start);
-  const progress = Math.min(1, elapsed / duration);
-
+  // Active typing phase (accelerated speed ~1.45x)
+  const progress = Math.min(1, elapsed / typingDuration);
   const shownClusters = Math.max(1, Math.min(totalClusters, Math.ceil(progress * totalClusters)));
   const visibleText = clusters.slice(0, shownClusters).join('');
   const isComplete = shownClusters >= totalClusters;

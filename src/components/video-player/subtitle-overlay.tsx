@@ -311,50 +311,56 @@ export function SubtitleOverlay({
                   );
                 }
 
-                if (animMode === 'typewriter' && isWordActive) {
-                  const slice = getTypewriterSlice(w.word, w.start, w.end, currentTime);
-                  const remainder = w.word.slice(slice.visibleText.length);
-                  const isCurrentlyTyping = slice.isTyping && !slice.isComplete;
+                if (animMode === 'typewriter') {
+                  const isLastWordInCaption = idx === displayWords.length - 1;
+                  const hasFinishedAllWords = activeWordIndex === -1 && currentTime >= w.start;
+                  const shouldRenderTypewriter = isWordActive || (isLastWordInCaption && hasFinishedAllWords);
 
-                  return (
-                    <React.Fragment key={`${activeCaption.id || ''}-l2-${idx}`}>
-                      {prefixSpace && (
-                        <span
-                          style={{
-                            opacity: isVisible ? 1 : 0,
-                            visibility: isVisible ? 'visible' : 'hidden',
-                          }}
-                        >
-                          {prefixSpace}
-                        </span>
-                      )}
-                      <span
-                        className="relative z-20 inline-block origin-center font-extrabold"
-                        style={{
-                          color: style.highlightColor || '#FACC15',
-                          textShadow: activeWordShadowCss,
-                          marginRight: gapRight > 0 ? `${gapRight}px` : undefined,
-                        }}
-                      >
-                        <span>{slice.visibleText}</span>
-                        {/* Blinking cursor positioned naturally */}
-                        <span
-                          className={`inline-block font-mono font-bold ${
-                            isCurrentlyTyping ? 'animate-pulse text-orange-400' : 'text-amber-300'
-                          }`}
-                          style={{ width: '0.45em', marginLeft: '0.05em' }}
-                        >
-                          |
-                        </span>
-                        {/* Ghost untyped remainder to lock paragraph width & line wrap perfectly */}
-                        {remainder && (
-                          <span className="opacity-0 select-none pointer-events-none" aria-hidden="true">
-                            {remainder}
+                  if (shouldRenderTypewriter) {
+                    const slice = getTypewriterSlice(w.word, w.start, w.end, currentTime);
+                    const remainder = w.word.slice(slice.visibleText.length);
+                    const isCurrentlyTyping = slice.isTyping && !slice.isComplete;
+
+                    return (
+                      <React.Fragment key={`${activeCaption.id || ''}-l2-${idx}`}>
+                        {prefixSpace && (
+                          <span
+                            style={{
+                              opacity: isVisible ? 1 : 0,
+                              visibility: isVisible ? 'visible' : 'hidden',
+                            }}
+                          >
+                            {prefixSpace}
                           </span>
                         )}
-                      </span>
-                    </React.Fragment>
-                  );
+                        <span
+                          className="relative z-20 inline-block origin-center font-extrabold"
+                          style={{
+                            color: style.highlightColor || '#FACC15',
+                            textShadow: activeWordShadowCss,
+                            marginRight: gapRight > 0 ? `${gapRight}px` : undefined,
+                          }}
+                        >
+                          <span>{slice.visibleText}</span>
+                          {/* Blinking cursor positioned naturally */}
+                          <span
+                            className={`inline-block font-mono font-bold ${
+                              isCurrentlyTyping ? 'animate-pulse text-orange-400' : 'text-amber-300'
+                            }`}
+                            style={{ width: '0.45em', marginLeft: '0.05em' }}
+                          >
+                            |
+                          </span>
+                          {/* Ghost untyped remainder to lock paragraph width & line wrap perfectly */}
+                          {remainder && (
+                            <span className="opacity-0 select-none pointer-events-none" aria-hidden="true">
+                              {remainder}
+                            </span>
+                          )}
+                        </span>
+                      </React.Fragment>
+                    );
+                  }
                 }
 
                 return (

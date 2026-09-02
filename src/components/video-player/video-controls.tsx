@@ -58,7 +58,7 @@ export function VideoControls({
           type="button"
           onClick={() => onSeek(currentTime - 5)}
           className="p-1.5 sm:p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer shrink-0"
-          title="ย้อนกลับ 5 วินาที"
+          title="ย้อนกลับ 5 วินาที (คีย์ลัด: ← หรือ J)"
         >
           <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
@@ -67,7 +67,7 @@ export function VideoControls({
           type="button"
           onClick={() => onSeek(currentTime + 5)}
           className="p-1.5 sm:p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer shrink-0"
-          title="ข้ามไปข้างหน้า 5 วินาที"
+          title="ข้ามไปข้างหน้า 5 วินาที (คีย์ลัด: → หรือ L)"
         >
           <RotateCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
         </button>
@@ -89,6 +89,7 @@ export function VideoControls({
               key={rate}
               type="button"
               onClick={() => onRateChange(rate)}
+              title={`ปรับความเร็วการเล่น ${rate} เท่า`}
               className={`px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 playbackRate === rate
                   ? 'bg-zinc-800 text-orange-400 shadow-sm'
@@ -105,7 +106,7 @@ export function VideoControls({
           type="button"
           onClick={onToggleMute}
           className="p-1.5 sm:p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"
-          title={isMuted ? 'เปิดเสียง' : 'ปิดเสียง'}
+          title={isMuted ? 'เปิดเสียง (คีย์ลัด: M)' : 'ปิดเสียง (คีย์ลัด: M)'}
         >
           {isMuted ? <VolumeX className="w-4 h-4 text-red-400" /> : <Volume2 className="w-4 h-4" />}
         </button>
@@ -115,7 +116,7 @@ export function VideoControls({
           type="button"
           onClick={onToggleFullscreen}
           className="p-1.5 sm:p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-colors cursor-pointer"
-          title={isFullscreen ? 'ออกจากโหมดเต็มจอ' : 'โหมดเต็มจอ'}
+          title={isFullscreen ? 'ออกจากโหมดเต็มจอ (Esc)' : 'โหมดเต็มจอ (คีย์ลัด: F)'}
         >
           {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
         </button>

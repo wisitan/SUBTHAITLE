@@ -163,6 +163,12 @@ export interface AppState {
   mergeCaption: (id: string, direction: 'next' | 'prev') => void;
   shiftAllCaptions: (offsetSeconds: number) => void;
   findAndReplace: (findText: string, replaceText: string, caseSensitive?: boolean) => void;
+  // History (Undo / Redo)
+  undoStack: Array<{ captions: CaptionItem[]; style: CaptionStyle }>;
+  redoStack: Array<{ captions: CaptionItem[]; style: CaptionStyle }>;
+  undo: () => void;
+  redo: () => void;
+
   setActiveCaptionIndex: (index: number | null) => void;
   setCurrentTime: (time: number) => void;
   setStyle: (stylePartial: Partial<CaptionStyle>) => void;

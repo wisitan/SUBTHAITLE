@@ -30,6 +30,25 @@ export const defaultCaptionStyle: CaptionStyle = {
   backgroundOpacity: 60,
 };
 
+interface HistorySnapshot {
+  captions: CaptionItem[];
+  style: CaptionStyle;
+}
+
+const MAX_HISTORY = 40;
+
+function pushSnapshot(state: { captions: CaptionItem[]; style: CaptionStyle; undoStack?: HistorySnapshot[] }): { undoStack: HistorySnapshot[]; redoStack: HistorySnapshot[] } {
+  const currentSnapshot: HistorySnapshot = {
+    captions: JSON.parse(JSON.stringify(state.captions || [])),
+    style: { ...state.style },
+  };
+  const prevStack = state.undoStack || [];
+  return {
+    undoStack: [...prevStack, currentSnapshot].slice(-MAX_HISTORY),
+    redoStack: [],
+  };
+}
+
 export interface CaptionSlice {
   rawWords: CaptionWord[];
   pacingMode: PacingMode;
@@ -39,6 +58,12 @@ export interface CaptionSlice {
   style: CaptionStyle;
   activePresetId: string;
   customPresets: Array<{ id: string; name: string; style: CaptionStyle; createdAt: string }>;
+
+  // History (Undo / Redo)
+  undoStack: HistorySnapshot[];
+  redoStack: HistorySnapshot[];
+  undo: () => void;
+  redo: () => void;
 
   setRawWords: (rawWords: CaptionWord[]) => void;
   setPacingMode: (pacingMode: PacingMode, customMaxWords?: number) => void;
@@ -69,17 +94,59 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
   style: defaultCaptionStyle,
   activePresetId: 'tiktok-viral',
   customPresets: [],
+  undoStack: [],
+  redoStack: [],
+
+  undo: () =>
+    set((state) => {
+      if (!state.undoStack || state.undoStack.length === 0) return state;
+      const prev = state.undoStack[state.undoStack.length - 1];
+      const newUndoStack = state.undoStack.slice(0, -1);
+      const currentSnapshot: HistorySnapshot = {
+        captions: JSON.parse(JSON.stringify(state.captions || [])),
+        style: { ...state.style },
+      };
+      const newRedoStack = [...(state.redoStack || []), currentSnapshot].slice(-MAX_HISTORY);
+
+      return {
+        captions: prev.captions,
+        style: prev.style,
+        undoStack: newUndoStack,
+        redoStack: newRedoStack,
+      };
+    }),
+
+  redo: () =>
+    set((state) => {
+      if (!state.redoStack || state.redoStack.length === 0) return state;
+      const next = state.redoStack[state.redoStack.length - 1];
+      const newRedoStack = state.redoStack.slice(0, -1);
+      const currentSnapshot: HistorySnapshot = {
+        captions: JSON.parse(JSON.stringify(state.captions || [])),
+        style: { ...state.style },
+      };
+      const newUndoStack = [...(state.undoStack || []), currentSnapshot].slice(-MAX_HISTORY);
+
+      return {
+        captions: next.captions,
+        style: next.style,
+        undoStack: newUndoStack,
+        redoStack: newRedoStack,
+      };
+    }),
 
   setRawWords: (rawWords) => set({ rawWords }),
 
   setPacingMode: (pacingMode, customMaxWords) => {
     set((state) => {
+      const history = pushSnapshot(state);
       const nextCustomWords = customMaxWords ?? state.customMaxWords;
       const newCaptions = groupWordsIntoCaptions(state.rawWords, {
         mode: pacingMode,
         ...(pacingMode === 'custom' ? { maxWordsPerLine: nextCustomWords } : {}),
       });
       return {
+        ...history,
         pacingMode,
         customMaxWords: nextCustomWords,
         captions: newCaptions.length > 0 ? newCaptions : state.captions,
@@ -89,6 +156,7 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
 
   regroupCaptions: (overrideMode, overrideCustomWords) => {
     set((state) => {
+      const history = pushSnapshot(state);
       const mode = overrideMode || state.pacingMode;
       const words = overrideCustomWords || state.customMaxWords;
       const newCaptions = groupWordsIntoCaptions(state.rawWords, {
@@ -96,6 +164,7 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
         ...(mode === 'custom' ? { maxWordsPerLine: words } : {}),
       });
       return {
+        ...history,
         pacingMode: mode,
         customMaxWords: words,
         captions: newCaptions.length > 0 ? newCaptions : state.captions,
@@ -103,7 +172,11 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
     });
   },
 
-  setCaptions: (captions) => set({ captions }),
+  setCaptions: (captions) =>
+    set((state) => ({
+      ...pushSnapshot(state),
+      captions,
+    })),
 
   updateCaptionText: (id, text) =>
     set((state) => ({
@@ -118,6 +191,7 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
 
   updateCaptionTiming: (id, start, end) =>
     set((state) => ({
+      ...pushSnapshot(state),
       captions: state.captions.map((c) => {
         if (c.id === id) {
           const newWords = c.text ? distributeTextToWords(c.text, start, end) : c.words;
@@ -129,6 +203,7 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
 
   addCaption: (afterId) =>
     set((state) => {
+      const history = pushSnapshot(state);
       const index = afterId
         ? state.captions.findIndex((c) => c.id === afterId)
         : state.captions.length - 1;
@@ -161,11 +236,15 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
         newCaptions.push(newCue);
       }
 
-      return { captions: newCaptions };
+      return {
+        ...history,
+        captions: newCaptions,
+      };
     }),
 
   deleteCaption: (id) =>
     set((state) => ({
+      ...pushSnapshot(state),
       captions: state.captions.filter((c) => c.id !== id),
     })),
 
@@ -173,6 +252,7 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
     set((state) => {
       const index = state.captions.findIndex((c) => c.id === id);
       if (index === -1) return state;
+      const history = pushSnapshot(state);
 
       const cue = state.captions[index];
       let cue1: CaptionItem;
@@ -241,7 +321,10 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
 
       const newCaptions = [...state.captions];
       newCaptions.splice(index, 1, cue1, cue2);
-      return { captions: newCaptions };
+      return {
+        ...history,
+        captions: newCaptions,
+      };
     }),
 
   mergeCaption: (id, direction) =>
@@ -252,6 +335,7 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
       const targetIndex = direction === 'next' ? index + 1 : index - 1;
       if (targetIndex < 0 || targetIndex >= state.captions.length) return state;
 
+      const history = pushSnapshot(state);
       const firstIndex = Math.min(index, targetIndex);
       const secondIndex = Math.max(index, targetIndex);
 
@@ -274,11 +358,15 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
 
       const newCaptions = [...state.captions];
       newCaptions.splice(firstIndex, 2, mergedCue);
-      return { captions: newCaptions };
+      return {
+        ...history,
+        captions: newCaptions,
+      };
     }),
 
   shiftAllCaptions: (offsetSeconds) =>
     set((state) => ({
+      ...pushSnapshot(state),
       captions: state.captions.map((c) => ({
         ...c,
         start: Math.max(0, Number((c.start + offsetSeconds).toFixed(3))),
@@ -294,10 +382,12 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
   findAndReplace: (findText, replaceText, caseSensitive = false) =>
     set((state) => {
       if (!findText) return state;
+      const history = pushSnapshot(state);
       const flags = caseSensitive ? 'g' : 'gi';
       const regex = new RegExp(findText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
 
       return {
+        ...history,
         captions: state.captions.map((c) => ({
           ...c,
           text: c.text.replace(regex, replaceText),
@@ -309,6 +399,7 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
 
   setStyle: (stylePartial) =>
     set((state) => ({
+      ...pushSnapshot(state),
       style: { ...state.style, ...stylePartial },
     })),
 

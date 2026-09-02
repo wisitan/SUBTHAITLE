@@ -12,6 +12,8 @@ import {
   Cloud,
   Loader2,
   Upload,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/context/auth-context';
@@ -124,6 +126,41 @@ export default function EditorPage() {
       isMounted = false;
     };
   }, [currentProjectId, projectTitle, file, videoUrl, setVideoUrl, setFile]);
+
+  // Global Keyboard Shortcuts (Cmd+Z / Ctrl+Z for Undo, Cmd+Shift+Z / Ctrl+Y for Redo)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isCtrlOrMeta = e.metaKey || e.ctrlKey;
+      const target = e.target as HTMLElement;
+      const isTextInput =
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') &&
+        target.getAttribute('type') !== 'range' &&
+        target.getAttribute('type') !== 'checkbox';
+
+      if (isCtrlOrMeta && e.key.toLowerCase() === 'z') {
+        if (!isTextInput) {
+          e.preventDefault();
+          if (e.shiftKey) {
+            useAppStore.getState().redo();
+            showToast('ทำซ้ำ (Redo)');
+          } else {
+            useAppStore.getState().undo();
+            showToast('ย้อนกลับ (Undo)');
+          }
+        }
+      } else if (isCtrlOrMeta && e.key.toLowerCase() === 'y') {
+        if (!isTextInput) {
+          e.preventDefault();
+          useAppStore.getState().redo();
+          showToast('ทำซ้ำ (Redo)');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const handleReconnectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -292,8 +329,35 @@ export default function EditorPage() {
             </div>
           </div>
 
-          {/* Right: Export Menu & User Profile */}
+          {/* Right: Undo/Redo, Export Menu & User Profile */}
           <div className="flex items-center gap-2">
+            {/* Undo / Redo Toolbar */}
+            <div className="flex items-center bg-zinc-900 border border-zinc-800 p-0.5 rounded-xl shadow-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  useAppStore.getState().undo();
+                  showToast('ย้อนกลับ (Undo)');
+                }}
+                className="p-1.5 sm:p-2 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                title="ย้อนกลับการแก้ไข (Undo) • คีย์ลัด: Cmd+Z (Mac) / Ctrl+Z (Windows)"
+              >
+                <Undo2 className="w-4 h-4" />
+              </button>
+              <div className="w-px h-4 bg-zinc-800" />
+              <button
+                type="button"
+                onClick={() => {
+                  useAppStore.getState().redo();
+                  showToast('ทำซ้ำ (Redo)');
+                }}
+                className="p-1.5 sm:p-2 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                title="ทำซ้ำการแก้ไข (Redo) • คีย์ลัด: Cmd+Shift+Z (Mac) / Ctrl+Y (Windows)"
+              >
+                <Redo2 className="w-4 h-4" />
+              </button>
+            </div>
+
             <UserProfileButton />
             <ExportMenu onShowToast={showToast} />
           </div>

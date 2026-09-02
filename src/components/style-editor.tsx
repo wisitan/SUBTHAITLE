@@ -419,10 +419,10 @@ export function StyleEditor() {
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                   {[
-                    { id: 'classic', label: '📺 คลาสสิก', desc: 'ทั้งประโยค' },
-                    { id: 'pop', label: '💥 เด้งทีละคำ', desc: 'Pop-in Reveal' },
-                    { id: 'sticker', label: '🏷️ สติกเกอร์', desc: 'Sticker Pill' },
-                    { id: 'typewriter', label: '⌨️ พิมพ์ดีด', desc: 'ตัวอักษร |' },
+                    { id: 'classic', label: '📺 คลาสสิก', desc: 'ทั้งประโยค', tooltip: 'ทั้งประโยค (Classic) • แสดงข้อความเต็มประโยคแล้วเปลี่ยนสีคำตามเสียงพูด' },
+                    { id: 'pop', label: '💥 เด้งทีละคำ', desc: 'Pop-in Reveal', tooltip: 'เด้งทีละคำ (Pop-in) • ปรากฏคำทีละคำตามจังหวะพูด' },
+                    { id: 'sticker', label: '🏷️ สติกเกอร์', desc: 'Sticker Pill', tooltip: 'สติกเกอร์ (Sticker Pill) • ใส่กรอบสีสติกเกอร์ตามคำที่กำลังพูด สไตล์ TikTok' },
+                    { id: 'typewriter', label: '⌨️ พิมพ์ดีด', desc: 'ตัวอักษร |', tooltip: 'พิมพ์ดีด (Typewriter |) • พิมพ์เร็วขึ้นและจบประโยคก่อน เพื่อให้มีเวลาหยุดอ่านทั้งประโยค' },
                   ].map((mode) => {
                     const isSelected = (style.wordAnimationMode || 'classic') === mode.id;
                     return (
@@ -430,6 +430,7 @@ export function StyleEditor() {
                         key={mode.id}
                         type="button"
                         onClick={() => setStyle({ wordAnimationMode: mode.id as WordAnimationMode })}
+                        title={mode.tooltip}
                         className={`p-2 rounded-xl border text-center flex flex-col items-center justify-center min-h-[48px] transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40 scale-[1.02]'

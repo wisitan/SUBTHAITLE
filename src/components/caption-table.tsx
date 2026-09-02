@@ -12,6 +12,8 @@ import {
   Check,
   X,
   SlidersHorizontal,
+  Undo2,
+  Redo2,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { CaptionRow } from './caption-row';
@@ -136,6 +138,33 @@ export function CaptionTable({ onPlayCue }: Props) {
 
           {/* Quick Toolbar Tools */}
           <div className="flex flex-wrap items-center gap-1.5">
+            {/* Undo / Redo Buttons */}
+            <div className="flex items-center bg-[#0f0f18] border border-zinc-700/80 rounded-xl p-0.5 shadow-sm">
+              <button
+                type="button"
+                onClick={() => {
+                  useAppStore.getState().undo();
+                  showToast('ย้อนกลับ (Undo)');
+                }}
+                className="p-1 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                title="ย้อนกลับการแก้ไข (Undo) • Cmd+Z (Mac) / Ctrl+Z (Windows)"
+              >
+                <Undo2 className="w-3.5 h-3.5" />
+              </button>
+              <div className="w-px h-3.5 bg-zinc-700" />
+              <button
+                type="button"
+                onClick={() => {
+                  useAppStore.getState().redo();
+                  showToast('ทำซ้ำ (Redo)');
+                }}
+                className="p-1 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                title="ทำซ้ำการแก้ไข (Redo) • Cmd+Shift+Z (Mac) / Ctrl+Y (Windows)"
+              >
+                <Redo2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
             {/* Auto-scroll toggle */}
             <button
               type="button"
@@ -145,7 +174,7 @@ export function CaptionTable({ onPlayCue }: Props) {
                   ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/50'
                   : 'bg-[#0f0f18] border-zinc-700 text-zinc-300 hover:text-white hover:bg-[#242434]'
               }`}
-              title="เลื่อนหน้าจอตามวิดีโออัตโนมัติ"
+              title="เปิด/ปิดการเลื่อนหน้าจอตามวิดีโออัตโนมัติ (Auto-Scroll)"
             >
               Auto-Scroll: {autoScroll ? 'ON' : 'OFF'}
             </button>
@@ -155,7 +184,7 @@ export function CaptionTable({ onPlayCue }: Props) {
               type="button"
               onClick={() => setTimeShiftModalOpen(true)}
               className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-[#0f0f18] hover:bg-[#242434] text-zinc-200 border border-zinc-700 hover:border-zinc-500 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
-              title="ขยับเวลาซับทั้งหมดพร้อมกัน (+- Offset)"
+              title="ขยับเวลาซับไตเติลทั้งหมดพร้อมกัน (+- Offset Seconds)"
             >
               <Clock className="w-3.5 h-3.5 text-orange-400" />
               <span>ขยับเวลา</span>
@@ -166,7 +195,7 @@ export function CaptionTable({ onPlayCue }: Props) {
               type="button"
               onClick={() => setFindReplaceModalOpen(true)}
               className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-[#0f0f18] hover:bg-[#242434] text-zinc-200 border border-zinc-700 hover:border-zinc-500 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
-              title="ค้นหาและแทนที่คำในซับไตเติล"
+              title="ค้นหาและแทนที่คำผิดทั้งหมดในคลิป (Find & Replace)"
             >
               <Replace className="w-3.5 h-3.5 text-amber-400" />
               <span>ค้นหา/แทนที่</span>
@@ -177,6 +206,7 @@ export function CaptionTable({ onPlayCue }: Props) {
               type="button"
               onClick={() => addCaption()}
               className="px-3 py-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-xs rounded-xl shadow transition-all flex items-center gap-1 cursor-pointer shrink-0"
+              title="เพิ่มกล่องซับไตเติลใหม่ต่อท้าย (Add Caption)"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>เพิ่มท่อน</span>

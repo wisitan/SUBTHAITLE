@@ -96,7 +96,7 @@ export const CaptionRow = memo(function CaptionRow({
                 onTimingChange(caption.id, newStart, caption.end);
               }}
               className="w-14 sm:w-16 px-1 py-0.5 rounded bg-[#0e0e16] border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
-              title="เวลาเริ่ม (วินาที)"
+              title="เวลาเริ่มพูด (วินาที) • ดับเบิ้ลคลิกเพื่อพิมพ์เวลาใหม่"
             />
             <span className="text-zinc-500 text-[11px]">➔</span>
             {/* End Time Input */}
@@ -109,7 +109,7 @@ export const CaptionRow = memo(function CaptionRow({
                 onTimingChange(caption.id, caption.start, newEnd);
               }}
               className="w-14 sm:w-16 px-1 py-0.5 rounded bg-[#0e0e16] border border-zinc-700 text-orange-400 font-semibold text-center focus:outline-none focus:border-orange-500 text-xs"
-              title="เวลาจบ (วินาที)"
+              title="เวลาจบประโยค (วินาที) • ดับเบิ้ลคลิกเพื่อพิมพ์เวลาใหม่"
             />
             <span className="text-[11px] sm:text-xs text-zinc-300 font-medium">
               ({duration}s)
@@ -120,7 +120,7 @@ export const CaptionRow = memo(function CaptionRow({
           {caption.lowConfidence && (
             <span
               className="px-1.5 py-0.5 text-[10px] sm:text-xs rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-center gap-1 font-medium shrink-0"
-              title="AI ไม่มั่นใจจุดนี้ กรุณาตรวจสอบความถูกต้อง"
+              title="AI ไม่มั่นใจจุดนี้ กรุณาตรวจสอบความถูกต้องของคำ"
             >
               <AlertTriangle className="w-3 h-3 text-amber-400" />
               AI Low Conf
@@ -134,7 +134,7 @@ export const CaptionRow = memo(function CaptionRow({
             type="button"
             onClick={() => onSplit(caption.id)}
             className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
-            title="แยกท่อนนี้ออกเป็น 2 ท่อน (Split)"
+            title="ตัดแบ่งซับท่อนนี้ออกเป็น 2 ท่อน (Split)"
           >
             <Scissors className="w-3.5 h-3.5" />
           </button>
@@ -144,7 +144,7 @@ export const CaptionRow = memo(function CaptionRow({
               type="button"
               onClick={() => onMerge(caption.id, 'next')}
               className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
-              title="รวมท่อนนี้กับท่อนถัดไป (Merge)"
+              title="รวมท่อนนี้เข้ากับท่อนถัดไป (Merge with Next)"
             >
               <LinkIcon className="w-3.5 h-3.5" />
             </button>
@@ -154,7 +154,7 @@ export const CaptionRow = memo(function CaptionRow({
             type="button"
             onClick={() => onAdd(caption.id)}
             className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-zinc-700 hover:border-zinc-500 text-zinc-300 hover:text-white transition-all cursor-pointer"
-            title="เพิ่มท่อนใหม่ต่อจากท่อนนี้"
+            title="เพิ่มกล่องซับใหม่ต่อจากท่อนนี้ (Add Next)"
           >
             <Plus className="w-3.5 h-3.5" />
           </button>
@@ -163,7 +163,7 @@ export const CaptionRow = memo(function CaptionRow({
             type="button"
             onClick={() => onDelete(caption.id)}
             className="p-1.5 rounded-lg bg-[#242434] border border-zinc-700 hover:bg-rose-500/20 hover:border-rose-500/50 text-zinc-400 hover:text-rose-400 transition-all cursor-pointer"
-            title="ลบท่อนนี้"
+            title="ลบกล่องซับนี้ (Delete • ย้อนกลับได้ด้วย Cmd+Z / Ctrl+Z)"
           >
             <Trash2 className="w-3.5 h-3.5" />
           </button>
