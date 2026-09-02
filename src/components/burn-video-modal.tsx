@@ -403,17 +403,6 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                 </button>
               </div>
             </div>
-
-            {/* Hint for typography retention */}
-            <div className="p-3 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-200 space-y-1">
-              <div className="flex items-center gap-1.5 text-amber-400 font-semibold">
-                <Sparkles className="w-4 h-4" />
-                <span>สไตล์และเอฟเฟกต์ที่จะฝังลงในวิดีโอ:</span>
-              </div>
-              <p className="text-zinc-300 pl-5.5 leading-relaxed">
-                ฟอนต์ <strong>{style.fontFamily}</strong> • ขนาด {style.fontSize}px • {style.hasOutline ? `ขอบหนา ${style.outlineWidth}px` : 'ไร้ขอบ'} • {style.enableWordHighlight ? 'ไฮไลท์คำพูดตามเสียงจริง ✨' : 'ข้อความนิ่ง'}
-              </p>
-            </div>
           </div>
         )}
 
