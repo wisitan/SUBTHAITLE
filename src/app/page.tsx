@@ -70,11 +70,11 @@ export default function Home() {
               </div>
 
               <h3 className="text-lg sm:text-xl font-bold text-white leading-snug">
-                &ldquo;เราเริ่มทำ SUBTHAITLE เพราะเราเองก็เป็น Content Creator... ที่เบื่อการจ่ายรายเดือน&rdquo;
+                &ldquo;เราเริ่มทำ SUBTHAITLE เพราะเราเองก็เป็น Content Creator... ที่เบื่อกับระบบผูกมัดรายเดือน&rdquo;
               </h3>
 
               <p className="text-sm sm:text-base text-zinc-300 leading-relaxed font-normal">
-                SUBTHAITLE เกิดจากปัญหาที่เราเจอด้วยตัวเอง — การทำ Subtitle ที่สวย อ่านง่าย จัดคำและ ทำ Word Highlight ให้ถูกต้องนั้นกินเวลาชีวิตมาก และ Creator ทุกคนก็มีต้นทุนมากมายที่ต้องแบกรับอยู่แล้ว เราจึงอยากสร้างเครื่องมือนี้ขึ้นมาเพื่อแบ่งปัน<strong className="text-amber-300 font-bold bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30">ให้ทุกคนได้ใช้งาน ฟรี โดยไม่ต้องมีค่าสมาชิกรายเดือน</strong> และสำหรับใครที่อยากช่วยสนับสนุน สามารถร่วม Donate ได้เพียงครั้งเดียว เพื่อช่วยเป็นค่าไฟ ค่า Server และค่าพัฒนาฟีเจอร์ใหม่ ๆ ให้ SUBTHAITLE อยู่ต่อและพัฒนาไปด้วยกัน
+                SUBTHAITLE เกิดจากปัญหาที่เราเจอด้วยตัวเอง — การทำซับไตเติลภาษาไทยที่สวย อ่านง่าย ตัดคำและทำ Word Highlight ให้ถูกต้องนั้นกินเวลาชีวิตมาก และ Creator ทุกคนก็มีต้นทุนเครื่องมือมากมายที่ต้องจ่ายอยู่แล้ว เราจึงอยากสร้างเครื่องมือนี้ขึ้นมาเพื่อแบ่งปัน<strong className="text-amber-300 font-bold bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30">ให้ทุกคนได้ใช้งานฟรีวันละ 5 คลิป โดยไม่มีค่าสมาชิกรายเดือน</strong> และหากวันไหนมีคลิปยาวหรือต้องการทำงานต่อเนื่อง ก็สามารถร่วมสนับสนุนเลี้ยงกาแฟทีมงานเพื่อรับโควต้าตามการใช้งานจริง (ไม่มีวันหมดอายุ) เพื่อช่วยเป็นค่าไฟ ค่า Server และพัฒนาฟีเจอร์ใหม่ ๆ ให้ SUBTHAITLE อยู่ต่อและพัฒนาไปด้วยกันครับ
               </p>
 
               <div className="pt-2">
@@ -83,7 +83,7 @@ export default function Home() {
                   className="inline-flex items-center justify-center gap-2 w-full sm:w-auto text-sm sm:text-base font-bold text-rose-200 hover:text-white bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 hover:border-rose-500/60 px-5 py-3 rounded-2xl transition-all shadow-md cursor-pointer"
                 >
                   <Heart className="w-4 h-4 text-rose-400 fill-rose-400/20" />
-                  <span>อ่านเรื่องราวฉบับเต็ม & ร่วมเลี้ยงกาแฟทีมงาน ☕</span>
+                  <span>ร่วมเลี้ยงกาแฟทีมงาน ☕</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
