@@ -72,44 +72,51 @@ export default function Home() {
           <UploadZone />
         </section>
 
-        {/* Recent Cloud Projects (Canva-Style) */}
-        <section>
+        {/* Recent Cloud Projects (Canva-Style) with External Glow */}
+        <section className="relative group">
+          {/* External Ambient Glow blooming outside the section */}
+          <div className="absolute -inset-2 bg-gradient-to-r from-orange-500/15 via-amber-500/10 to-orange-600/15 rounded-[36px] blur-2xl opacity-40 group-hover:opacity-75 transition-all duration-500 pointer-events-none -z-10" />
           <RecentProjects />
         </section>
 
-        {/* Creator Story Teaser Section */}
-        <section className="mt-4 p-5 sm:p-8 rounded-3xl bg-zinc-900/50 border border-zinc-800 backdrop-blur-sm relative overflow-hidden shadow-xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="flex flex-col sm:flex-row items-start gap-4">
-            <div className="w-11 h-11 rounded-2xl bg-orange-500/15 border border-orange-500/30 flex items-center justify-center text-orange-400 shrink-0 shadow-md">
-              <MessageSquareQuote className="w-6 h-6" />
-            </div>
+        {/* Creator Story Teaser Section with External Glow */}
+        <section className="relative group mt-2">
+          {/* External Ambient Glow blooming outside the story card */}
+          <div className="absolute -inset-2 sm:-inset-2.5 bg-gradient-to-r from-orange-500/25 via-amber-500/20 to-rose-500/20 rounded-[36px] blur-2xl opacity-45 group-hover:opacity-85 transition-all duration-500 pointer-events-none -z-10" />
 
-            <div className="space-y-3 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-orange-400 uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-orange-500/10 border border-orange-500/20">
-                  Story จากทีมผู้พัฒนา
-                </span>
+          <div className="p-5 sm:p-8 rounded-3xl bg-zinc-900/80 border border-orange-500/30 hover:border-orange-500/60 backdrop-blur-md relative overflow-hidden shadow-[0_0_50px_-10px_rgba(249,115,22,0.2)] transition-all duration-300">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+            
+            <div className="flex flex-col sm:flex-row items-start gap-4">
+              <div className="w-11 h-11 rounded-2xl bg-orange-500/20 border border-orange-500/40 flex items-center justify-center text-orange-400 shrink-0 shadow-[0_0_15px_rgba(249,115,22,0.3)]">
+                <MessageSquareQuote className="w-6 h-6" />
               </div>
 
-              <h3 className="text-lg sm:text-xl font-bold text-white leading-snug">
-                &ldquo;เราเริ่มทำ SUBTHAITLE เพราะเราเองก็เป็น Content Creator... ที่เบื่อกับระบบผูกมัดรายเดือน&rdquo;
-              </h3>
+              <div className="space-y-3 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-orange-400 uppercase tracking-wider px-2.5 py-0.5 rounded-md bg-orange-500/15 border border-orange-500/30 shadow-sm">
+                    Story จากทีมผู้พัฒนา
+                  </span>
+                </div>
 
-              <p className="text-sm sm:text-base text-zinc-300 leading-relaxed font-normal">
-                SUBTHAITLE เกิดจากปัญหาที่เราเจอด้วยตัวเอง — การทำซับไตเติลภาษาไทยที่สวย อ่านง่าย ตัดคำและทำ Word Highlight ให้ถูกต้องนั้นกินเวลาชีวิตมาก และ Creator ทุกคนก็มีต้นทุนเครื่องมือมากมายที่ต้องจ่ายอยู่แล้ว เราจึงอยากสร้างเครื่องมือนี้ขึ้นมาเพื่อแบ่งปัน<strong className="text-amber-300 font-bold bg-amber-500/15 px-1.5 py-0.5 rounded border border-amber-500/30">ให้ทุกคนได้ใช้งานฟรีวันละ 5 คลิป โดยไม่มีค่าสมาชิกรายเดือน</strong> และหากวันไหนมีคลิปยาวหรือต้องการทำงานต่อเนื่อง ก็สามารถร่วมสนับสนุนเลี้ยงกาแฟทีมงานเพื่อรับโควต้าตามการใช้งานจริง (ไม่มีวันหมดอายุ) เพื่อช่วยเป็นค่าไฟ ค่า Server และพัฒนาฟีเจอร์ใหม่ ๆ ให้ SUBTHAITLE อยู่ต่อและพัฒนาไปด้วยกันครับ
-              </p>
+                <h3 className="text-lg sm:text-xl font-bold text-white leading-snug">
+                  &ldquo;เราเริ่มทำ SUBTHAITLE เพราะเราเองก็เป็น Content Creator... ที่เบื่อกับระบบผูกมัดรายเดือน&rdquo;
+                </h3>
 
-              <div className="pt-2">
-                <Link
-                  href="/donate"
-                  className="inline-flex items-center justify-center gap-2 w-full sm:w-auto text-sm sm:text-base font-bold text-rose-200 hover:text-white bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 hover:border-rose-500/60 px-5 py-3 rounded-2xl transition-all shadow-md cursor-pointer"
-                >
-                  <Heart className="w-4 h-4 text-rose-400 fill-rose-400/20" />
-                  <span>ร่วมเลี้ยงกาแฟทีมงาน ☕</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                <p className="text-sm sm:text-base text-zinc-300 leading-relaxed font-normal">
+                  SUBTHAITLE เกิดจากปัญหาที่เราเจอด้วยตัวเอง — การทำซับไตเติลภาษาไทยที่สวย อ่านง่าย ตัดคำและทำ Word Highlight ให้ถูกต้องนั้นกินเวลาชีวิตมาก และ Creator ทุกคนก็มีต้นทุนเครื่องมือมากมายที่ต้องจ่ายอยู่แล้ว เราจึงอยากสร้างเครื่องมือนี้ขึ้นมาเพื่อแบ่งปัน<strong className="text-amber-300 font-bold bg-amber-500/20 px-1.5 py-0.5 rounded border border-amber-500/40 shadow-sm">ให้ทุกคนได้ใช้งานฟรีวันละ 5 คลิป โดยไม่มีค่าสมาชิกรายเดือน</strong> และหากวันไหนมีคลิปยาวหรือต้องการทำงานต่อเนื่อง ก็สามารถร่วมสนับสนุนเลี้ยงกาแฟทีมงานเพื่อรับโควต้าตามการใช้งานจริง (ไม่มีวันหมดอายุ) เพื่อช่วยเป็นค่าไฟ ค่า Server และพัฒนาฟีเจอร์ใหม่ ๆ ให้ SUBTHAITLE อยู่ต่อและพัฒนาไปด้วยกันครับ
+                </p>
+
+                <div className="pt-2">
+                  <Link
+                    href="/donate"
+                    className="inline-flex items-center justify-center gap-2 w-full sm:w-auto text-sm sm:text-base font-bold text-rose-200 hover:text-white bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 hover:border-rose-500/60 px-5 py-3 rounded-2xl transition-all shadow-[0_0_20px_-5px_rgba(244,63,94,0.3)] cursor-pointer"
+                  >
+                    <Heart className="w-4 h-4 text-rose-400 fill-rose-400/20" />
+                    <span>ร่วมเลี้ยงกาแฟทีมงาน ☕</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
