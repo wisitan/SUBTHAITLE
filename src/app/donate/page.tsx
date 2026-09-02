@@ -43,12 +43,12 @@ const DONATE_TIERS: DonateTier[] = [
     hoursDisplay: '60 นาที',
     estimatedClips: '~40 คลิป',
     icon: Coffee,
-    description: 'ร่วมสนับสนุนค่าน้ำชากาแฟ เติมพลังให้ทีมพัฒนาปรับปรุง AI ไทยอย่างต่อเนื่อง',
+    description: 'ร่วมสนับสนุนค่าน้ำชากาแฟ เติมพลังให้ทีมพัฒนาปรับปรุง AI ซับไตเติลภาษาไทยอย่างต่อเนื่อง',
     perks: [
       'รับโควต้าถอดเสียงขอบคุณ 60 นาที (1 ชั่วโมงเต็ม)',
-      'ทำคลิปสั้น TikTok / Reels ได้ ~40 คลิป',
-      'โควต้าไม่มีวันหมดอายุ ใช้ได้ตลอดไป',
-      'เข้าถึง AI โมเดลภาษาไทย SCB 10X Typhoon SOTA',
+      'ทำคลิปสั้น TikTok / Reels / Shorts ได้ ~40 คลิป',
+      'โควต้าไม่มีวันหมดอายุ สะสมทบยอดได้ตลอดไป',
+      'รองรับคลิปยาวสูงสุด 30 นาที / ไฟล์',
     ],
   },
   {
@@ -59,13 +59,13 @@ const DONATE_TIERS: DonateTier[] = [
     hoursDisplay: '2 ชั่วโมง (120 นาที)',
     estimatedClips: '~90 คลิป',
     icon: UtensilsCrossed,
-    description: 'ร่วมสมทบทุนค่าเซิร์ฟเวอร์ & GPU ประมวลผลถอดเสียงภาษาไทยให้ทำงานได้ 24 ชม.',
+    description: 'ร่วมสมทบทุนค่าเซิร์ฟเวอร์ & Cloudflare R2 ให้ระบบถอดเสียงทำงานได้อย่างเสถียร 24 ชม.',
     perks: [
       'รับโควต้าถอดเสียงขอบคุณ 120 นาที (2 ชั่วโมงเต็ม)',
-      'ทำคลิปสั้น TikTok / Reels ได้ ~90 คลิป',
-      'โควต้าไม่มีวันหมดอายุ สะสมทบยอดได้เรื่อย ๆ',
-      'เข้าถึง AI โมเดลภาษาไทย SCB 10X Typhoon SOTA',
-      'เรนเดอร์ MP4 4K / 1080p คมชัดเต็มร้อย ฟรี 0 เครดิต',
+      'ทำคลิปสั้น TikTok / Reels / Shorts ได้ ~90 คลิป',
+      'โควต้าไม่มีวันหมดอายุ สะสมทบยอดได้ตลอดไป',
+      'รองรับคลิปยาวสูงสุด 30 นาที / ไฟล์',
+      'แพ็กเกจสุดคุ้มสำหรับ Creator สายทำคลิปสม่ำเสมอ',
     ],
   },
   {
@@ -78,14 +78,13 @@ const DONATE_TIERS: DonateTier[] = [
     popular: true,
     tag: '🔥 ผู้สนับสนุนยอดนิยม',
     icon: Flame,
-    description: 'สุดยอดผู้สนับสนุนตัวจริง ช่วยค้ำจุนค่า Cloudflare R2, Cloud GPU และฟีเจอร์ใหม่ ๆ',
+    description: 'สุดยอดผู้สนับสนุนตัวจริง ช่วยค้ำจุนค่า Cloudflare R2, Server และการพัฒนาฟีเจอร์ใหม่ ๆ',
     perks: [
       'รับโควต้าถอดเสียงขอบคุณ 300 นาที (5 ชั่วโมงเต็ม)',
       'ทำคลิปสั้น TikTok / Reels / Shorts ได้ ~250 คลิป',
       'โควต้าไม่มีวันหมดอายุ สะสมทบยอดได้ตลอดไป',
-      'เข้าถึง AI ทุกโมเดล (Typhoon, Whisper-1, Gemini 2.5)',
-      'เรนเดอร์ MP4 4K / 1080p ไม่จำกัดจำนวนครั้ง',
-      'ความคุ้มค่าสูงสุดสำหรับสายคอนเทนต์มืออาชีพ',
+      'รองรับคลิปยาวสูงสุด 30 นาที / ไฟล์',
+      'ความคุ้มค่าสูงสุดสำหรับสายตัดต่อ & มืออาชีพ',
     ],
   },
 ];
@@ -267,6 +266,22 @@ export default function DonatePage() {
           })}
         </div>
 
+        {/* Universal Features Included For All Supporters */}
+        <div className="rounded-2xl bg-zinc-900/40 border border-zinc-800/80 p-4 sm:p-5 flex flex-wrap items-center justify-around gap-4 text-xs text-zinc-300">
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span><strong>เรนเดอร์ MP4 4K / 1080p</strong> ไม่จำกัด ฟรี 0 เครดิต</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span><strong>คลังฟอนต์ & สไตล์ซับไตเติล</strong> ปลดล็อกครบทุกแบบ</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span><strong>ซิงค์คลาวด์ข้ามอุปกรณ์</strong> เปิดแก้ไขบนมือถือ/แท็บเล็ตได้</span>
+          </div>
+        </div>
+
         {/* Story & Transparency Banner */}
         <div className="rounded-3xl bg-zinc-900/60 border border-zinc-800/80 p-6 sm:p-8 space-y-6">
           <div className="flex items-center gap-3">
@@ -286,7 +301,7 @@ export default function DonatePage() {
                 <span>ค่า Cloud GPU & Server</span>
               </div>
               <p className="text-zinc-400 leading-relaxed">
-                หล่อเลี้ยงระบบ API ถอดเสียง AI สปีดสูง (SCB 10X Typhoon, OpenAI Whisper) ตลอด 24 ชั่วโมง
+                หล่อเลี้ยงระบบ API ถอดเสียง AI ภาษาไทยความเร็วสูง (Groq Whisper Large v3 Turbo) ตลอด 24 ชั่วโมง
               </p>
             </div>
 
