@@ -214,125 +214,18 @@ export function SubtitleOverlay({
         className="absolute z-20 pointer-events-none select-none transition-all duration-75"
       >
         {style.enableWordHighlight && displayWords.length > 0 ? (
-          /* Architecture: Layer 1 (Base Outlines) + Layer 2 (Foreground Words & Pop-up Active Word) */
-          <div className="relative w-full">
-            {/* Layer 1: Continuous Background Outline & Shadow (Base Layer - skipped in sticker mode) */}
-            {!isStickerMode && (
-              <p
-                className="w-full inline-block m-0 p-0 select-none"
-                style={{
-                  textAlign: style.textAlign || 'center',
-                  wordBreak: 'break-word',
-                  whiteSpace: 'pre-wrap',
-                  letterSpacing: `${style.letterSpacing ?? 0}px`,
-                  lineHeight: style.lineHeight ?? 1.4,
-                  color: 'transparent',
-                  textShadow: shadowsCss,
-                }}
-                aria-hidden="true"
-              >
-                {displayWords.map((w: CaptionWord, idx: number) => {
-                  const isWordActive = idx === activeWordIndex;
-                  const isVisible = isWordVisible(idx);
-
-                  let prefixSpace = '';
-                  if (idx > 0) {
-                    const prevW = displayWords[idx - 1];
-                    const testJoin = formatCaptionWordsText([prevW, w]);
-                    if (testJoin.includes(' ')) {
-                      prefixSpace = ' ';
-                    }
-                  }
-
-                  const isLastWord = idx === displayWords.length - 1;
-                  const nextHasSpace = !isLastWord && formatCaptionWordsText([w, displayWords[idx + 1]]).includes(' ');
-                  const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
-
-                  const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
-                  const isScaled = isWordActive && scaleMultiplier > 1 && animMode !== 'typewriter';
-
-                  if (animMode === 'typewriter' && isWordActive) {
-                    const slice = getTypewriterSlice(w.word, w.start, w.end, currentTime);
-                    const remainder = w.word.slice(slice.visibleText.length);
-
-                    return (
-                      <React.Fragment key={`${activeCaption.id || ''}-l1-${idx}`}>
-                        {prefixSpace && (
-                          <span
-                            style={{
-                              opacity: isVisible ? 1 : 0,
-                              visibility: isVisible ? 'visible' : 'hidden',
-                            }}
-                          >
-                            {prefixSpace}
-                          </span>
-                        )}
-                        <span
-                          className="inline-block origin-center font-extrabold"
-                          style={{
-                            marginRight: gapRight > 0 ? `${gapRight}px` : undefined,
-                          }}
-                        >
-                          <span>{slice.visibleText}</span>
-                          {remainder && (
-                            <span className="opacity-0 select-none pointer-events-none" aria-hidden="true">
-                              {remainder}
-                            </span>
-                          )}
-                        </span>
-                      </React.Fragment>
-                    );
-                  }
-
-                  return (
-                    <React.Fragment key={`${activeCaption.id || ''}-l1-${idx}`}>
-                      {prefixSpace && (
-                        <span
-                          style={{
-                            opacity: isVisible ? 1 : 0,
-                            visibility: isVisible ? 'visible' : 'hidden',
-                          }}
-                        >
-                          {prefixSpace}
-                        </span>
-                      )}
-                      <span
-                        className="inline-block origin-center transition-[transform] duration-150 ease-out"
-                        style={{
-                          opacity: isVisible ? 1 : 0,
-                          visibility: isVisible ? 'visible' : 'hidden',
-                          fontWeight: isWordActive
-                            ? 800
-                            : style.fontWeight === 'bold' || style.fontWeight === '700'
-                            ? 700
-                            : style.fontWeight === '800'
-                            ? 800
-                            : 500,
-                          transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
-                          marginLeft: isScaled ? `${wordBufferPx}px` : undefined,
-                          marginRight: isScaled ? `${wordBufferPx + gapRight}px` : (gapRight > 0 ? `${gapRight}px` : undefined),
-                        }}
-                      >
-                        {w.word}
-                      </span>
-                    </React.Fragment>
-                  );
-                })}
-              </p>
-            )}
-
-            {/* Layer 2: Foreground Words */}
-            <p
-              className={`w-full inline-block m-0 p-0 select-none ${isStickerMode ? '' : 'absolute inset-0'}`}
-              style={{
-                textAlign: style.textAlign || 'center',
-                wordBreak: 'break-word',
-                whiteSpace: 'pre-wrap',
-                letterSpacing: `${style.letterSpacing ?? 0}px`,
-                lineHeight: style.lineHeight ?? (isStickerMode ? 1.7 : 1.4),
-                textShadow: isStickerMode ? 'none' : 'none',
-              }}
-            >
+          /* Single Unified Word Renderer (100% synchronized words, outlines, and shadows) */
+          <p
+            className="w-full inline-block m-0 p-0 select-none"
+            style={{
+              textAlign: style.textAlign || 'center',
+              wordBreak: 'break-word',
+              whiteSpace: 'pre-wrap',
+              letterSpacing: `${style.letterSpacing ?? 0}px`,
+              lineHeight: style.lineHeight ?? (isStickerMode ? 1.7 : 1.4),
+              textShadow: 'none',
+            }}
+          >
               {displayWords.map((w: CaptionWord, idx: number) => {
                 const isWordActive = idx === activeWordIndex;
                 const isVisible = isWordVisible(idx);
@@ -503,7 +396,6 @@ export function SubtitleOverlay({
                 );
               })}
             </p>
-          </div>
         ) : (
           /* Whole Caption Text Rendering */
           <p
