@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { deleteR2Object } from '@/lib/r2';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+
+const RETENTION_DAYS = 60; // Auto-purge projects inactive for > 60 days
 
 function getSupabaseAdmin() {
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
@@ -33,6 +36,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Database service unavailable' }, { status: 500 });
     }
 
+    // 1. Passive Auto-Purge: Clean up projects with updated_at older than 60 days for this user
+    const cutoffDate = new Date(Date.now() - RETENTION_DAYS * 86400 * 1000).toISOString();
+    try {
+      await supabase
+        .from('user_projects')
+        .delete()
+        .eq('user_id', userId)
+        .lt('updated_at', cutoffDate);
+    } catch (cleanupErr) {
+      console.warn('[Passive Purge Notice]:', cleanupErr);
+    }
+
+    // 2. Fetch active projects within 60-day retention window
     const { data: projects, error } = await supabase
       .from('user_projects')
       .select('id, user_id, title, duration, thumbnail_url, proxy_url, original_filename, captions, raw_words, style, aspect_ratio, created_at, updated_at')
@@ -55,7 +71,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/projects (Create or update project)
+// POST /api/projects (Create or update project & reset 60-day clock)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -91,7 +107,7 @@ export async function POST(request: NextRequest) {
       raw_words: rawWords || [],
       style: style || {},
       aspect_ratio: aspectRatio || '9:16',
-      updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(), // Reset the 60-day clock
     };
 
     if (proxyUrl) projectPayload.proxy_url = proxyUrl;
@@ -100,7 +116,7 @@ export async function POST(request: NextRequest) {
     let resultProject;
 
     if (id) {
-      // Update existing project
+      // Update existing project -> resets updated_at
       const { data, error } = await supabase
         .from('user_projects')
         .update(projectPayload)
@@ -156,6 +172,24 @@ export async function DELETE(request: NextRequest) {
     const supabase = getSupabaseAdmin();
     if (!supabase) {
       return NextResponse.json({ error: 'Database service unavailable' }, { status: 500 });
+    }
+
+    // Optional: fetch project to check if proxy needs deletion in R2
+    const { data: project } = await supabase
+      .from('user_projects')
+      .select('proxy_url')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single();
+
+    if (project?.proxy_url) {
+      try {
+        const urlParts = new URL(project.proxy_url);
+        const r2Key = urlParts.pathname.replace(/^\//, '');
+        if (r2Key) await deleteR2Object(r2Key);
+      } catch (r2Err) {
+        console.warn('[R2 Proxy Delete Warning]:', r2Err);
+      }
     }
 
     const { error } = await supabase
