@@ -144,6 +144,7 @@ export async function renderSubtitleCanvas(
   }
 
   const renderWords: RenderWord[] = [];
+  const microGapPx = style.enableWordHighlight ? Math.max(1.5, Math.round(2 * scale)) : 0;
 
   if (style.enableWordHighlight && caption.words && caption.words.length > 0) {
     caption.words.forEach((w: CaptionWord, idx: number) => {
@@ -173,6 +174,10 @@ export async function renderSubtitleCanvas(
         });
       }
 
+      const isLastWord = idx === caption.words!.length - 1;
+      const nextHasSpace = !isLastWord && formatCaptionWordsText([w, caption.words![idx + 1]]).includes(' ');
+      const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
+
       ctx.font = `${wordWeight} ${fontSize}px "${fontName}", sans-serif`;
       const rawWidth = ctx.measureText(w.word).width;
       renderWords.push({
@@ -180,7 +185,7 @@ export async function renderSubtitleCanvas(
         isActive,
         color: wordColor,
         weight: wordWeight,
-        width: rawWidth + scaleBufferPx * 2,
+        width: rawWidth + scaleBufferPx * 2 + gapRight,
         textWidth: rawWidth,
       });
     });
@@ -387,7 +392,20 @@ export async function renderSubtitleCanvas(
         restoreScaleTransform();
       }
 
-      // 3. Active Word Text Fill
+      // 3. Active Word Neon Glow Aura
+      applyScaleTransform();
+      ctx.save();
+      const glowColor = style.highlightColor || '#FACC15';
+      ctx.shadowColor = hexToRgba(glowColor, 80);
+      ctx.shadowBlur = 12 * scale;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.fillStyle = pw.color;
+      ctx.fillText(pw.text, pw.x, startY);
+      ctx.restore();
+      restoreScaleTransform();
+
+      // 4. Active Word Crisp Text Fill
       applyScaleTransform();
       ctx.save();
       ctx.fillStyle = pw.color;

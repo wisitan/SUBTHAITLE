@@ -138,6 +138,27 @@ export function SubtitleOverlay({
     };
   }, [style, visualBounds]);
 
+  // Dynamic micro-gap between adjacent words to prevent Thai text clustering when highlight is active
+  const { microGapPx, activeWordShadowCss } = useMemo(() => {
+    const baseDim = Math.min(visualBounds.w, visualBounds.h);
+    const domScale = (baseDim || 360) / 360;
+    const gap = style.enableWordHighlight ? Math.max(1.5, 2 * domScale) : 0;
+
+    const highlightColor = style.highlightColor || '#FACC15';
+    const glow1 = `0 0 ${8 * domScale}px ${hexToRgba(highlightColor, 75)}`;
+    const glow2 = `0 0 ${18 * domScale}px ${hexToRgba(highlightColor, 40)}`;
+    const activeGlow = `${glow1}, ${glow2}`;
+
+    const combinedShadows = shadowsCss !== 'none'
+      ? `${shadowsCss}, ${activeGlow}`
+      : activeGlow;
+
+    return {
+      microGapPx: gap,
+      activeWordShadowCss: combinedShadows,
+    };
+  }, [visualBounds, style.enableWordHighlight, style.highlightColor, shadowsCss]);
+
   if (!activeCaption) return null;
 
   return (
@@ -181,6 +202,10 @@ export function SubtitleOverlay({
                   }
                 }
 
+                const isLastWord = idx === activeCaption.words!.length - 1;
+                const nextHasSpace = !isLastWord && formatCaptionWordsText([w, activeCaption.words![idx + 1]]).includes(' ');
+                const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
+
                 const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
                 const isScaled = isWordActive && scaleMultiplier > 1;
 
@@ -199,7 +224,7 @@ export function SubtitleOverlay({
                           : 500,
                         transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
                         marginLeft: isScaled ? `${wordBufferPx}px` : undefined,
-                        marginRight: isScaled ? `${wordBufferPx}px` : undefined,
+                        marginRight: isScaled ? `${wordBufferPx + gapRight}px` : (gapRight > 0 ? `${gapRight}px` : undefined),
                       }}
                     >
                       {w.word}
@@ -233,6 +258,10 @@ export function SubtitleOverlay({
                   }
                 }
 
+                const isLastWord = idx === activeCaption.words!.length - 1;
+                const nextHasSpace = !isLastWord && formatCaptionWordsText([w, activeCaption.words![idx + 1]]).includes(' ');
+                const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
+
                 const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
                 const isScaled = isWordActive && scaleMultiplier > 1;
 
@@ -254,8 +283,8 @@ export function SubtitleOverlay({
                           : 500,
                         transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
                         marginLeft: isScaled ? `${wordBufferPx}px` : undefined,
-                        marginRight: isScaled ? `${wordBufferPx}px` : undefined,
-                        textShadow: isWordActive && shadowsCss !== 'none' ? shadowsCss : 'none',
+                        marginRight: isScaled ? `${wordBufferPx + gapRight}px` : (gapRight > 0 ? `${gapRight}px` : undefined),
+                        textShadow: isWordActive ? activeWordShadowCss : (shadowsCss !== 'none' ? shadowsCss : 'none'),
                       }}
                     >
                       {w.word}
