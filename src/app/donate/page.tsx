@@ -296,7 +296,7 @@ export default function DonatePage() {
                 <span>Cloudflare R2 Storage</span>
               </div>
               <p className="text-zinc-400 leading-relaxed">
-                บันทึก Proxy วิดีโอและโปรเจกต์งานซับไตเติลบนคลาวด์ ปลอดภัย เปิดดูข้ามอุปกรณ์ได้ตลอด 60 วัน
+                บันทึก Proxy วิดีโอและโปรเจกต์งานซับไตเติลบนคลาวด์ ปลอดภัย เปิดดูข้ามอุปกรณ์ได้ตลอด 7 วัน (เครื่องเดิมเปิดตัดต่อได้ตลอด)
               </p>
             </div>
 

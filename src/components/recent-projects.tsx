@@ -209,7 +209,7 @@ export function RecentProjects() {
           </h3>
           <p className="text-xs text-zinc-400 flex items-center gap-1.5">
             <Cloud className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span>บันทึกบนคลาวด์อัตโนมัติ (เก็บงานนาน 60 วันนับจากการแก้ไขล่าสุด • 0 เครดิต)</span>
+            <span>บันทึกบนคลาวด์อัตโนมัติ (เก็บงาน 7 วัน • เครื่องเดิมเปิดดูได้ตลอด • 0 เครดิต)</span>
           </p>
         </div>
 

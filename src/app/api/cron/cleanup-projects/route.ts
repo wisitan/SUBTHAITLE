@@ -5,7 +5,7 @@ import { deleteR2Object } from '@/lib/r2';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const RETENTION_DAYS = 60;
+const RETENTION_DAYS = 7;
 
 function getSupabaseAdmin() {
   const url = (process.env.NEXT_PUBLIC_SUPABASE_URL || '').trim();
