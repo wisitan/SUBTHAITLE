@@ -111,7 +111,7 @@ export function ProviderSelector() {
 
             <div className="mt-4 space-y-2">
               <p className="text-xs text-zinc-200 font-medium">
-                ⚡ ถอดเสียงรวดเร็วด้วย AI ภาษาไทย (คลิปละไม่เกิน 2 นาที)
+                ⚡ คลิปละไม่เกิน 2 นาที (ขนาดไฟล์สูงสุด 100 MB)
               </p>
 
               {/* Battery / Energy Status Gauge (Visual Bar, No Raw Numbers) */}
@@ -204,7 +204,7 @@ export function ProviderSelector() {
 
             <div className="mt-4 space-y-1.5">
               <p className="text-xs text-zinc-200 font-medium">
-                💎 คลิปยาวเท่าไหร่ก็ได้
+                💎 คลิปยาวสูงสุด 30 นาที (ขนาดไฟล์สูงสุด 1.5 GB)
               </p>
               <p className="text-xs text-zinc-400">
                 หักเวลาตามความยาวจริงของคลิป (นาที)

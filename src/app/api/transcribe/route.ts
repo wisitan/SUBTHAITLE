@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             error:
-              'คลิปวิดีโอมีความยาวเกิน 2 นาทีสำหรับโหมดใช้งานฟรี กรุณาเลือกโหมด "Credit ที่มี" เพื่อถอดเสียงคลิปยาวค่ะ',
+              'คลิปวิดีโอมีความยาวเกิน 2 นาทีสำหรับโหมดใช้งานฟรี กรุณาเลือกโหมด "โควต้าผู้สนับสนุน" เพื่อถอดเสียงคลิปยาวค่ะ',
           },
           { status: 400 }
         );
@@ -89,6 +89,17 @@ export async function POST(request: NextRequest) {
       // Track global free usage
       incrementDailySystemUsage();
     } else if (mode === 'credits') {
+      // 1. Credits mode duration limit: max 30 minutes (1830s)
+      if (clientDuration > 1830) {
+        return NextResponse.json(
+          {
+            error:
+              'คลิปวิดีโอมีความยาวเกิน 30 นาทีซึ่งเป็นขีดจำกัดสูงสุดต่อคลิปของระบบ กรุณาตัดแบ่งคลิปเป็นช่วงไม่เกิน 30 นาทีนะคะ',
+          },
+          { status: 400 }
+        );
+      }
+
       const neededCredits = calculateCreditUsage(clientDuration);
       if (supabase && userId) {
         const { error: deductErr } = await supabase.rpc('deduct_user_credits', {

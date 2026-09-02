@@ -50,10 +50,15 @@ export async function transcribeAudio(
     }
     if (mediaDuration > 125) {
       throw new Error(
-        'โหมดฟรีรองรับคลิปยาวไม่เกิน 2 นาที กรุณาเลือกโหมด "Credit ที่มี" เพื่อถอดเสียงคลิปยาว หรือตัดแบ่งคลิปก่อนค่ะ'
+        'โหมดฟรีรองรับคลิปยาวไม่เกิน 2 นาที กรุณาเลือกโหมด "โควต้าผู้สนับสนุน" เพื่อถอดเสียงคลิปยาว หรือตัดแบ่งคลิปก่อนค่ะ'
       );
     }
   } else if (providerMode === 'credits') {
+    if (mediaDuration > 1830) {
+      throw new Error(
+        'ระบบรองรับคลิปยาวสูงสุดไม่เกิน 30 นาทีต่อคลิป เพื่อความเสถียรในการประมวลผล กรุณาตัดแบ่งคลิปเป็นช่วงไม่เกิน 30 นาทีนะคะ'
+      );
+    }
     requiredCredits = calculateCreditUsage(mediaDuration);
     if (creditsMinutes < requiredCredits) {
       throw new Error(

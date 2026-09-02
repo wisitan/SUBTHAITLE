@@ -88,7 +88,6 @@ export function UploadZone() {
 
   const isBYOK = (providerMode === 'byok' || providerMode === 'local') && Boolean(groqApiKey);
   const isFreeMode = providerMode === 'free' || providerMode === 'google_free' || providerMode === 'groq_free';
-  const isUnlimitedSize = isBYOK || providerMode === 'credits';
 
   const handleFile = useCallback(
     async (selectedFile: File) => {
@@ -108,11 +107,20 @@ export function UploadZone() {
         return;
       }
 
-      // Check size limit (Free tier limit = 100MB)
-      const maxFreeSizeBytes = 100 * 1024 * 1024;
-      if (!isUnlimitedSize && selectedFile.size > maxFreeSizeBytes) {
+      // Check size limit: Free mode max 100MB, Credits mode max 1.5GB (1500MB)
+      const maxFreeSizeBytes = 100 * 1024 * 1024; // 100 MB
+      const maxCreditSizeBytes = 1500 * 1024 * 1024; // 1.5 GB
+
+      if (isFreeMode && selectedFile.size > maxFreeSizeBytes) {
         setErrorMessage(
-          `ขนาดไฟล์ (${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB) เกินโควต้าฟรี 100 MB กรุณาเลือกไฟล์ที่เล็กลง หรือใส่ API Key ของตัวเอง (BYOK) เพื่ออัปโหลดได้ไม่จำกัด`
+          `⚠️ ขนาดไฟล์ (${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB) เกินกำหนด 100 MB สำหรับโหมดใช้งานฟรี กรุณาเลือกไฟล์ที่เล็กลง หรือเปลี่ยนเป็นโหมด "โควต้าผู้สนับสนุน" เพื่ออัปโหลดไฟล์ขนาดใหญ่ได้สูงสุด 1.5 GB ค่ะ`
+        );
+        return;
+      }
+
+      if (selectedFile.size > maxCreditSizeBytes) {
+        setErrorMessage(
+          `⚠️ ขนาดไฟล์ (${(selectedFile.size / (1024 * 1024 * 1024)).toFixed(2)} GB) เกินกำหนดสูงสุด 1.5 GB ต่อไฟล์ของระบบ เพื่อความเสถียรในการประมวลผล กรุณาบีบอัดวิดีโอหรือเลือกไฟล์ที่มีขนาดไม่เกิน 1.5 GB นะคะ`
         );
         return;
       }
@@ -155,7 +163,7 @@ export function UploadZone() {
         setStatus('idle', 0, 'พร้อมถอดเสียง');
       }
     },
-    [isUnlimitedSize, setAudioBlob, setCaptions, setErrorMessage, setFile, setStatus, setVideoUrl, videoUrl]
+    [isFreeMode, setAudioBlob, setCaptions, setErrorMessage, setFile, setStatus, setVideoUrl, videoUrl]
   );
 
   const onDragOver = (e: React.DragEvent) => {
@@ -202,6 +210,20 @@ export function UploadZone() {
 
     if (!audioBlob) {
       setErrorMessage('ไม่พบไฟล์เสียงสำหรับการถอดข้อความ กรุณาเลือกไฟล์ใหม่อีกครั้ง');
+      return;
+    }
+
+    // Duration limits pre-check
+    if (isFreeMode && mediaDuration > 125) {
+      setErrorMessage(
+        '⚠️ คลิปวิดีโอยาวเกิน 2 นาทีสำหรับโหมดใช้งานฟรี กรุณาสลับไปใช้โหมด "โควต้าผู้สนับสนุน" เพื่อถอดเสียงคลิปยาว หรือตัดแบ่งคลิปก่อนค่ะ'
+      );
+      return;
+    }
+    if (providerMode === 'credits' && mediaDuration > 1830) {
+      setErrorMessage(
+        '⚠️ คลิปวิดีโอยาวเกิน 30 นาทีซึ่งเป็นขีดจำกัดสูงสุดต่อคลิปของระบบ เพื่อความเสถียรในการประมวลผล กรุณาตัดแบ่งคลิปเป็นช่วงไม่เกิน 30 นาทีนะคะ'
+      );
       return;
     }
 
@@ -362,14 +384,14 @@ export function UploadZone() {
             <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-950/80 border border-zinc-700/80 text-zinc-300 font-medium">
               รองรับ MP4, MOV, WebM, MKV, MP3, WAV
             </span>
-            {isUnlimitedSize ? (
-              <span className="px-3 py-1.5 text-xs rounded-lg bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 font-semibold flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5" />
-                โหมดไม่จำกัดขนาดไฟล์
+            {isFreeMode ? (
+              <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-950/80 border border-zinc-700/80 text-zinc-300 font-medium">
+                ฟรี: สูงสุด 100 MB • ยาว 2 นาที
               </span>
             ) : (
-              <span className="px-3 py-1.5 text-xs rounded-lg bg-zinc-950/80 border border-zinc-700/80 text-zinc-300 font-medium">
-                ขนาดไฟล์สูงสุด 100 MB
+              <span className="px-3 py-1.5 text-xs rounded-lg bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 font-semibold flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5" />
+                Credit: สูงสุด 1.5 GB • ยาว 30 นาที
               </span>
             )}
           </div>
@@ -499,8 +521,9 @@ export function UploadZone() {
           {videoUrl && (() => {
             const isFreeMode = providerMode === 'free' || providerMode === 'google_free' || providerMode === 'groq_free';
             const isOverFreeLimit = isFreeMode && mediaDuration > 125;
+            const isOverCreditLimit = providerMode === 'credits' && mediaDuration > 1830;
             const requiredCredits = calculateCreditUsage(mediaDuration);
-            const isNotEnoughCredits = providerMode === 'credits' && creditsMinutes < requiredCredits;
+            const isNotEnoughCredits = providerMode === 'credits' && !isOverCreditLimit && creditsMinutes < requiredCredits;
 
             const formatSecs = (s: number) => {
               const m = Math.floor(s / 60);
@@ -542,7 +565,7 @@ export function UploadZone() {
                     </p>
 
                     {/* Credit Calculation Details */}
-                    {providerMode === 'credits' && mediaDuration > 0 && (
+                    {providerMode === 'credits' && mediaDuration > 0 && !isOverCreditLimit && (
                       <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-800/60 text-xs text-emerald-300 flex items-center justify-between">
                         <span>
                           💎 คลิปนี้ใช้ <strong>{requiredCredits} เครดิต (นาที)</strong>
@@ -561,6 +584,19 @@ export function UploadZone() {
                       <span className="font-bold block text-white">⚠️ คลิปวิดีโอยาวเกิน 2 นาทีสำหรับโหมด Free</span>
                       <p>
                         คลิปนี้ยาว {formatSecs(mediaDuration)} ซึ่งเกินโควต้า 2 นาทีของโหมดฟรี กรุณาสลับไปใช้โหมด <strong>&ldquo;Credit ที่มี&rdquo;</strong> เพื่อถอดเสียงคลิปยาว หรือตัดแบ่งคลิปก่อนค่ะ
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Warning: Over Credit Limit (> 30 Mins) */}
+                {isOverCreditLimit && (
+                  <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-xs sm:text-sm flex items-start gap-3 animate-in fade-in duration-200 shadow-md">
+                    <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                    <div className="flex-1 space-y-1">
+                      <span className="font-bold block text-white">⚠️ คลิปวิดีโอยาวเกิน 30 นาที</span>
+                      <p>
+                        คลิปนี้ยาว {formatSecs(mediaDuration)} ซึ่งเกินกำหนดสูงสุด 30 นาทีต่อคลิปของระบบ เพื่อป้องกันปัญหาเบราว์เซอร์ค้างหรือส่งข้อมูลไม่สำเร็จ กรุณาตัดแบ่งคลิปเป็นช่วงไม่เกิน 30 นาทีนะคะ
                       </p>
                     </div>
                   </div>
@@ -609,7 +645,8 @@ export function UploadZone() {
                 disabled={
                   isExtracting ||
                   isTranscribing ||
-                  ((providerMode === 'google_free' || providerMode === 'groq_free') && mediaDuration > 125) ||
+                  ((providerMode === 'free' || providerMode === 'google_free' || providerMode === 'groq_free') && mediaDuration > 125) ||
+                  (providerMode === 'credits' && mediaDuration > 1830) ||
                   (providerMode === 'credits' && creditsMinutes < calculateCreditUsage(mediaDuration))
                 }
                 onClick={handleStartTranscribe}
