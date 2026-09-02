@@ -4,6 +4,8 @@ import { AppState, UserProject } from './types';
 export interface MediaSlice {
   file: File | null;
   videoUrl: string | null;
+  proxyUrl: string | null;
+  originalFilename: string | null;
   audioBlob: Blob | null;
   mediaDuration: number;
 
@@ -22,6 +24,8 @@ export interface MediaSlice {
 
   setFile: (file: File | null) => void;
   setVideoUrl: (url: string | null) => void;
+  setProxyUrl: (proxyUrl: string | null) => void;
+  setOriginalFilename: (filename: string | null) => void;
   setAudioBlob: (blob: Blob | null) => void;
   setMediaDuration: (duration: number) => void;
   setCurrentProjectId: (id: string | null) => void;
@@ -39,6 +43,8 @@ export interface MediaSlice {
 export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set) => ({
   file: null,
   videoUrl: null,
+  proxyUrl: null,
+  originalFilename: null,
   audioBlob: null,
   mediaDuration: 0,
 
@@ -55,8 +61,10 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
   seekTarget: null,
   currentTime: 0,
 
-  setFile: (file) => set({ file }),
+  setFile: (file) => set({ file, originalFilename: file ? file.name : null }),
   setVideoUrl: (videoUrl) => set({ videoUrl }),
+  setProxyUrl: (proxyUrl) => set({ proxyUrl }),
+  setOriginalFilename: (originalFilename) => set({ originalFilename }),
   setAudioBlob: (audioBlob) => set({ audioBlob }),
   setMediaDuration: (mediaDuration) => set({ mediaDuration }),
 
@@ -67,6 +75,8 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
     set((state) => ({
       currentProjectId: project.id,
       projectTitle: project.title,
+      proxyUrl: project.proxy_url || null,
+      originalFilename: project.original_filename || project.title || null,
       mediaDuration: project.duration || 0,
       captions: project.captions || [],
       rawWords: project.raw_words || [],
@@ -98,6 +108,8 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
     set({
       file: null,
       videoUrl: null,
+      proxyUrl: null,
+      originalFilename: null,
       audioBlob: null,
       mediaDuration: 0,
       currentProjectId: null,

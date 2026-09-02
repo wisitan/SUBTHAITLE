@@ -54,6 +54,8 @@ export interface UserProject {
   title: string;
   duration: number;
   thumbnail_url?: string | null;
+  proxy_url?: string | null;
+  original_filename?: string | null;
   captions: CaptionItem[];
   raw_words?: CaptionWord[];
   style?: CaptionStyle;
@@ -66,6 +68,8 @@ export interface AppState {
   // File & Media state
   file: File | null;
   videoUrl: string | null;
+  proxyUrl: string | null;
+  originalFilename: string | null;
   audioBlob: Blob | null;
   mediaDuration: number;
   

@@ -15,6 +15,7 @@ import {
   RotateCcw,
   Upload,
   HardDrive,
+  Cloud,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { burnSubtitlesToVideo, VideoResolution, BurnProgress } from '@/lib/burn';
@@ -29,6 +30,8 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
   const file = useAppStore((s) => s.file);
   const setFile = useAppStore((s) => s.setFile);
   const setVideoUrl = useAppStore((s) => s.setVideoUrl);
+  const proxyUrl = useAppStore((s) => s.proxyUrl);
+  const originalFilename = useAppStore((s) => s.originalFilename);
   const captions = useAppStore((s) => s.captions);
   const style = useAppStore((s) => s.style);
   const currentProjectId = useAppStore((s) => s.currentProjectId);
@@ -84,8 +87,32 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
     }
   };
 
-  const handleStartBurn = async () => {
-    if (!file) {
+  const handleStartBurn = async (forceProxy: boolean = false) => {
+    let videoToBurn: File | Blob | null = file;
+
+    // If local file is missing but proxy is available and requested
+    if (!videoToBurn && proxyUrl && forceProxy) {
+      setIsBurning(true);
+      setProgress({
+        percent: 5,
+        ratio: 0.05,
+        stage: 'preparing_media',
+        message: 'กำลังดาวน์โหลดวิดีโอ Proxy จาก Cloudflare R2...',
+      });
+      try {
+        const res = await fetch(proxyUrl);
+        if (!res.ok) throw new Error('ไม่สามารถดาวน์โหลดวิดีโอ Proxy จาก Cloudflare R2 ได้');
+        const blob = await res.blob();
+        videoToBurn = new File([blob], `${projectTitle || 'proxy_video'}.mp4`, { type: 'video/mp4' });
+      } catch (fetchErr) {
+        console.error('Fetch proxy error:', fetchErr);
+        setErrorMsg('ไม่สามารถดึงไฟล์ Proxy ได้ กรุณาเชื่อมต่อไฟล์ต้นฉบับเพื่อเรนเดอร์ค่ะ');
+        setIsBurning(false);
+        return;
+      }
+    }
+
+    if (!videoToBurn) {
       setErrorMsg('กรุณาเลือกหรือเชื่อมต่อไฟล์วิดีโอต้นฉบับก่อนทำการเรนเดอร์ค่ะ');
       return;
     }
@@ -94,12 +121,14 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
     setErrorMsg(null);
     setRenderedBlob(null);
 
+    const targetRes = forceProxy ? '720p' : resolution;
+
     try {
       const outputBlob = await burnSubtitlesToVideo({
-        videoFile: file,
+        videoFile: videoToBurn as File,
         captions,
         style,
-        resolution,
+        resolution: targetRes,
         onProgress: (prog) => setProgress(prog),
       });
 
@@ -115,8 +144,9 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
 
   const handleDownload = () => {
     if (!downloadUrl) return;
-    const originalName = file?.name ? file.name.replace(/\.[^/.]+$/, '') : (projectTitle || 'subthaitle_video');
-    const filename = `${originalName}_with_subtitles.mp4`;
+    const baseName = file?.name || originalFilename || projectTitle || 'subthaitle_video';
+    const cleanName = baseName.replace(/\.[^/.]+$/, '');
+    const filename = `${cleanName}_with_subtitles.mp4`;
 
     const a = document.createElement('a');
     a.href = downloadUrl;
@@ -134,6 +164,8 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
     }
     onClose();
   };
+
+  const displayName = originalFilename || projectTitle || file?.name || 'ต้นฉบับ';
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 font-sans">
@@ -158,7 +190,11 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                 <span>ฝังซับไตเติลลงวิดีโอ MP4 (Burn Subtitles)</span>
               </h3>
               <p className="text-xs text-zinc-400 mt-0.5">
-                ประมวลผลบน GPU เครื่องของคุณ 100% ปลอดภัย คมชัดระดับ Master
+                {file
+                  ? '⚡ เรนเดอร์ด้วยไฟล์ Master คมชัดเต็ม 100% ในเครื่อง'
+                  : proxyUrl
+                  ? '☁️ เรนเดอร์ด้วย Cloudflare R2 Proxy หรือเชื่อมต่อไฟล์ 4K'
+                  : 'ประมวลผลบน GPU เครื่องของคุณ 100% ปลอดภัย'}
               </p>
             </div>
           </div>
@@ -172,26 +208,54 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
           </button>
         </div>
 
-        {/* Missing File / Media Offline Warning & Relink Box */}
-        {!file && (
-          <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/50 space-y-2.5">
+        {/* Missing File / Media Offline: Show 2 Smart Options */}
+        {!file && !renderedBlob && !isBurning && (
+          <div className="p-4 rounded-2xl bg-zinc-900/90 border border-zinc-700/80 space-y-3">
             <div className="flex items-start gap-2.5">
               <HardDrive className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
               <div className="space-y-0.5">
-                <h4 className="text-sm font-bold text-white">ต้องการไฟล์วิดีโอต้นฉบับสำหรับการเรนเดอร์</h4>
+                <h4 className="text-sm font-bold text-white">
+                  {proxyUrl ? 'เลือกวิธีส่งออกวิดีโอ (Export Choice)' : 'ต้องการไฟล์วิดีโอเพื่อเรนเดอร์'}
+                </h4>
                 <p className="text-xs text-zinc-300 leading-relaxed">
-                  เนื่องจากคุณเปิดโปรเจกต์นี้จากคลาวด์ กรุณาเลือกไฟล์วิดีโอ <strong className="text-amber-300">{projectTitle || 'ต้นฉบับ'}</strong> จากเครื่องนี้เพื่อเริ่มเรนเดอร์ความละเอียดสูงค่ะ
+                  ไฟล์ต้นฉบับ <strong className="text-amber-300">[{displayName}]</strong> ยังไม่ถูกโหลดเข้าเครื่องนี้
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={() => filePickerRef.current?.click()}
-              className="w-full py-2.5 px-4 rounded-xl bg-orange-500 hover:bg-orange-400 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
-            >
-              <Upload className="w-4 h-4" />
-              <span>📂 เชื่อมต่อไฟล์วิดีโอต้นฉบับ (Locate Media)</span>
-            </button>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              {/* Option 1: Locate Master File */}
+              <button
+                type="button"
+                onClick={() => filePickerRef.current?.click()}
+                className="p-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-xs flex flex-col justify-between gap-1 transition-all shadow-md cursor-pointer text-left"
+              >
+                <span className="flex items-center gap-1.5 text-xs font-black">
+                  <Upload className="w-3.5 h-3.5" />
+                  <span>📂 เชื่อมต่อไฟล์ต้นฉบับ</span>
+                </span>
+                <span className="text-[10px] font-medium text-zinc-900 opacity-90">
+                  เลือกไฟล์เดิมเพื่อเรนเดอร์ 4K / 1080p
+                </span>
+              </button>
+
+              {/* Option 2: 720p Cloud Proxy */}
+              {proxyUrl && (
+                <button
+                  type="button"
+                  onClick={() => handleStartBurn(true)}
+                  className="p-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 text-white font-bold text-xs flex flex-col justify-between gap-1 transition-all cursor-pointer text-left"
+                >
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-amber-300">
+                    <Cloud className="w-3.5 h-3.5" />
+                    <span>⚡ เรนเดอร์ 720p Proxy</span>
+                  </span>
+                  <span className="text-[10px] font-normal text-zinc-400">
+                    ดึงจาก R2 ทันที ไม่ต้องใช้ไฟล์เดิม
+                  </span>
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -203,8 +267,8 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
           </div>
         )}
 
-        {/* Step 1: Resolution Options (if not completed) */}
-        {!renderedBlob && !isBurning && (
+        {/* Step 1: Resolution Options (Shown when Master file is present) */}
+        {!renderedBlob && !isBurning && file && (
           <div className="space-y-3">
             <label className="text-sm font-bold text-zinc-200 block">
               เลือกความละเอียดของวิดีโอ (Video Resolution):
@@ -342,24 +406,26 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
               >
                 ยกเลิก
               </button>
-              <button
-                type="button"
-                onClick={handleStartBurn}
-                disabled={isBurning || !file}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isBurning ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>กำลังเรนเดอร์...</span>
-                  </>
-                ) : (
-                  <>
-                    <Film className="w-4 h-4" />
-                    <span>เริ่มเรนเดอร์วิดีโอ ({resolution})</span>
-                  </>
-                )}
-              </button>
+              {file && (
+                <button
+                  type="button"
+                  onClick={() => handleStartBurn(false)}
+                  disabled={isBurning}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isBurning ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>กำลังเรนเดอร์...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Film className="w-4 h-4" />
+                      <span>เริ่มเรนเดอร์วิดีโอ ({resolution})</span>
+                    </>
+                  )}
+                </button>
+              )}
             </>
           ) : (
             <>

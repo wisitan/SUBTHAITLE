@@ -26,6 +26,8 @@ interface Props {
 
 export function VideoPlayer({ className = '' }: Props) {
   const videoUrl = useAppStore((s) => s.videoUrl);
+  const proxyUrl = useAppStore((s) => s.proxyUrl);
+  const originalFilename = useAppStore((s) => s.originalFilename);
   const file = useAppStore((s) => s.file);
   const captions = useAppStore((s) => s.captions);
   const currentTime = useAppStore((s) => s.currentTime);
@@ -53,6 +55,8 @@ export function VideoPlayer({ className = '' }: Props) {
   const [isMuted, setIsMuted] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [containerSize, setContainerSize] = useState({ w: 360, h: 640 });
+
+  const effectiveVideoUrl = videoUrl || proxyUrl;
 
   // Sync fullscreen change events
   useEffect(() => {
@@ -327,11 +331,11 @@ export function VideoPlayer({ className = '' }: Props) {
         onClick={togglePlay}
         className={`relative shrink-0 flex items-center justify-center bg-black cursor-pointer overflow-hidden min-h-[280px] ${aspectClass}`}
       >
-        {videoUrl ? (
+        {effectiveVideoUrl ? (
           <>
             <video
               ref={videoRef}
-              src={videoUrl}
+              src={effectiveVideoUrl}
               playsInline
               onLoadedMetadata={(e) => {
                 const dur = e.currentTarget.duration;
@@ -347,6 +351,13 @@ export function VideoPlayer({ className = '' }: Props) {
               className="w-full h-full object-contain pointer-events-none"
             />
 
+            {/* Cloud Proxy Badge */}
+            {!file && proxyUrl && (
+              <div className="absolute top-2 left-2 z-30 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md border border-amber-500/40 text-amber-300 text-[10px] font-semibold flex items-center gap-1 shadow">
+                <span>⚡ Cloudflare R2 Proxy (720p)</span>
+              </div>
+            )}
+
             {/* Audio File Visualizer */}
             {isAudioFile && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-zinc-900 via-zinc-950 to-black text-center p-6 space-y-4">
@@ -354,7 +365,7 @@ export function VideoPlayer({ className = '' }: Props) {
                   <Music className={`w-10 h-10 ${isPlaying ? 'animate-bounce' : ''}`} />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-white line-clamp-1">{file?.name}</h4>
+                  <h4 className="text-sm font-bold text-white line-clamp-1">{file?.name || originalFilename}</h4>
                   <p className="text-xs text-zinc-400 mt-1">ไฟล์เสียง (Audio Mode) กำลังเล่นพร้อม Subtitle</p>
                 </div>
                 <div className="flex items-center gap-1 h-8">
@@ -449,18 +460,18 @@ export function VideoPlayer({ className = '' }: Props) {
                   คลิกเพื่อเลือกไฟล์วิดีโอ
                 </h4>
                 <p className="text-[11px] text-zinc-400 mt-0.5">
-                  เลือกไฟล์ {file?.name || projectTitle || 'วิดีโอต้นฉบับ'} เพื่อดูพรีวิวและส่งออก
+                  เลือกไฟล์ {originalFilename || file?.name || projectTitle || 'วิดีโอต้นฉบับ'} เพื่อดูพรีวิวและส่งออก 4K
                 </p>
               </div>
               <span className="inline-block px-3 py-1 rounded-xl bg-orange-500 text-zinc-950 text-xs font-bold shadow-md">
-                + เชื่อมต่อวิดีโอ
+                + เชื่อมต่อวิดีโอ (Locate Media)
               </span>
             </div>
           </div>
         )}
 
         {/* Big Center Play Indicator on Pause */}
-        {!isPlaying && videoUrl && (
+        {!isPlaying && effectiveVideoUrl && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[2px] transition-opacity">
             <div className="w-16 h-16 rounded-full bg-orange-500/90 text-zinc-950 flex items-center justify-center shadow-2xl transform scale-100 hover:scale-110 transition-transform">
               <Play className="w-7 h-7 ml-1 fill-zinc-950" />

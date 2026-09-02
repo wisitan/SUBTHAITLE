@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
     const { data: projects, error } = await supabase
       .from('user_projects')
-      .select('id, user_id, title, duration, thumbnail_url, captions, raw_words, style, aspect_ratio, created_at, updated_at')
+      .select('id, user_id, title, duration, thumbnail_url, proxy_url, original_filename, captions, raw_words, style, aspect_ratio, created_at, updated_at')
       .eq('user_id', userId)
       .order('updated_at', { ascending: false })
       .limit(30);
@@ -65,6 +65,8 @@ export async function POST(request: NextRequest) {
       title,
       duration,
       thumbnailUrl,
+      proxyUrl,
+      originalFilename,
       captions,
       rawWords,
       style,
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Database service unavailable' }, { status: 500 });
     }
 
-    const projectPayload = {
+    const projectPayload: Record<string, unknown> = {
       user_id: userId,
       title: title || 'โปรเจกต์ไม่มีชื่อ',
       duration: duration || 0,
@@ -91,6 +93,9 @@ export async function POST(request: NextRequest) {
       aspect_ratio: aspectRatio || '9:16',
       updated_at: new Date().toISOString(),
     };
+
+    if (proxyUrl) projectPayload.proxy_url = proxyUrl;
+    if (originalFilename) projectPayload.original_filename = originalFilename;
 
     let resultProject;
 
