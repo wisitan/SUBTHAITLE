@@ -185,6 +185,22 @@ export function SubtitleOverlay({
   const animMode = style.wordAnimationMode || 'classic';
   const isStickerMode = animMode === 'sticker';
 
+  const isWordVisible = (idx: number): boolean => {
+    if (animMode === 'classic') return true;
+    if (activeWordIndex !== -1) {
+      return idx <= activeWordIndex;
+    }
+    if (displayWords.length === 0) return false;
+    if (currentTime < displayWords[0].start) return false;
+    if (currentTime >= displayWords[displayWords.length - 1].end) return true;
+    for (let i = displayWords.length - 1; i >= 0; i--) {
+      if (currentTime >= displayWords[i].end) {
+        return idx <= i;
+      }
+    }
+    return false;
+  };
+
   return (
     <div
       className="absolute inset-0 m-auto pointer-events-none"
@@ -217,11 +233,7 @@ export function SubtitleOverlay({
               >
                 {displayWords.map((w: CaptionWord, idx: number) => {
                   const isWordActive = idx === activeWordIndex;
-
-                  let isVisible = true;
-                  if (animMode === 'pop' || animMode === 'typewriter') {
-                    isVisible = currentTime >= w.start || isWordActive;
-                  }
+                  const isVisible = isWordVisible(idx);
 
                   let prefixSpace = '';
                   if (idx > 0) {
@@ -323,11 +335,7 @@ export function SubtitleOverlay({
             >
               {displayWords.map((w: CaptionWord, idx: number) => {
                 const isWordActive = idx === activeWordIndex;
-
-                let isVisible = true;
-                if (animMode === 'pop' || animMode === 'sticker' || animMode === 'typewriter') {
-                  isVisible = currentTime >= w.start || isWordActive;
-                }
+                const isVisible = isWordVisible(idx);
 
                 let prefixSpace = '';
                 if (idx > 0) {
