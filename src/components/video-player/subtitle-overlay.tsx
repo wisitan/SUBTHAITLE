@@ -289,7 +289,7 @@ export function SubtitleOverlay({
                 const isWordActive = idx === activeWordIndex;
 
                 let isVisible = true;
-                if (animMode === 'pop') {
+                if (animMode === 'pop' || animMode === 'sticker') {
                   isVisible = currentTime >= w.start || isWordActive;
                 }
 
@@ -317,6 +317,8 @@ export function SubtitleOverlay({
                         isWordActive ? 'relative z-30' : 'relative z-10'
                       }`}
                       style={{
+                        opacity: isVisible ? 1 : 0,
+                        visibility: isVisible ? 'visible' : 'hidden',
                         backgroundColor: isWordActive
                           ? style.highlightColor || '#FACC15'
                           : 'rgba(18, 18, 26, 0.85)',

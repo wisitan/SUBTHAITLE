@@ -162,7 +162,7 @@ export async function renderSubtitleCanvas(
       const isActive = activeWordIndex === idx;
 
       let isVisible = true;
-      if (animMode === 'pop') {
+      if (animMode === 'pop' || animMode === 'sticker') {
         if (activeWordIndex === null) {
           isVisible = false;
         } else {
