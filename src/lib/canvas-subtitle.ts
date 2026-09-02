@@ -137,6 +137,7 @@ export async function renderSubtitleCanvas(
   interface RenderWord {
     text: string;
     isActive: boolean;
+    isVisible: boolean;
     color: string;
     weight: string;
     width: number;
@@ -145,11 +146,25 @@ export async function renderSubtitleCanvas(
 
   const renderWords: RenderWord[] = [];
   const microGapPx = style.enableWordHighlight ? Math.max(1.5, Math.round(2 * scale)) : 0;
+  const animMode = style.wordAnimationMode || 'classic';
 
   const displayWords = expandWordsToFineGrained(caption.words);
 
   if (style.enableWordHighlight && displayWords.length > 0) {
     displayWords.forEach((w: CaptionWord, idx: number) => {
+      const isActive = activeWordIndex === idx;
+
+      let isVisible = true;
+      if (animMode === 'pop' || animMode === 'fade') {
+        if (activeWordIndex === null) {
+          isVisible = false;
+        } else {
+          isVisible = idx <= activeWordIndex;
+        }
+      } else if (animMode === 'one_word') {
+        isVisible = isActive;
+      }
+
       let prefixSpace = '';
       if (idx > 0) {
         const prevW = displayWords[idx - 1];
@@ -159,7 +174,6 @@ export async function renderSubtitleCanvas(
         }
       }
 
-      const isActive = activeWordIndex === idx;
       const wordWeight = isActive ? '800' : baseWeight;
       const wordColor = isActive ? style.highlightColor || '#FACC15' : style.textColor || '#FFFFFF';
 
@@ -169,6 +183,7 @@ export async function renderSubtitleCanvas(
         renderWords.push({
           text: prefixSpace,
           isActive: false,
+          isVisible,
           color: wordColor,
           weight: baseWeight,
           width: sw,
@@ -185,6 +200,7 @@ export async function renderSubtitleCanvas(
       renderWords.push({
         text: w.word,
         isActive,
+        isVisible,
         color: wordColor,
         weight: wordWeight,
         width: rawWidth + scaleBufferPx * 2 + gapRight,
@@ -199,6 +215,7 @@ export async function renderSubtitleCanvas(
     renderWords.push({
       text,
       isActive: false,
+      isVisible: true,
       color: style.textColor || '#FFFFFF',
       weight: baseWeight,
       width: sw,
@@ -306,8 +323,8 @@ export async function renderSubtitleCanvas(
       };
     });
 
-    const inactiveWords = positionedWords.filter((pw) => !pw.isActive || !style.enableWordHighlight);
-    const activeWords = positionedWords.filter((pw) => pw.isActive && style.enableWordHighlight);
+    const inactiveWords = positionedWords.filter((pw) => pw.isVisible && (!pw.isActive || !style.enableWordHighlight));
+    const activeWords = positionedWords.filter((pw) => pw.isVisible && pw.isActive && style.enableWordHighlight);
 
     // --- PHASE 1: Base Layer (Inactive Words) ---
     // A. Inactive Shadows

@@ -198,6 +198,14 @@ export function SubtitleOverlay({
             >
               {displayWords.map((w: CaptionWord, idx: number) => {
                 const isWordActive = idx === activeWordIndex;
+                const animMode = style.wordAnimationMode || 'classic';
+
+                let isVisible = true;
+                if (animMode === 'pop' || animMode === 'fade') {
+                  isVisible = currentTime >= w.start || isWordActive;
+                } else if (animMode === 'one_word') {
+                  isVisible = isWordActive;
+                }
 
                 let prefixSpace = '';
                 if (idx > 0) {
@@ -217,10 +225,23 @@ export function SubtitleOverlay({
 
                 return (
                   <React.Fragment key={idx}>
-                    {prefixSpace && <span>{prefixSpace}</span>}
+                    {prefixSpace && (
+                      <span
+                        style={{
+                          opacity: isVisible ? 1 : 0,
+                          visibility: isVisible ? 'visible' : 'hidden',
+                        }}
+                      >
+                        {prefixSpace}
+                      </span>
+                    )}
                     <span
-                      className="inline-block origin-center transition-all duration-150 ease-out"
+                      className={`inline-block origin-center transition-all ${
+                        animMode === 'fade' ? 'duration-200 ease-out' : 'duration-150 ease-out'
+                      }`}
                       style={{
+                        opacity: isVisible ? 1 : 0,
+                        visibility: isVisible ? 'visible' : 'hidden',
                         fontWeight: isWordActive
                           ? 800
                           : style.fontWeight === 'bold' || style.fontWeight === '700'
@@ -254,6 +275,14 @@ export function SubtitleOverlay({
             >
               {displayWords.map((w: CaptionWord, idx: number) => {
                 const isWordActive = idx === activeWordIndex;
+                const animMode = style.wordAnimationMode || 'classic';
+
+                let isVisible = true;
+                if (animMode === 'pop' || animMode === 'fade') {
+                  isVisible = currentTime >= w.start || isWordActive;
+                } else if (animMode === 'one_word') {
+                  isVisible = isWordActive;
+                }
 
                 let prefixSpace = '';
                 if (idx > 0) {
@@ -273,12 +302,25 @@ export function SubtitleOverlay({
 
                 return (
                   <React.Fragment key={idx}>
-                    {prefixSpace && <span>{prefixSpace}</span>}
+                    {prefixSpace && (
+                      <span
+                        style={{
+                          opacity: isVisible ? 1 : 0,
+                          visibility: isVisible ? 'visible' : 'hidden',
+                        }}
+                      >
+                        {prefixSpace}
+                      </span>
+                    )}
                     <span
-                      className={`inline-block origin-center transition-all duration-150 ease-out ${
+                      className={`inline-block origin-center transition-all ${
+                        animMode === 'fade' ? 'duration-200 ease-out' : 'duration-150 ease-out'
+                      } ${
                         isWordActive ? 'relative z-20' : 'relative z-10'
                       }`}
                       style={{
+                        opacity: isVisible ? 1 : 0,
+                        visibility: isVisible ? 'visible' : 'hidden',
                         color: isWordActive ? style.highlightColor || '#FACC15' : style.textColor || '#FFFFFF',
                         fontWeight: isWordActive
                           ? 800

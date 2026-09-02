@@ -17,7 +17,7 @@ import {
   Layers,
   Smartphone,
 } from 'lucide-react';
-import { useAppStore, defaultCaptionStyle } from '@/lib/store';
+import { useAppStore, defaultCaptionStyle, WordAnimationMode } from '@/lib/store';
 import { FontPicker } from './font-picker';
 
 const COLOR_PALETTE = [
@@ -397,6 +397,52 @@ export function StyleEditor() {
                       {p.label}
                     </button>
                   ))}
+                </div>
+              </div>
+
+              {/* Word Reveal Animation Mode */}
+              <div className="space-y-2 pt-3 border-t border-zinc-800/80">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-zinc-200 font-medium flex items-center gap-1.5">
+                    <span>แอนิเมชันการโผล่ของคำ (Word Reveal Animation):</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-amber-400">
+                    {(style.wordAnimationMode || 'classic') === 'classic'
+                      ? 'ทั้งประโยค'
+                      : (style.wordAnimationMode || 'classic') === 'pop'
+                      ? 'เด้งทีละคำ (Pop-in)'
+                      : (style.wordAnimationMode || 'classic') === 'fade'
+                      ? 'พิมพ์ทีละคำ (Typewriter)'
+                      : 'คำเดี่ยว (One Word)'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                  {[
+                    { id: 'classic', label: '📺 คลาสสิก', desc: 'ทั้งประโยค' },
+                    { id: 'pop', label: '💥 เด้งทีละคำ', desc: 'Pop-in Reveal' },
+                    { id: 'fade', label: '⌨️ พิมพ์ทีละคำ', desc: 'Typewriter' },
+                    { id: 'one_word', label: '🎯 คำเดี่ยว', desc: 'One Word' },
+                  ].map((mode) => {
+                    const isSelected = (style.wordAnimationMode || 'classic') === mode.id;
+                    return (
+                      <button
+                        key={mode.id}
+                        type="button"
+                        onClick={() => setStyle({ wordAnimationMode: mode.id as WordAnimationMode })}
+                        className={`p-2 rounded-xl border text-center flex flex-col items-center justify-center min-h-[48px] transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40 scale-[1.02]'
+                            : 'bg-[#181824] border-zinc-700/80 hover:bg-[#222232] hover:border-orange-400/60 text-zinc-200 shadow-sm'
+                        }`}
+                      >
+                        <span className="block text-xs font-bold leading-tight">{mode.label}</span>
+                        <span className={`block text-[10px] leading-tight mt-0.5 ${isSelected ? 'text-zinc-900 font-medium' : 'text-zinc-400'}`}>
+                          {mode.desc}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>

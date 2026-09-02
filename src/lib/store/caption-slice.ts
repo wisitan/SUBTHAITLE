@@ -24,6 +24,7 @@ export const defaultCaptionStyle: CaptionStyle = {
   enableWordHighlight: true,
   highlightColor: '#FACC15',
   highlightScale: 1.15,
+  wordAnimationMode: 'classic',
   hasBackground: false,
   backgroundColor: '#000000',
   backgroundOpacity: 60,
