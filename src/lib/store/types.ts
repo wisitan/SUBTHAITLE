@@ -22,7 +22,7 @@ export interface CaptionItem {
   lowConfidence?: boolean;
 }
 
-export type WordAnimationMode = 'classic' | 'pop' | 'fade' | 'one_word';
+export type WordAnimationMode = 'classic' | 'pop' | 'sticker';
 
 export interface CaptionStyle {
   fontFamily: string;
@@ -45,7 +45,7 @@ export interface CaptionStyle {
   enableWordHighlight: boolean;
   highlightColor: string;
   highlightScale?: number; // scale multiplier for active word, e.g. 1.15 (115%)
-  wordAnimationMode?: WordAnimationMode; // 'classic' (ทั้งประโยค) | 'pop' (เด้งทีละคำ) | 'fade' (พิมพ์ทีละคำ) | 'one_word' (คำเดี่ยวกลางจอ)
+  wordAnimationMode?: WordAnimationMode; // 'classic' (ทั้งประโยค) | 'pop' (เด้งทีละคำ) | 'sticker' (สติกเกอร์กล่องข้อความ)
   hasBackground?: boolean;
   backgroundColor?: string;     // Hex color e.g. "#000000"
   backgroundOpacity?: number;   // 0 to 100 (percentage)

@@ -144,8 +144,8 @@ export function SubtitleOverlay({
     };
   }, [style, visualBounds]);
 
-  // Dynamic micro-gap between adjacent words to prevent Thai text clustering when highlight is active
-  const { microGapPx, activeWordShadowCss } = useMemo(() => {
+  // Dynamic micro-gap between adjacent words and sticker pill styling
+  const { microGapPx, activeWordShadowCss, stickerStyles } = useMemo(() => {
     const baseDim = Math.min(visualBounds.w, visualBounds.h);
     const domScale = (baseDim || 360) / 360;
     const gap = style.enableWordHighlight ? Math.max(1.5, 2 * domScale) : 0;
@@ -159,13 +159,28 @@ export function SubtitleOverlay({
       ? `${shadowsCss}, ${activeGlow}`
       : activeGlow;
 
+    // Sticker mode parameters with generous spacing to guarantee zero background overlap
+    const pillPadX = Math.round(7 * domScale);
+    const pillPadY = Math.round(3 * domScale);
+    const pillRadius = Math.round(6 * domScale);
+    const pillMargin = Math.round(3 * domScale);
+
     return {
       microGapPx: gap,
       activeWordShadowCss: combinedShadows,
+      stickerStyles: {
+        pillPadX,
+        pillPadY,
+        pillRadius,
+        pillMargin,
+      },
     };
   }, [visualBounds, style.enableWordHighlight, style.highlightColor, shadowsCss]);
 
   if (!activeCaption) return null;
+
+  const animMode = style.wordAnimationMode || 'classic';
+  const isStickerMode = animMode === 'sticker';
 
   return (
     <div
@@ -180,31 +195,102 @@ export function SubtitleOverlay({
         className="absolute z-20 pointer-events-none select-none transition-all duration-75"
       >
         {style.enableWordHighlight && displayWords.length > 0 ? (
-          /* Sticker Pop-up Architecture: Layer 1 (Base Outlines) + Layer 2 (Foreground Words & Pop-up Active Word) */
+          /* Architecture: Layer 1 (Base Outlines) + Layer 2 (Foreground Words & Pop-up Active Word) */
           <div className="relative w-full">
-            {/* Layer 1: Continuous Background Outline & Shadow (Base Layer) */}
+            {/* Layer 1: Continuous Background Outline & Shadow (Base Layer - skipped in sticker mode) */}
+            {!isStickerMode && (
+              <p
+                className="w-full inline-block m-0 p-0 select-none"
+                style={{
+                  textAlign: style.textAlign || 'center',
+                  wordBreak: 'break-word',
+                  whiteSpace: 'pre-wrap',
+                  letterSpacing: `${style.letterSpacing ?? 0}px`,
+                  lineHeight: style.lineHeight ?? 1.4,
+                  color: 'transparent',
+                  textShadow: shadowsCss,
+                }}
+                aria-hidden="true"
+              >
+                {displayWords.map((w: CaptionWord, idx: number) => {
+                  const isWordActive = idx === activeWordIndex;
+
+                  let isVisible = true;
+                  if (animMode === 'pop') {
+                    isVisible = currentTime >= w.start || isWordActive;
+                  }
+
+                  let prefixSpace = '';
+                  if (idx > 0) {
+                    const prevW = displayWords[idx - 1];
+                    const testJoin = formatCaptionWordsText([prevW, w]);
+                    if (testJoin.includes(' ')) {
+                      prefixSpace = ' ';
+                    }
+                  }
+
+                  const isLastWord = idx === displayWords.length - 1;
+                  const nextHasSpace = !isLastWord && formatCaptionWordsText([w, displayWords[idx + 1]]).includes(' ');
+                  const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
+
+                  const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
+                  const isScaled = isWordActive && scaleMultiplier > 1;
+
+                  return (
+                    <React.Fragment key={idx}>
+                      {prefixSpace && (
+                        <span
+                          style={{
+                            opacity: isVisible ? 1 : 0,
+                            visibility: isVisible ? 'visible' : 'hidden',
+                          }}
+                        >
+                          {prefixSpace}
+                        </span>
+                      )}
+                      <span
+                        className="inline-block origin-center transition-all duration-150 ease-out"
+                        style={{
+                          opacity: isVisible ? 1 : 0,
+                          visibility: isVisible ? 'visible' : 'hidden',
+                          fontWeight: isWordActive
+                            ? 800
+                            : style.fontWeight === 'bold' || style.fontWeight === '700'
+                            ? 700
+                            : style.fontWeight === '800'
+                            ? 800
+                            : 500,
+                          transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
+                          marginLeft: isScaled ? `${wordBufferPx}px` : undefined,
+                          marginRight: isScaled ? `${wordBufferPx + gapRight}px` : (gapRight > 0 ? `${gapRight}px` : undefined),
+                        }}
+                      >
+                        {w.word}
+                      </span>
+                    </React.Fragment>
+                  );
+                })}
+              </p>
+            )}
+
+            {/* Layer 2: Foreground Words */}
             <p
-              className="w-full inline-block m-0 p-0 select-none"
+              className={`w-full inline-block m-0 p-0 select-none ${isStickerMode ? '' : 'absolute inset-0'}`}
               style={{
                 textAlign: style.textAlign || 'center',
                 wordBreak: 'break-word',
                 whiteSpace: 'pre-wrap',
                 letterSpacing: `${style.letterSpacing ?? 0}px`,
-                lineHeight: style.lineHeight ?? 1.4,
-                color: 'transparent',
-                textShadow: shadowsCss,
+                lineHeight: style.lineHeight ?? (isStickerMode ? 1.7 : 1.4),
+                textShadow: isStickerMode ? 'none' : 'none',
               }}
-              aria-hidden="true"
             >
               {displayWords.map((w: CaptionWord, idx: number) => {
                 const isWordActive = idx === activeWordIndex;
-                const animMode = style.wordAnimationMode || 'classic';
 
                 let isVisible = true;
-                if (animMode === 'pop' || animMode === 'fade') {
+                if (animMode === 'pop') {
                   isVisible = currentTime >= w.start || isWordActive;
-                } else if (animMode === 'one_word') {
-                  isVisible = isWordActive;
                 }
 
                 let prefixSpace = '';
@@ -223,82 +309,39 @@ export function SubtitleOverlay({
                 const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
                 const isScaled = isWordActive && scaleMultiplier > 1;
 
-                return (
-                  <React.Fragment key={idx}>
-                    {prefixSpace && (
-                      <span
-                        style={{
-                          opacity: isVisible ? 1 : 0,
-                          visibility: isVisible ? 'visible' : 'hidden',
-                        }}
-                      >
-                        {prefixSpace}
-                      </span>
-                    )}
+                if (isStickerMode) {
+                  return (
                     <span
-                      className={`inline-block origin-center transition-all ${
-                        animMode === 'fade' ? 'duration-200 ease-out' : 'duration-150 ease-out'
+                      key={idx}
+                      className={`inline-block origin-center transition-all duration-150 ease-out ${
+                        isWordActive ? 'relative z-30' : 'relative z-10'
                       }`}
                       style={{
-                        opacity: isVisible ? 1 : 0,
-                        visibility: isVisible ? 'visible' : 'hidden',
-                        fontWeight: isWordActive
-                          ? 800
-                          : style.fontWeight === 'bold' || style.fontWeight === '700'
-                          ? 700
-                          : style.fontWeight === '800'
-                          ? 800
-                          : 500,
+                        backgroundColor: isWordActive
+                          ? style.highlightColor || '#FACC15'
+                          : 'rgba(18, 18, 26, 0.85)',
+                        color: isWordActive
+                          ? '#121216'
+                          : style.textColor || '#FFFFFF',
+                        fontWeight: isWordActive ? 800 : 700,
+                        padding: `${stickerStyles.pillPadY}px ${stickerStyles.pillPadX}px`,
+                        borderRadius: `${stickerStyles.pillRadius}px`,
+                        margin: isScaled
+                          ? `2px ${stickerStyles.pillMargin + wordBufferPx}px`
+                          : `2px ${stickerStyles.pillMargin}px`,
                         transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
-                        marginLeft: isScaled ? `${wordBufferPx}px` : undefined,
-                        marginRight: isScaled ? `${wordBufferPx + gapRight}px` : (gapRight > 0 ? `${gapRight}px` : undefined),
+                        border: isWordActive
+                          ? '1px solid rgba(255, 255, 255, 0.6)'
+                          : '1px solid rgba(255, 255, 255, 0.15)',
+                        boxShadow: isWordActive
+                          ? `0 0 14px ${hexToRgba(style.highlightColor || '#FACC15', 75)}, 0 4px 10px rgba(0,0,0,0.5)`
+                          : '0 2px 6px rgba(0,0,0,0.4)',
                       }}
                     >
                       {w.word}
                     </span>
-                  </React.Fragment>
-                );
-              })}
-            </p>
-
-            {/* Layer 2: Foreground Words */}
-            <p
-              className="w-full inline-block m-0 p-0 absolute inset-0 select-none"
-              style={{
-                textAlign: style.textAlign || 'center',
-                wordBreak: 'break-word',
-                whiteSpace: 'pre-wrap',
-                letterSpacing: `${style.letterSpacing ?? 0}px`,
-                lineHeight: style.lineHeight ?? 1.4,
-                textShadow: 'none',
-              }}
-            >
-              {displayWords.map((w: CaptionWord, idx: number) => {
-                const isWordActive = idx === activeWordIndex;
-                const animMode = style.wordAnimationMode || 'classic';
-
-                let isVisible = true;
-                if (animMode === 'pop' || animMode === 'fade') {
-                  isVisible = currentTime >= w.start || isWordActive;
-                } else if (animMode === 'one_word') {
-                  isVisible = isWordActive;
+                  );
                 }
-
-                let prefixSpace = '';
-                if (idx > 0) {
-                  const prevW = displayWords[idx - 1];
-                  const testJoin = formatCaptionWordsText([prevW, w]);
-                  if (testJoin.includes(' ')) {
-                    prefixSpace = ' ';
-                  }
-                }
-
-                const isLastWord = idx === displayWords.length - 1;
-                const nextHasSpace = !isLastWord && formatCaptionWordsText([w, displayWords[idx + 1]]).includes(' ');
-                const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
-
-                const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
-                const isScaled = isWordActive && scaleMultiplier > 1;
 
                 return (
                   <React.Fragment key={idx}>
@@ -313,9 +356,7 @@ export function SubtitleOverlay({
                       </span>
                     )}
                     <span
-                      className={`inline-block origin-center transition-all ${
-                        animMode === 'fade' ? 'duration-200 ease-out' : 'duration-150 ease-out'
-                      } ${
+                      className={`inline-block origin-center transition-all duration-150 ease-out ${
                         isWordActive ? 'relative z-20' : 'relative z-10'
                       }`}
                       style={{

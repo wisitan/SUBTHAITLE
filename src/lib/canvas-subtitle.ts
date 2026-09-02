@@ -127,11 +127,19 @@ export async function renderSubtitleCanvas(
     (ctx as unknown as { letterSpacing: string }).letterSpacing = `${letterSpacing}px`;
   }
 
-  const lineHeight = fontSize * (style.lineHeight ?? 1.4);
+  const animMode = style.wordAnimationMode || 'classic';
+  const isStickerMode = animMode === 'sticker';
+  const lineHeight = fontSize * (style.lineHeight ?? (isStickerMode ? 1.7 : 1.4));
   const maxWidth = (width * (style.maxWidth ?? 92)) / 100;
   const boxPaddingX = style.hasBackground ? 18 * scale : 8 * scale;
   const boxPaddingY = style.hasBackground ? 10 * scale : 4 * scale;
   const borderRadius = style.hasBackground ? 14 * scale : 0;
+
+  // Sticker pill metrics
+  const pillPadX = Math.round(7 * scale);
+  const pillPadY = Math.round(3 * scale);
+  const pillMargin = Math.round(3 * scale);
+  const pillRadius = Math.round(6 * scale);
 
   // Build rendered items / words with spacing
   interface RenderWord {
@@ -146,7 +154,6 @@ export async function renderSubtitleCanvas(
 
   const renderWords: RenderWord[] = [];
   const microGapPx = style.enableWordHighlight ? Math.max(1.5, Math.round(2 * scale)) : 0;
-  const animMode = style.wordAnimationMode || 'classic';
 
   const displayWords = expandWordsToFineGrained(caption.words);
 
@@ -155,18 +162,16 @@ export async function renderSubtitleCanvas(
       const isActive = activeWordIndex === idx;
 
       let isVisible = true;
-      if (animMode === 'pop' || animMode === 'fade') {
+      if (animMode === 'pop') {
         if (activeWordIndex === null) {
           isVisible = false;
         } else {
           isVisible = idx <= activeWordIndex;
         }
-      } else if (animMode === 'one_word') {
-        isVisible = isActive;
       }
 
       let prefixSpace = '';
-      if (idx > 0) {
+      if (!isStickerMode && idx > 0) {
         const prevW = displayWords[idx - 1];
         const testJoin = formatCaptionWordsText([prevW, w]);
         if (testJoin.includes(' ')) {
@@ -175,7 +180,9 @@ export async function renderSubtitleCanvas(
       }
 
       const wordWeight = isActive ? '800' : baseWeight;
-      const wordColor = isActive ? style.highlightColor || '#FACC15' : style.textColor || '#FFFFFF';
+      const wordColor = isActive
+        ? (isStickerMode ? '#121216' : (style.highlightColor || '#FACC15'))
+        : (style.textColor || '#FFFFFF');
 
       if (prefixSpace) {
         ctx.font = `${baseWeight} ${fontSize}px "${fontName}", sans-serif`;
@@ -197,13 +204,15 @@ export async function renderSubtitleCanvas(
 
       ctx.font = `${wordWeight} ${fontSize}px "${fontName}", sans-serif`;
       const rawWidth = ctx.measureText(w.word).width;
+      const totalWordWidth = rawWidth + (isStickerMode ? (pillPadX * 2 + pillMargin * 2) : 0) + scaleBufferPx * 2 + gapRight;
+
       renderWords.push({
         text: w.word,
         isActive,
         isVisible,
         color: wordColor,
         weight: wordWeight,
-        width: rawWidth + scaleBufferPx * 2 + gapRight,
+        width: totalWordWidth,
         textWidth: rawWidth,
       });
     });
@@ -281,7 +290,7 @@ export async function renderSubtitleCanvas(
   const boxLeftX = centerX - totalBoxWidth / 2;
 
   // 1. Draw Background Box if enabled
-  if (style.hasBackground) {
+  if (style.hasBackground && !isStickerMode) {
     ctx.save();
     ctx.fillStyle = hexToRgba(style.backgroundColor || '#27272A', style.backgroundOpacity ?? 75);
     drawRoundRect(ctx, boxLeftX, boxTopY, totalBoxWidth, totalBoxHeight, borderRadius);
@@ -289,7 +298,6 @@ export async function renderSubtitleCanvas(
   }
 
   // 2. Draw Text with Sticker Pop-up Layering:
-  // (1) Inactive Words Shadows, Outlines & Fills -> (2) Active Pop-up Word Shadow, Outline & Fill on Top!
   const textAlign = style.textAlign || 'center';
   let startY = boxTopY + boxPaddingY + lineHeight / 2;
 
@@ -304,7 +312,6 @@ export async function renderSubtitleCanvas(
     let cursorX = startX;
     const positionedWords = line.words.map((w) => {
       const slotStart = cursorX;
-      // จัดตัวหนังสือจริงให้อยู่กึ่งกลางของ "ช่อง" ที่จองไว้ (ช่อง = ตัวหนังสือ + buffer 2 ข้าง)
       const glyphX = slotStart + (w.width - w.textWidth) / 2;
       cursorX += w.width;
 
@@ -327,43 +334,76 @@ export async function renderSubtitleCanvas(
     const activeWords = positionedWords.filter((pw) => pw.isVisible && pw.isActive && style.enableWordHighlight);
 
     // --- PHASE 1: Base Layer (Inactive Words) ---
-    // A. Inactive Shadows
-    if (style.hasShadow) {
+    if (isStickerMode) {
+      inactiveWords.forEach((pw) => {
+        const pillX = pw.x - pillPadX;
+        const pillY = startY - fontSize * 0.75 - pillPadY;
+        const pillW = pw.textWidth + pillPadX * 2;
+        const pillH = fontSize * 1.35 + pillPadY * 2;
+
+        // Draw pill background
+        ctx.save();
+        ctx.fillStyle = 'rgba(18, 18, 26, 0.85)';
+        drawRoundRect(ctx, pillX, pillY, pillW, pillH, pillRadius);
+        ctx.restore();
+
+        // Draw pill border
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = Math.max(1, 1 * scale);
+        if (typeof ctx.roundRect === 'function') {
+          ctx.beginPath();
+          ctx.roundRect(pillX, pillY, pillW, pillH, pillRadius);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Draw text
+        ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
+        ctx.save();
+        ctx.fillStyle = pw.color;
+        ctx.fillText(pw.text, pw.x, startY);
+        ctx.restore();
+      });
+    } else {
+      // A. Inactive Shadows
+      if (style.hasShadow) {
+        inactiveWords.forEach((pw) => {
+          ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
+          ctx.save();
+          ctx.shadowColor = hexToRgba(style.shadowColor || '#000000', (style.shadowOpacity ?? 0.8) * 100);
+          ctx.shadowBlur = (style.shadowBlur || 8) * scale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 4 * scale;
+          ctx.fillStyle = pw.color;
+          ctx.fillText(pw.text, pw.x, startY);
+          ctx.restore();
+        });
+      }
+
+      // B. Inactive Outlines
+      if (style.hasOutline && style.outlineWidth > 0) {
+        inactiveWords.forEach((pw) => {
+          ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
+          ctx.save();
+          ctx.strokeStyle = style.outlineColor || '#000000';
+          ctx.lineWidth = style.outlineWidth * scale * 2.2;
+          ctx.lineJoin = 'round';
+          ctx.lineCap = 'round';
+          ctx.strokeText(pw.text, pw.x, startY);
+          ctx.restore();
+        });
+      }
+
+      // C. Inactive Text Fills
       inactiveWords.forEach((pw) => {
         ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
         ctx.save();
-        ctx.shadowColor = hexToRgba(style.shadowColor || '#000000', (style.shadowOpacity ?? 0.8) * 100);
-        ctx.shadowBlur = (style.shadowBlur || 8) * scale;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 4 * scale;
         ctx.fillStyle = pw.color;
         ctx.fillText(pw.text, pw.x, startY);
         ctx.restore();
       });
     }
-
-    // B. Inactive Outlines
-    if (style.hasOutline && style.outlineWidth > 0) {
-      inactiveWords.forEach((pw) => {
-        ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
-        ctx.save();
-        ctx.strokeStyle = style.outlineColor || '#000000';
-        ctx.lineWidth = style.outlineWidth * scale * 2.2;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.strokeText(pw.text, pw.x, startY);
-        ctx.restore();
-      });
-    }
-
-    // C. Inactive Text Fills
-    inactiveWords.forEach((pw) => {
-      ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
-      ctx.save();
-      ctx.fillStyle = pw.color;
-      ctx.fillText(pw.text, pw.x, startY);
-      ctx.restore();
-    });
 
     // --- PHASE 2: Sticker Pop-up Layer (Active Highlighted Words on Top) ---
     activeWords.forEach((pw) => {
@@ -384,53 +424,91 @@ export async function renderSubtitleCanvas(
         }
       };
 
-      // 1. Active Word Shadow
-      if (style.hasShadow) {
+      if (isStickerMode) {
+        applyScaleTransform();
+
+        const pillX = pw.x - pillPadX;
+        const pillY = startY - fontSize * 0.75 - pillPadY;
+        const pillW = pw.textWidth + pillPadX * 2;
+        const pillH = fontSize * 1.35 + pillPadY * 2;
+
+        // Draw active pill with neon glow
+        ctx.save();
+        ctx.shadowColor = hexToRgba(style.highlightColor || '#FACC15', 75);
+        ctx.shadowBlur = 14 * scale;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.fillStyle = style.highlightColor || '#FACC15';
+        drawRoundRect(ctx, pillX, pillY, pillW, pillH, pillRadius);
+        ctx.restore();
+
+        // Draw border
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = Math.max(1, 1.2 * scale);
+        if (typeof ctx.roundRect === 'function') {
+          ctx.beginPath();
+          ctx.roundRect(pillX, pillY, pillW, pillH, pillRadius);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        // Draw crisp text
+        ctx.save();
+        ctx.fillStyle = '#121216';
+        ctx.fillText(pw.text, pw.x, startY);
+        ctx.restore();
+
+        restoreScaleTransform();
+      } else {
+        // 1. Active Word Shadow
+        if (style.hasShadow) {
+          applyScaleTransform();
+          ctx.save();
+          ctx.shadowColor = hexToRgba(style.shadowColor || '#000000', (style.shadowOpacity ?? 0.8) * 100);
+          ctx.shadowBlur = (style.shadowBlur || 8) * scale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 4 * scale;
+          ctx.fillStyle = pw.color;
+          ctx.fillText(pw.text, pw.x, startY);
+          ctx.restore();
+          restoreScaleTransform();
+        }
+
+        // 2. Active Word Outline
+        if (style.hasOutline && style.outlineWidth > 0) {
+          applyScaleTransform();
+          ctx.save();
+          ctx.strokeStyle = style.outlineColor || '#000000';
+          ctx.lineWidth = style.outlineWidth * scale * 2.2;
+          ctx.lineJoin = 'round';
+          ctx.lineCap = 'round';
+          ctx.strokeText(pw.text, pw.x, startY);
+          ctx.restore();
+          restoreScaleTransform();
+        }
+
+        // 3. Active Word Neon Glow Aura
         applyScaleTransform();
         ctx.save();
-        ctx.shadowColor = hexToRgba(style.shadowColor || '#000000', (style.shadowOpacity ?? 0.8) * 100);
-        ctx.shadowBlur = (style.shadowBlur || 8) * scale;
+        const glowColor = style.highlightColor || '#FACC15';
+        ctx.shadowColor = hexToRgba(glowColor, 80);
+        ctx.shadowBlur = 12 * scale;
         ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 4 * scale;
+        ctx.shadowOffsetY = 0;
+        ctx.fillStyle = pw.color;
+        ctx.fillText(pw.text, pw.x, startY);
+        ctx.restore();
+        restoreScaleTransform();
+
+        // 4. Active Word Crisp Text Fill
+        applyScaleTransform();
+        ctx.save();
         ctx.fillStyle = pw.color;
         ctx.fillText(pw.text, pw.x, startY);
         ctx.restore();
         restoreScaleTransform();
       }
-
-      // 2. Active Word Outline (Framing the pop-up above inactive words)
-      if (style.hasOutline && style.outlineWidth > 0) {
-        applyScaleTransform();
-        ctx.save();
-        ctx.strokeStyle = style.outlineColor || '#000000';
-        ctx.lineWidth = style.outlineWidth * scale * 2.2;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.strokeText(pw.text, pw.x, startY);
-        ctx.restore();
-        restoreScaleTransform();
-      }
-
-      // 3. Active Word Neon Glow Aura
-      applyScaleTransform();
-      ctx.save();
-      const glowColor = style.highlightColor || '#FACC15';
-      ctx.shadowColor = hexToRgba(glowColor, 80);
-      ctx.shadowBlur = 12 * scale;
-      ctx.shadowOffsetX = 0;
-      ctx.shadowOffsetY = 0;
-      ctx.fillStyle = pw.color;
-      ctx.fillText(pw.text, pw.x, startY);
-      ctx.restore();
-      restoreScaleTransform();
-
-      // 4. Active Word Crisp Text Fill
-      applyScaleTransform();
-      ctx.save();
-      ctx.fillStyle = pw.color;
-      ctx.fillText(pw.text, pw.x, startY);
-      ctx.restore();
-      restoreScaleTransform();
     });
 
     startY += lineHeight;
