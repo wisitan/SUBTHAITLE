@@ -646,21 +646,21 @@ export function StyleEditor() {
           <div className="grid grid-cols-4 gap-1.5 pt-1">
             <button
               type="button"
-              onClick={() => setStyle({ maxWidth: 70 })}
+              onClick={() => setStyle({ maxWidth: 78 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
-                (style.maxWidth ?? 92) === 70
+                (style.maxWidth ?? 78) === 78
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
                   : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
-              <span className="block text-xs font-semibold leading-tight">แคบ</span>
-              <span className="block text-[11px] opacity-85 font-mono leading-tight">(70%)</span>
+              <span className="block text-xs font-semibold leading-tight">Safe Zone</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(78%)</span>
             </button>
             <button
               type="button"
               onClick={() => setStyle({ maxWidth: 85 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
-                (style.maxWidth ?? 92) === 85
+                (style.maxWidth ?? 78) === 85
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
                   : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
@@ -672,7 +672,7 @@ export function StyleEditor() {
               type="button"
               onClick={() => setStyle({ maxWidth: 92 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
-                (style.maxWidth ?? 92) === 92
+                (style.maxWidth ?? 78) === 92
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
                   : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
@@ -684,7 +684,7 @@ export function StyleEditor() {
               type="button"
               onClick={() => setStyle({ maxWidth: 98 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
-                (style.maxWidth ?? 92) === 98
+                (style.maxWidth ?? 78) === 98
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
                   : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
@@ -694,7 +694,7 @@ export function StyleEditor() {
             </button>
           </div>
           <p className="text-xs text-zinc-300 pt-0.5">
-            💡 เพิ่มความกว้างเพื่อให้ข้อความขยายออกด้านข้างได้เต็มจอ และลดการตัดขึ้นบรรทัดใหม่
+            💡 ปรับ 78% (Safe Zone) เพื่อให้เว้นระยะปลอดภัยจากปุ่มแชร์และหัวใจฝั่งขวา
           </p>
         </div>
 
@@ -722,27 +722,27 @@ export function StyleEditor() {
           <div className="grid grid-cols-3 gap-1.5 pt-1">
             <button
               type="button"
-              onClick={() => setStyle({ positionY: 10 })}
+              onClick={() => setStyle({ positionY: 28 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
-                style.positionY === 10
+                style.positionY === 28
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
                   : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
-              <span className="block text-xs font-semibold leading-tight">ล่างสุด</span>
-              <span className="block text-[11px] opacity-85 font-mono leading-tight">(10%)</span>
+              <span className="block text-xs font-semibold leading-tight">Safe Zone</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(28% เหนือบอร์ด)</span>
             </button>
             <button
               type="button"
-              onClick={() => setStyle({ positionY: 18 })}
+              onClick={() => setStyle({ positionY: 38 })}
               className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
-                style.positionY === 18
+                style.positionY === 38
                   ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
                   : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
               }`}
             >
-              <span className="block text-xs font-semibold leading-tight">TikTok ฮิต</span>
-              <span className="block text-[11px] opacity-85 font-mono leading-tight">(18%)</span>
+              <span className="block text-xs font-semibold leading-tight">ล่าง-กลาง</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(38%)</span>
             </button>
             <button
               type="button"
