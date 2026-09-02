@@ -58,9 +58,9 @@ export const CaptionRow = memo(function CaptionRow({
       onClick={() => {
         if (onSelectCue) onSelectCue(caption.start, actualIndex);
       }}
-      className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 relative group/card max-w-full overflow-hidden cursor-pointer ${
+      className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 relative group/card max-w-full overflow-visible hover:z-20 cursor-pointer ${
         isActive
-          ? 'bg-[#24202e] border-orange-500 shadow-xl shadow-orange-500/10 ring-2 ring-orange-500/50'
+          ? 'z-10 bg-[#24202e] border-orange-500 shadow-xl shadow-orange-500/10 ring-2 ring-orange-500/50'
           : 'bg-[#181824] border border-zinc-700/90 hover:border-orange-500/60 hover:bg-[#20202e] focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30 shadow-md'
       }`}
     >
@@ -68,7 +68,7 @@ export const CaptionRow = memo(function CaptionRow({
       <div className="flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 sm:gap-2 pb-2.5 border-b border-zinc-700/70 text-sm">
         {/* Left: Index + Play Button + Timings */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
-          <Tooltip content={`ท่อนซับลำดับที่ #${actualIndex + 1}`}>
+          <Tooltip content={`ท่อนซับลำดับที่ #${actualIndex + 1}`} align="left">
             <span
               className={`w-6 h-6 rounded-lg flex items-center justify-center font-mono font-bold text-xs shrink-0 ${
                 isActive
@@ -81,7 +81,7 @@ export const CaptionRow = memo(function CaptionRow({
           </Tooltip>
 
           {/* Play this cue button */}
-          <Tooltip content="เล่นวิดีโอตั้งแต่ท่อนนี้">
+          <Tooltip content="เล่นวิดีโอตั้งแต่ท่อนนี้" align="left">
             <button
               type="button"
               onClick={(e) => {
@@ -192,7 +192,7 @@ export const CaptionRow = memo(function CaptionRow({
 
           {/* Merge */}
           {!isLast && (
-            <Tooltip content="รวมท่อนนี้เข้ากับท่อนถัดไป (Merge)">
+            <Tooltip content="รวมท่อนนี้เข้ากับท่อนถัดไป (Merge)" align="right">
               <button
                 type="button"
                 onClick={(e) => {
@@ -207,7 +207,7 @@ export const CaptionRow = memo(function CaptionRow({
           )}
 
           {/* Add */}
-          <Tooltip content="เพิ่มกล่องซับใหม่ต่อจากท่อนนี้ (Add)">
+          <Tooltip content="เพิ่มกล่องซับใหม่ต่อจากท่อนนี้ (Add)" align="right">
             <button
               type="button"
               onClick={(e) => {
@@ -221,7 +221,7 @@ export const CaptionRow = memo(function CaptionRow({
           </Tooltip>
 
           {/* Delete */}
-          <Tooltip content="ลบกล่องซับนี้ (Delete • ย้อนกลับได้ด้วย Cmd+Z)">
+          <Tooltip content="ลบกล่องซับนี้ (Delete • ย้อนกลับได้ด้วย Cmd+Z)" align="right">
             <button
               type="button"
               onClick={(e) => {
