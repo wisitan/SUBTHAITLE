@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { CaptionItem, CaptionStyle, CaptionWord } from '@/lib/store';
-import { formatCaptionWordsText, expandWordsToFineGrained, getTypewriterSlice } from '@/lib/thai-text';
+import { formatCaptionWordsText, expandWordsToFineGrained, getTypewriterSlice, distributeTextToWords } from '@/lib/thai-text';
 
 interface SubtitleOverlayProps {
   activeCaption: CaptionItem | null;
@@ -29,8 +29,11 @@ export function SubtitleOverlay({
 }: SubtitleOverlayProps) {
   // Fine-grained timed words with compound segment expansion (splits "จากTableDescription" -> ["จาก", "Table", "Description"])
   const displayWords = useMemo(() => {
-    if (!activeCaption?.words || activeCaption.words.length === 0) return [];
-    return expandWordsToFineGrained(activeCaption.words);
+    if (!activeCaption) return [];
+    if (activeCaption.words && activeCaption.words.length > 0) {
+      return expandWordsToFineGrained(activeCaption.words);
+    }
+    return distributeTextToWords(activeCaption.text, activeCaption.start, activeCaption.end);
   }, [activeCaption]);
 
   // Calculate the single active word index (Guarantees STRICTLY only ONE fine-grained word is highlighted at any time)
@@ -241,7 +244,7 @@ export function SubtitleOverlay({
                     const remainder = w.word.slice(slice.visibleText.length);
 
                     return (
-                      <React.Fragment key={idx}>
+                      <React.Fragment key={`${activeCaption.id || ''}-l1-${idx}`}>
                         {prefixSpace && (
                           <span
                             style={{
@@ -270,7 +273,7 @@ export function SubtitleOverlay({
                   }
 
                   return (
-                    <React.Fragment key={idx}>
+                    <React.Fragment key={`${activeCaption.id || ''}-l1-${idx}`}>
                       {prefixSpace && (
                         <span
                           style={{
@@ -282,7 +285,7 @@ export function SubtitleOverlay({
                         </span>
                       )}
                       <span
-                        className="inline-block origin-center transition-all duration-150 ease-out"
+                        className="inline-block origin-center transition-[transform] duration-150 ease-out"
                         style={{
                           opacity: isVisible ? 1 : 0,
                           visibility: isVisible ? 'visible' : 'hidden',
@@ -344,7 +347,7 @@ export function SubtitleOverlay({
 
                 if (isStickerMode) {
                   return (
-                    <React.Fragment key={idx}>
+                    <React.Fragment key={`${activeCaption.id || ''}-l2-${idx}`}>
                       {prefixSpace && (
                         <span
                           style={{
@@ -356,7 +359,7 @@ export function SubtitleOverlay({
                         </span>
                       )}
                       <span
-                        className={`inline-block origin-center transition-all duration-150 ease-out ${
+                        className={`inline-block origin-center transition-[transform,color,background-color] duration-150 ease-out ${
                           isWordActive ? 'relative z-30' : 'relative z-10'
                         }`}
                         style={{
@@ -413,7 +416,7 @@ export function SubtitleOverlay({
                   const isCurrentlyTyping = slice.isTyping && !slice.isComplete;
 
                   return (
-                    <React.Fragment key={idx}>
+                    <React.Fragment key={`${activeCaption.id || ''}-l2-${idx}`}>
                       {prefixSpace && (
                         <span
                           style={{
@@ -454,7 +457,7 @@ export function SubtitleOverlay({
                 }
 
                 return (
-                  <React.Fragment key={idx}>
+                  <React.Fragment key={`${activeCaption.id || ''}-l2-${idx}`}>
                     {prefixSpace && (
                       <span
                         style={{
@@ -466,7 +469,7 @@ export function SubtitleOverlay({
                       </span>
                     )}
                     <span
-                      className={`inline-block origin-center transition-all duration-150 ease-out ${
+                      className={`inline-block origin-center transition-[transform,color] duration-150 ease-out ${
                         isWordActive ? 'relative z-20' : 'relative z-10'
                       }`}
                       style={{
