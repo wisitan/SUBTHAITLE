@@ -171,9 +171,17 @@ export interface AppState {
   deleteCustomPreset: (id: string) => void;
   setCustomPresets: (presets: Array<{ id: string; name: string; style: CaptionStyle; createdAt: string }>) => void;
   getDailyUsage: (userId?: string) => number;
-  syncDailyUsage: (userId?: string) => void;
-  incrementDailyUsage: (userId?: string) => void;
   syncQuotas: (userId?: string) => void;
+  syncQuotasWithProfile: (
+    profile: {
+      groq_free_day?: string | null;
+      groq_free_count?: number;
+      google_free_month?: string | null;
+      google_free_count?: number;
+    } | null,
+    userId?: string
+  ) => void;
+  setGroqDailyUsageCount: (count: number, userId?: string) => void;
   incrementGoogleMonthlyUsage: (userId?: string) => void;
   incrementGroqDailyUsage: (userId?: string) => void;
   reset: () => void;

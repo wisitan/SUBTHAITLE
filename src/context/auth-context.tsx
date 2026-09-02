@@ -96,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (p) {
       setProfile(p);
       const store = useAppStore.getState();
+      store.syncQuotasWithProfile(p, user.id);
       if (typeof p.credits_minutes === 'number') {
         store.setCreditsMinutes(p.credits_minutes);
       }
@@ -121,10 +122,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (currentUser) {
         const p = await fetchProfile(currentUser.id);
         setProfile(p);
+        store.syncQuotasWithProfile(p, currentUser.id);
         store.setCreditsMinutes(p?.credits_minutes ?? 0);
         store.setLifetimeUnlocked(p?.is_lifetime_unlocked ?? false);
       } else {
         setProfile(null);
+        store.syncQuotasWithProfile(null, undefined);
         store.setCreditsMinutes(0);
         store.setLifetimeUnlocked(false);
       }
@@ -142,10 +145,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (currentUser) {
         const p = await fetchProfile(currentUser.id);
         setProfile(p);
+        store.syncQuotasWithProfile(p, currentUser.id);
         store.setCreditsMinutes(p?.credits_minutes ?? 0);
         store.setLifetimeUnlocked(p?.is_lifetime_unlocked ?? false);
       } else {
         setProfile(null);
+        store.syncQuotasWithProfile(null, undefined);
         store.setCreditsMinutes(0);
         store.setLifetimeUnlocked(false);
       }
@@ -157,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [fetchProfile]);
 
-  // 3. Realtime subscription for instant tier upgrades
+  // 3. Realtime subscription for instant tier upgrades & cross-device quota sync
   useEffect(() => {
     if (!user) return;
     const supabase = getSupabase();
@@ -178,6 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const updatedProfile = payload.new as UserProfile;
           setProfile(updatedProfile);
           const store = useAppStore.getState();
+          store.syncQuotasWithProfile(updatedProfile, user.id);
           if (typeof updatedProfile.credits_minutes === 'number') {
             store.setCreditsMinutes(updatedProfile.credits_minutes);
           }
@@ -196,8 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 4. Synchronize user-scoped daily quota, credits, and lifetime status
   useEffect(() => {
     const store = useAppStore.getState();
-    store.syncDailyUsage(user?.id);
-    store.syncQuotas(user?.id);
+    store.syncQuotasWithProfile(profile, user?.id);
 
     if (profile) {
       if (typeof profile.credits_minutes === 'number') {
@@ -238,8 +243,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const store = useAppStore.getState();
     store.setCreditsMinutes(0);
     store.setLifetimeUnlocked(false);
-    store.syncDailyUsage(undefined);
-    store.syncQuotas(undefined);
+    store.syncQuotasWithProfile(null, undefined);
 
     if (typeof window !== 'undefined' && window.location.pathname !== '/') {
       window.location.href = '/';

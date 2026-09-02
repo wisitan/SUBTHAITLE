@@ -46,6 +46,9 @@ export async function POST(request: NextRequest) {
       }
     };
 
+    let usedQuotaCount: number | undefined = undefined;
+    let remainingQuota: number | undefined = undefined;
+
     // Mode validation
     if (mode === 'free' || mode === 'groq_free' || mode === 'google_free') {
       // 1. Check Global System-Wide Daily Limit (500 clips / day)
@@ -76,6 +79,10 @@ export async function POST(request: NextRequest) {
         const firstRow = Array.isArray(quotaRes) ? quotaRes[0] : quotaRes;
         if (firstRow && firstRow.allowed === false) {
           return NextResponse.json({ error: firstRow.message }, { status: 429 });
+        }
+        if (firstRow && typeof firstRow.count === 'number') {
+          usedQuotaCount = firstRow.count;
+          remainingQuota = Math.max(0, 3 - firstRow.count);
         }
       }
 
@@ -117,6 +124,8 @@ export async function POST(request: NextRequest) {
         duration: result.duration,
         language: result.language,
         words: result.words,
+        usedQuotaCount,
+        remainingQuota,
       });
     } catch (sttError) {
       await refundCreditsIfFailed();

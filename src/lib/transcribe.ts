@@ -3,7 +3,6 @@ import {
   CaptionWord,
   useAppStore,
   calculateCreditUsage,
-  getGroqDailyUsageFromStorage,
 } from './store';
 import { cleanThaiText, resegmentThaiWords } from './thai-text';
 import { groupWordsIntoCaptions, splitLongCaptions } from './caption-grouping';
@@ -44,8 +43,7 @@ export async function transcribeAudio(
   let requiredCredits = 0;
 
   if (isFreeMode) {
-    const dailyUsage = getGroqDailyUsageFromStorage(authInfo?.userId);
-    if (dailyUsage >= store.maxGroqDailyQuota) {
+    if (store.groqDailyUsageCount >= store.maxGroqDailyQuota) {
       throw new Error(
         `โควต้าฟรีประจำวันของคุณครบ ${store.maxGroqDailyQuota} คลิปแล้วค่ะ (รีเซ็ตใหม่ทุกเที่ยงคืน) หรือสามารถเติมเครดิตเพื่อถอดเสียงต่อได้ทันทีค่ะ`
       );
@@ -85,7 +83,7 @@ export async function transcribeAudio(
   });
 
   let resText = '';
-  let data: TranscribeResponse;
+  let data: TranscribeResponse & { usedQuotaCount?: number; remainingQuota?: number };
   try {
     resText = await res.text();
     data = JSON.parse(resText);
@@ -103,9 +101,12 @@ export async function transcribeAudio(
   if (providerMode === 'credits' && requiredCredits > 0) {
     store.deductCredits(requiredCredits);
   } else if (isFreeMode) {
-    store.incrementGroqDailyUsage(authInfo?.userId);
+    if (typeof data.usedQuotaCount === 'number') {
+      store.setGroqDailyUsageCount(data.usedQuotaCount, authInfo?.userId);
+    } else {
+      store.incrementGroqDailyUsage(authInfo?.userId);
+    }
   }
-  store.incrementDailyUsage(authInfo?.userId);
 
   if (onProgress) {
     onProgress('จัดกลุ่มคำและคำนวณจังหวะซับไตเติล (Smart Pacing)...');

@@ -3,28 +3,40 @@ import { AppState, ProviderMode, TranscriptionProvider, UserTier } from './types
 import { DEFAULT_THAI_DICTIONARY, DictionaryEntry } from '../default-dictionary';
 import { fetchCustomDictionaryFromCloud } from '../supabase';
 
+export function getBangkokDateString(): string {
+  try {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Bangkok',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+  } catch {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+}
+
+export function getBangkokMonthString(): string {
+  return getBangkokDateString().slice(0, 7);
+}
+
 export function getUserTodayUsageKey(userId?: string): string {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const today = `${year}-${month}-${day}`;
+  const today = getBangkokDateString();
   return `subthaitle_usage_${userId || 'anon'}_${today}`;
 }
 
 export function getUserGoogleMonthKey(userId?: string): string {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  return `subthaitle_google_${userId || 'anon'}_${year}-${month}`;
+  const month = getBangkokMonthString();
+  return `subthaitle_google_${userId || 'anon'}_${month}`;
 }
 
 export function getUserGroqDayKey(userId?: string): string {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `subthaitle_groq_${userId || 'anon'}_${year}-${month}-${day}`;
+  const today = getBangkokDateString();
+  return `subthaitle_groq_${userId || 'anon'}_${today}`;
 }
 
 export function getDailyUsageFromStorage(userId?: string): number {
@@ -111,6 +123,16 @@ export interface QuotaSlice {
   syncDailyUsage: (userId?: string) => void;
   incrementDailyUsage: (userId?: string) => void;
   syncQuotas: (userId?: string) => void;
+  syncQuotasWithProfile: (
+    profile: {
+      groq_free_day?: string | null;
+      groq_free_count?: number;
+      google_free_month?: string | null;
+      google_free_count?: number;
+    } | null,
+    userId?: string
+  ) => void;
+  setGroqDailyUsageCount: (count: number, userId?: string) => void;
   incrementGoogleMonthlyUsage: (userId?: string) => void;
   incrementGroqDailyUsage: (userId?: string) => void;
 }
@@ -212,7 +234,63 @@ export const createQuotaSlice: StateCreator<AppState, [], [], QuotaSlice> = (set
     set({
       googleMonthlyUsageCount: googleCount,
       groqDailyUsageCount: groqCount,
+      dailyUsageCount: groqCount,
     });
+  },
+
+  syncQuotasWithProfile: (profile, userId) => {
+    const currentBangkokDay = getBangkokDateString();
+    const currentBangkokMonth = getBangkokMonthString();
+
+    let groqCount = 0;
+    let googleCount = 0;
+
+    if (profile) {
+      // 1. Check Groq Free Daily Quota (reset daily in Bangkok time)
+      if (profile.groq_free_day === currentBangkokDay) {
+        groqCount = profile.groq_free_count || 0;
+      } else {
+        groqCount = 0;
+      }
+
+      // 2. Check Google Free Monthly Quota (reset monthly)
+      if (profile.google_free_month === currentBangkokMonth) {
+        googleCount = profile.google_free_count || 0;
+      } else {
+        googleCount = 0;
+      }
+
+      // Update local storage cache for offline/instant initial paint
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(getUserGroqDayKey(userId), groqCount.toString());
+          localStorage.setItem(getUserGoogleMonthKey(userId), googleCount.toString());
+          localStorage.setItem(getUserTodayUsageKey(userId), groqCount.toString());
+        } catch {}
+      }
+    } else {
+      // Fallback for unauthenticated users
+      googleCount = getGoogleMonthlyUsageFromStorage(userId);
+      groqCount = getGroqDailyUsageFromStorage(userId);
+    }
+
+    set({
+      googleMonthlyUsageCount: googleCount,
+      groqDailyUsageCount: groqCount,
+      dailyUsageCount: groqCount,
+    });
+  },
+
+  setGroqDailyUsageCount: (count, userId) => {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(getUserGroqDayKey(userId), count.toString());
+        localStorage.setItem(getUserTodayUsageKey(userId), count.toString());
+      } catch (e) {
+        console.warn('Failed to save groq daily usage', e);
+      }
+    }
+    set({ groqDailyUsageCount: count, dailyUsageCount: count });
   },
 
   incrementGoogleMonthlyUsage: (userId) => {
@@ -232,10 +310,11 @@ export const createQuotaSlice: StateCreator<AppState, [], [], QuotaSlice> = (set
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem(getUserGroqDayKey(userId), next.toString());
+        localStorage.setItem(getUserTodayUsageKey(userId), next.toString());
       } catch (e) {
         console.warn('Failed to save groq daily usage', e);
       }
     }
-    set({ groqDailyUsageCount: next });
+    set({ groqDailyUsageCount: next, dailyUsageCount: next });
   },
 });

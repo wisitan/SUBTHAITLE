@@ -20,10 +20,9 @@ export function ProviderSelector() {
     creditsMinutes,
     groqDailyUsageCount,
     maxGroqDailyQuota,
-    syncQuotas,
   } = useAppStore();
 
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [systemEnergy, setSystemEnergy] = React.useState<{
     energyLevel: 'full' | 'medium' | 'low' | 'empty';
     percentage: number;
@@ -35,7 +34,9 @@ export function ProviderSelector() {
   });
 
   useEffect(() => {
-    syncQuotas(user?.id);
+    if (user) {
+      refreshProfile();
+    }
     fetch('/api/system/quota')
       .then((res) => res.json())
       .then((data) => {
@@ -44,7 +45,7 @@ export function ProviderSelector() {
         }
       })
       .catch(() => {});
-  }, [user, syncQuotas]);
+  }, [user, refreshProfile]);
 
   const remainingDaily = Math.max(0, maxGroqDailyQuota - groqDailyUsageCount);
   const isFreeSelected = providerMode === 'free' || providerMode === 'groq_free' || providerMode === 'google_free';
