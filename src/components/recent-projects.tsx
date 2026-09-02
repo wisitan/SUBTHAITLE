@@ -24,6 +24,14 @@ import {
 
 type TimeFilterType = 'all' | 'today' | '7days' | '30days' | 'custom';
 
+function getTodayDateString(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 function formatDuration(seconds: number): string {
   if (!seconds || isNaN(seconds)) return '0:00';
   const m = Math.floor(seconds / 60);
@@ -286,7 +294,11 @@ export function RecentProjects() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setTimeFilter('custom')}
+                  onClick={() => {
+                    setTimeFilter('custom');
+                    if (!customStartDate) setCustomStartDate(getTodayDateString());
+                    if (!customEndDate) setCustomEndDate(getTodayDateString());
+                  }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 ${
                     timeFilter === 'custom'
                       ? 'bg-orange-500 text-zinc-950 shadow-sm font-bold'
@@ -302,21 +314,43 @@ export function RecentProjects() {
 
           {/* Custom Date Range Picker */}
           {timeFilter === 'custom' && (
-            <div className="pt-2 border-t border-zinc-800/80 flex flex-wrap items-center gap-2 text-xs animate-in fade-in">
+            <div className="pt-2 border-t border-zinc-800/80 flex flex-wrap items-center gap-2.5 text-xs animate-in fade-in">
               <span className="text-zinc-400 font-medium">ช่วงวันที่:</span>
-              <input
-                type="date"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                className="px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs focus:outline-none focus:border-orange-500"
-              />
+
+              {/* Start Date */}
+              <div className="relative inline-flex items-center group/date">
+                <input
+                  type="date"
+                  value={customStartDate}
+                  onClick={(e) => e.currentTarget.showPicker?.()}
+                  onKeyDown={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.showPicker?.();
+                  }}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                  className="px-3 py-1.5 pr-8 rounded-xl bg-zinc-950 border border-zinc-700 hover:border-orange-500/60 focus:border-orange-500 text-zinc-100 text-xs font-medium cursor-pointer [color-scheme:dark] shadow-inner transition-colors"
+                />
+                <Calendar className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 pointer-events-none group-hover/date:text-orange-400 transition-colors" />
+              </div>
+
               <span className="text-zinc-500">ถึง</span>
-              <input
-                type="date"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                className="px-2.5 py-1.5 rounded-lg bg-zinc-950 border border-zinc-700 text-zinc-200 text-xs focus:outline-none focus:border-orange-500"
-              />
+
+              {/* End Date */}
+              <div className="relative inline-flex items-center group/date">
+                <input
+                  type="date"
+                  value={customEndDate}
+                  onClick={(e) => e.currentTarget.showPicker?.()}
+                  onKeyDown={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.showPicker?.();
+                  }}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                  className="px-3 py-1.5 pr-8 rounded-xl bg-zinc-950 border border-zinc-700 hover:border-orange-500/60 focus:border-orange-500 text-zinc-100 text-xs font-medium cursor-pointer [color-scheme:dark] shadow-inner transition-colors"
+                />
+                <Calendar className="w-3.5 h-3.5 text-zinc-400 absolute right-2.5 pointer-events-none group-hover/date:text-orange-400 transition-colors" />
+              </div>
+
               {(customStartDate || customEndDate) && (
                 <button
                   type="button"
@@ -324,7 +358,7 @@ export function RecentProjects() {
                     setCustomStartDate('');
                     setCustomEndDate('');
                   }}
-                  className="px-2 py-1 text-zinc-400 hover:text-white text-[11px] underline"
+                  className="px-2.5 py-1 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 text-[11px] font-medium transition-colors cursor-pointer"
                 >
                   ล้างวันที่
                 </button>
