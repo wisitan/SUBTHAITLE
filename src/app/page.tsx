@@ -23,19 +23,38 @@ export default function Home() {
       <Header />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 py-8 sm:py-12 flex flex-col gap-8">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col gap-4 sm:gap-5">
         {/* Clean Hero Section */}
-        <section className="text-center space-y-4 max-w-2xl mx-auto pt-2 sm:pt-4">
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+        <section className="text-center space-y-3 max-w-2xl mx-auto pt-1 sm:pt-2">
+          <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black tracking-tight text-white leading-tight">
             สร้าง Subtitle ภาษาไทย <br />
             <span className="bg-gradient-to-r from-orange-400 via-amber-300 to-rose-400 bg-clip-text text-transparent">
               อัตโนมัติ สวยสะกดตา ไฮไลต์ทีละคำ
             </span>
           </h1>
 
-          <p className="text-base sm:text-lg text-zinc-200 max-w-xl mx-auto leading-relaxed">
-            ถอดเสียงภาษาไทยด้วย <span className="text-white font-bold bg-orange-500/20 px-1.5 py-0.5 rounded-md border border-orange-500/30">AI แม่นยำระดับคำ</span> จัดเว้นวรรคและตัดคำอย่างเป็นธรรมชาติ พร้อมส่งออกเป็น <span className="text-amber-300 font-semibold underline underline-offset-4 decoration-amber-500/40">FCPXML, XML, SRT</span> หรือ <span className="text-rose-300 font-semibold">ฝังซับวิดีโอ MP4</span> ได้ทันที
-          </p>
+          {/* 4-Step Process Indicator */}
+          <div className="flex items-center justify-center gap-1 sm:gap-2 flex-wrap text-xs sm:text-[13px] text-zinc-400 font-medium pt-1">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 shadow-sm">
+              <span className="w-4 h-4 rounded-full bg-orange-500/20 text-orange-400 font-bold text-[10px] flex items-center justify-center">1</span>
+              <span>อัปโหลดวิดีโอ</span>
+            </span>
+            <span className="text-zinc-600">→</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 shadow-sm">
+              <span className="w-4 h-4 rounded-full bg-orange-500/20 text-orange-400 font-bold text-[10px] flex items-center justify-center">2</span>
+              <span>AI ถอดเสียง</span>
+            </span>
+            <span className="text-zinc-600">→</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 shadow-sm">
+              <span className="w-4 h-4 rounded-full bg-orange-500/20 text-orange-400 font-bold text-[10px] flex items-center justify-center">3</span>
+              <span>เลือกสไตล์</span>
+            </span>
+            <span className="text-zinc-600">→</span>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-zinc-300 shadow-sm">
+              <span className="w-4 h-4 rounded-full bg-orange-500/20 text-orange-400 font-bold text-[10px] flex items-center justify-center">4</span>
+              <span>เรนเดอร์</span>
+            </span>
+          </div>
         </section>
 
         {/* Engine & Provider Settings */}

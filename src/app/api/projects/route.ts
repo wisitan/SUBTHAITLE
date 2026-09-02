@@ -98,28 +98,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Database service unavailable' }, { status: 500 });
     }
 
-    const projectPayload: Record<string, unknown> = {
-      user_id: userId,
-      title: title || 'โปรเจกต์ไม่มีชื่อ',
-      duration: duration || 0,
-      thumbnail_url: thumbnailUrl || null,
-      captions: captions || [],
-      raw_words: rawWords || [],
-      style: style || {},
-      aspect_ratio: aspectRatio || '9:16',
-      updated_at: new Date().toISOString(),
-    };
-
-    if (proxyUrl) projectPayload.proxy_url = proxyUrl;
-    if (originalFilename) projectPayload.original_filename = originalFilename;
-
     let resultProject;
 
     if (id) {
-      // Update existing project
+      // Update existing project (Only update fields that are explicitly provided)
+      const updatePayload: Record<string, unknown> = {
+        updated_at: new Date().toISOString(),
+      };
+
+      if (title !== undefined) updatePayload.title = title;
+      if (duration !== undefined) updatePayload.duration = duration;
+      if (thumbnailUrl !== undefined) updatePayload.thumbnail_url = thumbnailUrl;
+      if (captions !== undefined) updatePayload.captions = captions;
+      if (rawWords !== undefined) updatePayload.raw_words = rawWords;
+      if (style !== undefined) updatePayload.style = style;
+      if (aspectRatio !== undefined) updatePayload.aspect_ratio = aspectRatio;
+      if (proxyUrl !== undefined) updatePayload.proxy_url = proxyUrl;
+      if (originalFilename !== undefined) updatePayload.original_filename = originalFilename;
+
       const { data, error } = await supabase
         .from('user_projects')
-        .update(projectPayload)
+        .update(updatePayload)
         .eq('id', id)
         .eq('user_id', userId)
         .select()
@@ -128,11 +127,11 @@ export async function POST(request: NextRequest) {
       if (error) {
         // Fallback: If error relates to missing proxy_url or original_filename column, retry without them
         if (error.message?.includes('proxy_url') || error.message?.includes('original_filename') || error.code === '42703') {
-          delete projectPayload.proxy_url;
-          delete projectPayload.original_filename;
+          delete updatePayload.proxy_url;
+          delete updatePayload.original_filename;
           const retry = await supabase
             .from('user_projects')
-            .update(projectPayload)
+            .update(updatePayload)
             .eq('id', id)
             .eq('user_id', userId)
             .select()
@@ -147,26 +146,36 @@ export async function POST(request: NextRequest) {
       }
     } else {
       // Insert new project
+      const insertPayload: Record<string, unknown> = {
+        user_id: userId,
+        title: title || originalFilename || 'SUBTHAITLE Project',
+        duration: duration || 0,
+        thumbnail_url: thumbnailUrl || null,
+        captions: captions || [],
+        raw_words: rawWords || [],
+        style: style || {},
+        aspect_ratio: aspectRatio || '9:16',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      if (proxyUrl) insertPayload.proxy_url = proxyUrl;
+      if (originalFilename) insertPayload.original_filename = originalFilename;
+
       const { data, error } = await supabase
         .from('user_projects')
-        .insert({
-          ...projectPayload,
-          created_at: new Date().toISOString(),
-        })
+        .insert(insertPayload)
         .select()
         .single();
 
       if (error) {
         // Fallback: If error relates to missing column, retry without them
         if (error.message?.includes('proxy_url') || error.message?.includes('original_filename') || error.code === '42703') {
-          delete projectPayload.proxy_url;
-          delete projectPayload.original_filename;
+          delete insertPayload.proxy_url;
+          delete insertPayload.original_filename;
           const retry = await supabase
             .from('user_projects')
-            .insert({
-              ...projectPayload,
-              created_at: new Date().toISOString(),
-            })
+            .insert(insertPayload)
             .select()
             .single();
           resultProject = retry.data;

@@ -13,14 +13,12 @@ import {
   FileVideo,
   Trash2,
   Play,
-  ArrowRight,
   Loader2,
   LogIn,
   Search,
   X,
   Calendar,
   Filter,
-  HardDrive,
   LayoutGrid,
   List,
   ArrowUpDown,
@@ -605,108 +603,83 @@ export function RecentProjects() {
         </div>
       )}
 
-      {/* Projects Display: Card Grid View */}
+      {/* Projects Display: Card Grid View (Clean Canva/Tamsub Style) */}
       {!isLoading && pagedProjects.length > 0 && viewMode === 'grid' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
           {pagedProjects.map((project) => (
             <div
               key={project.id}
               onClick={() => handleOpenProject(project)}
-              className="group relative bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-orange-500/60 rounded-2xl p-3 sm:p-3.5 transition-all duration-200 cursor-pointer shadow-lg hover:shadow-orange-500/5 flex flex-col justify-between overflow-hidden"
+              className="group relative bg-zinc-900/90 hover:bg-zinc-900 border border-zinc-800/90 hover:border-orange-500/60 rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer shadow-md hover:shadow-orange-500/5 flex flex-col justify-between"
             >
-              {/* Top Row: Thumbnail + Info */}
-              <div className="flex items-start gap-3">
-                {/* Thumbnail Snapshot or Icon */}
-                <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden group-hover:border-orange-500/40 transition-colors">
-                  <ProjectThumbnailImage
-                    project={project}
-                    className="w-full h-full object-cover"
-                    iconSize="w-7 h-7"
-                  />
+              {/* Full-width Top Thumbnail Container */}
+              <div className="relative w-full aspect-[4/3] bg-zinc-950 flex items-center justify-center overflow-hidden border-b border-zinc-800/80">
+                <ProjectThumbnailImage
+                  project={project}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  iconSize="w-8 h-8"
+                />
 
-                  {/* Play Overlay on Hover */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <div className="w-8 h-8 rounded-full bg-orange-500 text-zinc-950 flex items-center justify-center shadow-md">
-                      <Play className="w-4 h-4 fill-zinc-950 ml-0.5" />
-                    </div>
-                  </div>
-
-                  {/* Duration Badge */}
-                  {project.duration > 0 && (
-                    <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md bg-black/80 backdrop-blur-sm text-[9.5px] font-mono font-bold text-white shadow">
-                      {formatDuration(project.duration)}
+                {/* Status Badge (Top Left) */}
+                <div className="absolute top-2 left-2 pointer-events-none">
+                  {project.proxy_url ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 backdrop-blur-md border border-emerald-500/30 text-emerald-300 text-[10px] font-semibold shadow">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                      <span>เสร็จแล้ว</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-950/80 backdrop-blur-md border border-zinc-700/80 text-zinc-300 text-[10px] font-medium shadow">
+                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                      <span>ในเครื่อง</span>
                     </span>
                   )}
                 </div>
 
-                {/* Details */}
-                <div className="flex-1 min-w-0 space-y-1">
-                  {/* Status Badge */}
-                  <div className="flex items-center justify-between gap-1">
-                    {project.proxy_url ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-950/60 border border-amber-800/60 text-amber-300 text-[10px] font-semibold">
-                        <Cloud className="w-3 h-3 text-amber-400" />
-                        <span>Cloud Proxy 720p</span>
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-800/80 border border-zinc-700/80 text-zinc-400 text-[10px] font-medium">
-                        <HardDrive className="w-3 h-3 text-zinc-400" />
-                        <span>เครื่องนี้เท่านั้น</span>
-                      </span>
-                    )}
+                {/* Delete Button (Top Right) */}
+                <button
+                  type="button"
+                  disabled={deletingId === project.id}
+                  onClick={(e) => handleDeleteProject(e, project.id)}
+                  className="absolute top-2 right-2 p-1.5 rounded-lg bg-black/60 hover:bg-rose-950/80 border border-white/10 hover:border-rose-500/40 text-zinc-300 hover:text-rose-300 transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-md"
+                  title="ลบโปรเจกต์"
+                >
+                  {deletingId === project.id ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-3.5 h-3.5" />
+                  )}
+                </button>
 
-                    {/* Delete Button */}
-                    <button
-                      type="button"
-                      disabled={deletingId === project.id}
-                      onClick={(e) => handleDeleteProject(e, project.id)}
-                      className="p-1 text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
-                      title="ลบโปรเจกต์"
-                    >
-                      {deletingId === project.id ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-3.5 h-3.5" />
-                      )}
-                    </button>
+                {/* Play Overlay on Hover */}
+                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity pointer-events-none">
+                  <div className="w-9 h-9 rounded-full bg-orange-500 text-zinc-950 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform">
+                    <Play className="w-4 h-4 fill-zinc-950 ml-0.5" />
                   </div>
-
-                  {/* Project Title */}
-                  <h4 className="text-sm font-bold text-zinc-100 line-clamp-1 group-hover:text-orange-300 transition-colors">
-                    {project.title}
-                  </h4>
-
-                  {/* Subtitle count & Local cache indicator */}
-                  <div className="flex items-center gap-2 text-[11px] text-zinc-400">
-                    <span>{project.captions?.length || 0} ท่อนซับ</span>
-                    <span className="text-zinc-600">•</span>
-                    <span className="flex items-center gap-1 text-[10.5px] text-zinc-400">
-                      <HardDrive className="w-3 h-3 text-orange-400/80" />
-                      <span>บันทึกในเครื่อง</span>
-                    </span>
-                  </div>
-
-                  {/* Relative Updated Time */}
-                  <p className="text-[10px] text-zinc-500">
-                    {formatRelativeTime(project.updated_at || project.created_at)}
-                  </p>
                 </div>
+
+                {/* Duration Badge (Bottom Right) */}
+                {project.duration > 0 && (
+                  <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-md bg-black/80 backdrop-blur-md text-[10px] font-mono font-bold text-white shadow">
+                    {formatDuration(project.duration)}
+                  </span>
+                )}
               </div>
 
-              {/* Bottom Quick Action Bar */}
-              <div className="mt-3 pt-2.5 border-t border-zinc-800/70 flex items-center justify-between text-xs text-zinc-400 group-hover:text-zinc-300">
-                <span className="text-[11px]">เปิดแก้ไข (0 เครดิต)</span>
-                <span className="text-orange-400 font-semibold inline-flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform text-[11px]">
-                  เปิดใน Editor
-                  <ArrowRight className="w-3 h-3" />
-                </span>
+              {/* Bottom Text Area: Project Title + Date Only */}
+              <div className="p-3 space-y-1">
+                <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-400 transition-colors" title={project.title}>
+                  {project.title || 'โปรเจกต์ไม่มีชื่อ'}
+                </h4>
+                <p className="text-[11px] text-zinc-400 font-medium">
+                  {formatRelativeTime(project.updated_at || project.created_at)}
+                </p>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Projects Display: Compact List View */}
+      {/* Projects Display: Compact Clean List View */}
       {!isLoading && pagedProjects.length > 0 && viewMode === 'list' && (
         <div className="space-y-2">
           {pagedProjects.map((project) => (
@@ -715,22 +688,15 @@ export function RecentProjects() {
               onClick={() => handleOpenProject(project)}
               className="group relative bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-orange-500/60 rounded-xl p-2.5 sm:p-3 transition-all duration-200 cursor-pointer shadow-md hover:shadow-orange-500/5 flex items-center justify-between gap-3 overflow-hidden"
             >
-              {/* Left: Thumbnail & Project Info */}
+              {/* Left: Thumbnail & Info */}
               <div className="flex items-center gap-3 min-w-0 flex-1">
                 {/* Thumbnail */}
-                <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden group-hover:border-orange-500/40 transition-colors">
+                <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden group-hover:border-orange-500/40 transition-colors">
                   <ProjectThumbnailImage
                     project={project}
                     className="w-full h-full object-cover"
                     iconSize="w-5 h-5"
                   />
-
-                  {/* Play Overlay */}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                    <div className="w-6 h-6 rounded-full bg-orange-500 text-zinc-950 flex items-center justify-center shadow-md">
-                      <Play className="w-3 h-3 fill-zinc-950 ml-0.5" />
-                    </div>
-                  </div>
 
                   {project.duration > 0 && (
                     <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded bg-black/80 backdrop-blur-sm text-[8.5px] font-mono font-bold text-white shadow">
@@ -741,30 +707,12 @@ export function RecentProjects() {
 
                 {/* Info */}
                 <div className="min-w-0 flex-1 space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-300 transition-colors">
-                      {project.title}
-                    </h4>
-                    {project.proxy_url ? (
-                      <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-950/60 border border-amber-800/60 text-amber-300 text-[9px] font-semibold shrink-0">
-                        <Cloud className="w-2.5 h-2.5 text-amber-400" />
-                        <span>Cloud Proxy</span>
-                      </span>
-                    ) : (
-                      <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/80 text-zinc-400 text-[9px] font-medium shrink-0">
-                        <HardDrive className="w-2.5 h-2.5 text-zinc-400" />
-                        <span>เครื่องนี้</span>
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-400">
-                    <span>{project.captions?.length || 0} ท่อนซับ</span>
-                    <span className="text-zinc-600">•</span>
-                    <span className="text-zinc-500 text-[10px]">
-                      {formatRelativeTime(project.updated_at || project.created_at)}
-                    </span>
-                  </div>
+                  <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-300 transition-colors">
+                    {project.title || 'โปรเจกต์ไม่มีชื่อ'}
+                  </h4>
+                  <p className="text-[11px] text-zinc-400 font-medium">
+                    {formatRelativeTime(project.updated_at || project.created_at)}
+                  </p>
                 </div>
               </div>
 
@@ -783,11 +731,6 @@ export function RecentProjects() {
                     <Trash2 className="w-4 h-4" />
                   )}
                 </button>
-
-                <div className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-xs border border-orange-500/30 group-hover:bg-orange-500 group-hover:text-zinc-950 transition-all">
-                  <span>เปิดใน Editor</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                </div>
               </div>
             </div>
           ))}
