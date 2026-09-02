@@ -7,7 +7,7 @@ import { useAuth } from '@/context/auth-context';
 import { extractAudioFromMedia, AudioExtractProgress } from '@/lib/audio-extract';
 import { transcribeAudio } from '@/lib/transcribe';
 import { saveVideoToCache } from '@/lib/video-cache';
-import { saveProjectToCloud } from '@/lib/projects-client';
+import { saveProjectToCloud, uploadProxyToR2 } from '@/lib/projects-client';
 import {
   UploadCloud,
   FileVideo,
@@ -227,6 +227,13 @@ export function UploadZone() {
       if (user?.id) {
         try {
           const storeState = useAppStore.getState();
+          let proxyUrl: string | null = null;
+
+          if (file) {
+            setStatus('uploading', 95, 'กำลังซิงค์วิดีโอขึ้น Cloudflare R2...');
+            proxyUrl = await uploadProxyToR2(file, 'initial', file.name);
+          }
+
           const savedProject = await saveProjectToCloud({
             userId: user.id,
             title: projectName,
@@ -236,13 +243,14 @@ export function UploadZone() {
             style: storeState.style,
             aspectRatio: storeState.aspectRatio,
             originalFilename: file?.name,
+            proxyUrl,
             file,
           });
 
           if (savedProject?.id) {
             useAppStore.getState().setCurrentProjectId(savedProject.id);
-            if (savedProject.proxy_url) {
-              useAppStore.getState().setProxyUrl(savedProject.proxy_url);
+            if (savedProject.proxy_url || proxyUrl) {
+              useAppStore.getState().setProxyUrl(savedProject.proxy_url || proxyUrl);
             }
             if (file) {
               saveVideoToCache(savedProject.id, file);

@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const { filename, contentType, projectId } = await request.json();
+    const { filename, projectId } = await request.json();
 
     if (!filename) {
       return NextResponse.json({ error: 'Missing filename' }, { status: 400 });
@@ -22,11 +22,7 @@ export async function POST(request: NextRequest) {
     const sanitizedFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     const key = `proxies/${projectId || 'guest'}/${Date.now()}_${sanitizedFilename}`;
 
-    const presignedData = await createPresignedUploadUrl(
-      key,
-      contentType || 'video/mp4',
-      3600
-    );
+    const presignedData = await createPresignedUploadUrl(key, 3600);
 
     if (!presignedData) {
       return NextResponse.json(

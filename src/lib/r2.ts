@@ -26,10 +26,10 @@ export function getR2Client(): S3Client | null {
 
 /**
  * Generate a presigned PUT URL for direct client-side upload to Cloudflare R2
+ * Unsigned headers ensure maximum cross-browser compatibility
  */
 export async function createPresignedUploadUrl(
   key: string,
-  contentType: string = 'video/mp4',
   expiresInSeconds: number = 3600
 ): Promise<{ uploadUrl: string; publicUrl: string } | null> {
   const s3 = getR2Client();
@@ -39,7 +39,6 @@ export async function createPresignedUploadUrl(
     const command = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME,
       Key: key,
-      ContentType: contentType,
     });
 
     const uploadUrl = await getSignedUrl(s3, command, { expiresIn: expiresInSeconds });

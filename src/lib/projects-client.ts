@@ -24,34 +24,61 @@ export async function uploadProxyToR2(
   projectId: string,
   filename: string
 ): Promise<string | null> {
+  // Strategy 1: Direct Presigned URL (Ultra-fast direct-to-R2)
   try {
     const res = await fetch('/api/storage/proxy-upload', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         filename,
-        contentType: file.type || 'video/mp4',
         projectId,
       }),
     });
 
-    if (!res.ok) return null;
-    const json = await res.json();
+    if (res.ok) {
+      const json = await res.json();
+      if (json.isConfigured && json.uploadUrl && json.publicUrl) {
+        try {
+          const uploadRes = await fetch(json.uploadUrl, {
+            method: 'PUT',
+            body: file,
+          });
 
-    if (json.isConfigured && json.uploadUrl && json.publicUrl) {
-      const uploadRes = await fetch(json.uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type || 'video/mp4' },
-        body: file,
-      });
-
-      if (uploadRes.ok) {
-        return json.publicUrl;
+          if (uploadRes.ok) {
+            console.log('[R2 Proxy Upload] Uploaded successfully via Presigned URL:', json.publicUrl);
+            return json.publicUrl;
+          }
+        } catch (corsErr) {
+          console.warn('[R2 Proxy Upload] Presigned PUT blocked by CORS, trying server fallback:', corsErr);
+        }
       }
     }
   } catch (err) {
-    console.warn('[R2 Proxy Upload Warning]:', err);
+    console.warn('[R2 Proxy Upload Presigned Route Error]:', err);
   }
+
+  // Strategy 2: Server-side Direct Upload Fallback (100% CORS-immune)
+  try {
+    const formData = new FormData();
+    formData.append('file', file, filename);
+    formData.append('projectId', projectId);
+
+    const fallbackRes = await fetch('/api/storage/direct-upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (fallbackRes.ok) {
+      const fallbackJson = await fallbackRes.json();
+      if (fallbackJson.publicUrl) {
+        console.log('[R2 Proxy Upload] Uploaded successfully via Server Fallback:', fallbackJson.publicUrl);
+        return fallbackJson.publicUrl;
+      }
+    }
+  } catch (fallbackErr) {
+    console.warn('[R2 Proxy Upload Server Fallback Exception]:', fallbackErr);
+  }
+
   return null;
 }
 
