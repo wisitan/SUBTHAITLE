@@ -264,7 +264,7 @@ export default function EditorPage() {
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           {/* Left: Back button & File info */}
           <div className="flex items-center gap-3 min-w-0">
-            <Tooltip content="กลับสู่หน้าหลัก">
+            <Tooltip content="กลับสู่หน้าหลัก" position="bottom">
               <Link
                 href="/"
                 className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors shrink-0 cursor-pointer"
@@ -283,7 +283,7 @@ export default function EditorPage() {
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <Tooltip content="คลิกเพื่อพิมพ์เปลี่ยนชื่อโปรเจกต์">
+                  <Tooltip content="คลิกเพื่อพิมพ์เปลี่ยนชื่อโปรเจกต์" position="bottom">
                     <input
                       type="text"
                       value={projectTitle || file?.name || 'SUBTHAITLE Project'}
