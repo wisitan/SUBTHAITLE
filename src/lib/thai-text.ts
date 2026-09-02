@@ -29,6 +29,67 @@ function getThaiSegmenter() {
 }
 
 /**
+ * Splits compound words where Thai and Latin/Digits or CamelCase words are fused together
+ * (e.g. "จากTableDescription" -> ["จาก", "Table", "Description"])
+ * (e.g. "GuideScript" -> ["Guide", "Script"])
+ * (e.g. "ราคา399บาท" -> ["ราคา", "399", "บาท"])
+ */
+export function splitCompoundSegment(text: string): string[] {
+  if (!text) return [];
+  const parts: string[] = [];
+  const regex = /([\u0E00-\u0E7F]+|[A-Z]?[a-z]+|[A-Z]+(?=[A-Z][a-z]|\d|\b|[^\w])|[0-9]+|[^\s\u0E00-\u0E7FA-Za-z0-9]+)/g;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    if (match[0].trim()) {
+      parts.push(match[0].trim());
+    }
+  }
+  return parts.length > 0 ? parts : [text];
+}
+
+/**
+ * Expands an array of timed words so that any compound tokens are broken into fine-grained,
+ * single-word units with proportionally distributed start and end timestamps.
+ */
+export function expandWordsToFineGrained<T extends { word: string; start: number; end: number }>(words?: T[] | null): T[] {
+  if (!words || words.length === 0) return [];
+  const result: T[] = [];
+
+  for (const w of words) {
+    const rawWord = w.word.trim();
+    if (!rawWord) continue;
+
+    const subwords = splitCompoundSegment(rawWord);
+    if (subwords.length <= 1) {
+      result.push(w);
+      continue;
+    }
+
+    const dur = Math.max(0.05, w.end - w.start);
+    const totalChars = subwords.reduce((acc, s) => acc + s.length, 0);
+    let currStart = w.start;
+
+    for (let i = 0; i < subwords.length; i++) {
+      const sub = subwords[i];
+      const isLast = i === subwords.length - 1;
+      const subDur = (sub.length / totalChars) * dur;
+      const subEnd = isLast ? w.end : currStart + subDur;
+
+      result.push({
+        ...w,
+        word: sub,
+        start: parseFloat(currStart.toFixed(3)),
+        end: parseFloat(Math.max(currStart + 0.04, subEnd).toFixed(3)),
+      });
+
+      currStart = subEnd;
+    }
+  }
+
+  return result;
+}
+
+/**
  * Re-segments Whisper's BPE subword tokens into linguistically correct Thai & English words
  * using the browser's built-in Intl.Segmenter('th', { granularity: 'word' }).
  *
@@ -155,7 +216,7 @@ export function resegmentThaiWords<T extends { word: string; start: number; end:
     }
   }
 
-  return result;
+  return expandWordsToFineGrained(result);
 }
 
 /**
@@ -359,10 +420,10 @@ export function distributeTextToWords(text: string, start: number, end: number):
 
   if (segmenter) {
     const segments = Array.from(segmenter.segment(text));
-    tokens = segments.map((s) => s.segment);
+    tokens = segments.flatMap((s) => splitCompoundSegment(s.segment.trim())).filter(Boolean);
   } else {
-    // Fallback: split by space, though this is poor for Thai
-    tokens = text.split(/\s+/).filter(Boolean);
+    // Fallback: split by space
+    tokens = text.split(/\s+/).flatMap((s) => splitCompoundSegment(s.trim())).filter(Boolean);
   }
 
   const duration = end - start;

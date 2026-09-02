@@ -1,5 +1,5 @@
 import { CaptionItem, CaptionStyle, CaptionWord } from './store';
-import { formatCaptionWordsText } from './thai-text';
+import { formatCaptionWordsText, expandWordsToFineGrained } from './thai-text';
 
 export interface RenderSequenceOptions {
   captions: CaptionItem[];
@@ -146,11 +146,13 @@ export async function renderSubtitleCanvas(
   const renderWords: RenderWord[] = [];
   const microGapPx = style.enableWordHighlight ? Math.max(1.5, Math.round(2 * scale)) : 0;
 
-  if (style.enableWordHighlight && caption.words && caption.words.length > 0) {
-    caption.words.forEach((w: CaptionWord, idx: number) => {
+  const displayWords = expandWordsToFineGrained(caption.words);
+
+  if (style.enableWordHighlight && displayWords.length > 0) {
+    displayWords.forEach((w: CaptionWord, idx: number) => {
       let prefixSpace = '';
       if (idx > 0) {
-        const prevW = caption.words![idx - 1];
+        const prevW = displayWords[idx - 1];
         const testJoin = formatCaptionWordsText([prevW, w]);
         if (testJoin.includes(' ')) {
           prefixSpace = ' ';
@@ -174,8 +176,8 @@ export async function renderSubtitleCanvas(
         });
       }
 
-      const isLastWord = idx === caption.words!.length - 1;
-      const nextHasSpace = !isLastWord && formatCaptionWordsText([w, caption.words![idx + 1]]).includes(' ');
+      const isLastWord = idx === displayWords.length - 1;
+      const nextHasSpace = !isLastWord && formatCaptionWordsText([w, displayWords[idx + 1]]).includes(' ');
       const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
 
       ctx.font = `${wordWeight} ${fontSize}px "${fontName}", sans-serif`;
@@ -484,9 +486,10 @@ export async function generateCaptionImageSequence(
       });
     }
 
-    if (style.enableWordHighlight && cue.words && cue.words.length > 0) {
+    const cueDisplayWords = expandWordsToFineGrained(cue.words);
+    if (style.enableWordHighlight && cueDisplayWords.length > 0) {
       // Sort words by start time
-      const sortedWords = [...cue.words].sort((a, b) => a.start - b.start);
+      const sortedWords = [...cueDisplayWords].sort((a, b) => a.start - b.start);
       let currentCueTime = actualStart;
 
       for (let wIdx = 0; wIdx < sortedWords.length; wIdx++) {

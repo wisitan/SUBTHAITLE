@@ -2,7 +2,7 @@
 
 import React, { useMemo } from 'react';
 import { CaptionItem, CaptionStyle, CaptionWord } from '@/lib/store';
-import { formatCaptionWordsText } from '@/lib/thai-text';
+import { formatCaptionWordsText, expandWordsToFineGrained } from '@/lib/thai-text';
 
 interface SubtitleOverlayProps {
   activeCaption: CaptionItem | null;
@@ -27,21 +27,27 @@ export function SubtitleOverlay({
   style,
   visualBounds,
 }: SubtitleOverlayProps) {
-  // Calculate the single active word index (Guarantees STRICTLY only ONE word is highlighted at any time)
+  // Fine-grained timed words with compound segment expansion (splits "จากTableDescription" -> ["จาก", "Table", "Description"])
+  const displayWords = useMemo(() => {
+    if (!activeCaption?.words || activeCaption.words.length === 0) return [];
+    return expandWordsToFineGrained(activeCaption.words);
+  }, [activeCaption]);
+
+  // Calculate the single active word index (Guarantees STRICTLY only ONE fine-grained word is highlighted at any time)
   const activeWordIndex = useMemo(() => {
-    if (!activeCaption?.words || activeCaption.words.length === 0) return -1;
+    if (displayWords.length === 0) return -1;
     
     // 1. Strict non-overlapping match: start <= time < end
-    const strictIdx = activeCaption.words.findIndex(
+    const strictIdx = displayWords.findIndex(
       (w) => w.start <= currentTime && currentTime < w.end
     );
     if (strictIdx !== -1) return strictIdx;
 
     // 2. Tolerance match (for trailing 50ms)
-    return activeCaption.words.findIndex(
+    return displayWords.findIndex(
       (w) => w.start <= currentTime && currentTime <= w.end + 0.05
     );
-  }, [activeCaption, currentTime]);
+  }, [displayWords, currentTime]);
 
   // Calculate buffer margin needed around each word to prevent overlapping when scale transforms
   const wordBufferPx = useMemo(() => {
@@ -173,7 +179,7 @@ export function SubtitleOverlay({
         style={subtitleOverlayStyle}
         className="absolute z-20 pointer-events-none select-none transition-all duration-75"
       >
-        {style.enableWordHighlight && activeCaption.words && activeCaption.words.length > 0 ? (
+        {style.enableWordHighlight && displayWords.length > 0 ? (
           /* Sticker Pop-up Architecture: Layer 1 (Base Outlines) + Layer 2 (Foreground Words & Pop-up Active Word) */
           <div className="relative w-full">
             {/* Layer 1: Continuous Background Outline & Shadow (Base Layer) */}
@@ -190,20 +196,20 @@ export function SubtitleOverlay({
               }}
               aria-hidden="true"
             >
-              {activeCaption.words.map((w: CaptionWord, idx: number) => {
+              {displayWords.map((w: CaptionWord, idx: number) => {
                 const isWordActive = idx === activeWordIndex;
 
                 let prefixSpace = '';
                 if (idx > 0) {
-                  const prevW = activeCaption.words![idx - 1];
+                  const prevW = displayWords[idx - 1];
                   const testJoin = formatCaptionWordsText([prevW, w]);
                   if (testJoin.includes(' ')) {
                     prefixSpace = ' ';
                   }
                 }
 
-                const isLastWord = idx === activeCaption.words!.length - 1;
-                const nextHasSpace = !isLastWord && formatCaptionWordsText([w, activeCaption.words![idx + 1]]).includes(' ');
+                const isLastWord = idx === displayWords.length - 1;
+                const nextHasSpace = !isLastWord && formatCaptionWordsText([w, displayWords[idx + 1]]).includes(' ');
                 const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
 
                 const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
@@ -246,20 +252,20 @@ export function SubtitleOverlay({
                 textShadow: 'none',
               }}
             >
-              {activeCaption.words.map((w: CaptionWord, idx: number) => {
+              {displayWords.map((w: CaptionWord, idx: number) => {
                 const isWordActive = idx === activeWordIndex;
 
                 let prefixSpace = '';
                 if (idx > 0) {
-                  const prevW = activeCaption.words![idx - 1];
+                  const prevW = displayWords[idx - 1];
                   const testJoin = formatCaptionWordsText([prevW, w]);
                   if (testJoin.includes(' ')) {
                     prefixSpace = ' ';
                   }
                 }
 
-                const isLastWord = idx === activeCaption.words!.length - 1;
-                const nextHasSpace = !isLastWord && formatCaptionWordsText([w, activeCaption.words![idx + 1]]).includes(' ');
+                const isLastWord = idx === displayWords.length - 1;
+                const nextHasSpace = !isLastWord && formatCaptionWordsText([w, displayWords[idx + 1]]).includes(' ');
                 const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
 
                 const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
