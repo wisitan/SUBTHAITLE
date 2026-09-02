@@ -52,16 +52,6 @@ export function SubtitleOverlay({
     );
   }, [displayWords, currentTime]);
 
-  // Calculate buffer margin needed around each word to prevent overlapping when scale transforms
-  const wordBufferPx = useMemo(() => {
-    const baseDim = Math.min(visualBounds.w, visualBounds.h);
-    const domScale = (baseDim || 360) / 360;
-    const scaledFontSize = (style.fontSize || 24) * domScale;
-    const highlightScale = style.highlightScale ?? 1.15;
-    if (!style.enableWordHighlight || highlightScale <= 1) return 0;
-    return ((highlightScale - 1) / 2) * scaledFontSize;
-  }, [visualBounds, style]);
-
   // Build dynamic text-shadow & outline CSS with 100% WYSIWYG Proportional Scaling
   const { subtitleOverlayStyle, shadowsCss } = useMemo(() => {
     const baseDim = Math.min(visualBounds.w, visualBounds.h);
@@ -147,8 +137,8 @@ export function SubtitleOverlay({
     };
   }, [style, visualBounds]);
 
-  // Dynamic micro-gap between adjacent words and sticker pill styling
-  const { microGapPx, activeWordShadowCss, stickerStyles } = useMemo(() => {
+  // Dynamic micro-gap between adjacent words and highlight shadow glow
+  const { microGapPx, activeWordShadowCss } = useMemo(() => {
     const baseDim = Math.min(visualBounds.w, visualBounds.h);
     const domScale = (baseDim || 360) / 360;
     const gap = style.enableWordHighlight ? Math.max(1.5, 2 * domScale) : 0;
@@ -162,21 +152,9 @@ export function SubtitleOverlay({
       ? `${shadowsCss}, ${activeGlow}`
       : activeGlow;
 
-    // Sticker mode parameters with generous spacing to guarantee zero background overlap
-    const pillPadX = Math.round(7 * domScale);
-    const pillPadY = Math.round(3 * domScale);
-    const pillRadius = Math.round(6 * domScale);
-    const pillMargin = Math.round(3 * domScale);
-
     return {
       microGapPx: gap,
       activeWordShadowCss: combinedShadows,
-      stickerStyles: {
-        pillPadX,
-        pillPadY,
-        pillRadius,
-        pillMargin,
-      },
     };
   }, [visualBounds, style.enableWordHighlight, style.highlightColor, shadowsCss]);
 
@@ -230,17 +208,33 @@ export function SubtitleOverlay({
                 const isWordActive = idx === activeWordIndex;
                 const isVisible = isWordVisible(idx);
 
+                // Preserve user-typed spaces accurately
+                const hasLeadingSpace = w.word.startsWith(' ');
+                const cleanWord = w.word.trim();
+
                 let prefixSpace = '';
-                if (idx > 0) {
+                if (hasLeadingSpace) {
+                  prefixSpace = ' ';
+                } else if (idx > 0) {
                   const prevW = displayWords[idx - 1];
-                  const testJoin = formatCaptionWordsText([prevW, w]);
-                  if (testJoin.includes(' ')) {
+                  const prevClean = prevW.word.trim();
+                  // Check if user's caption text explicitly contains a space between these words
+                  if (activeCaption.text && (activeCaption.text.includes(`${prevClean} ${cleanWord}`) || activeCaption.text.includes(`${prevClean}  ${cleanWord}`))) {
                     prefixSpace = ' ';
+                  } else {
+                    const testJoin = formatCaptionWordsText([prevW, w]);
+                    if (testJoin.includes(' ')) {
+                      prefixSpace = ' ';
+                    }
                   }
                 }
 
                 const isLastWord = idx === displayWords.length - 1;
-                const nextHasSpace = !isLastWord && formatCaptionWordsText([w, displayWords[idx + 1]]).includes(' ');
+                const nextHasSpace = !isLastWord && (
+                  displayWords[idx + 1].word.startsWith(' ') ||
+                  (activeCaption.text ? activeCaption.text.includes(`${cleanWord} ${displayWords[idx + 1].word.trim()}`) : false) ||
+                  formatCaptionWordsText([w, displayWords[idx + 1]]).includes(' ')
+                );
                 const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
 
                 const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
@@ -259,53 +253,46 @@ export function SubtitleOverlay({
                           {prefixSpace}
                         </span>
                       )}
+                      {/* Zero-Layout-Shift Sticker Container */}
                       <span
-                        className={`inline-block origin-center transition-[transform] duration-120 ease-out ${
-                          isWordActive ? 'relative z-30' : 'relative z-10'
-                        }`}
+                        className="relative inline-block origin-center"
                         style={{
                           opacity: isVisible ? 1 : 0,
                           visibility: isVisible ? 'visible' : 'hidden',
-                          backgroundColor: isWordActive
-                            ? (style.highlightColor || '#FACC15')
-                            : 'transparent',
-                          color: isWordActive
-                            ? '#121216'
-                            : (style.textColor || '#FFFFFF'),
-                          fontWeight: isWordActive
-                            ? 800
-                            : (style.fontWeight === 'bold' || style.fontWeight === '700'
-                            ? 700
-                            : style.fontWeight === '800'
-                            ? 800
-                            : 500),
-                          padding: isWordActive
-                            ? `${stickerStyles.pillPadY}px ${stickerStyles.pillPadX}px`
-                            : '0',
-                          borderRadius: isWordActive
-                            ? `${stickerStyles.pillRadius}px`
-                            : '0',
-                          margin: isWordActive
-                            ? `0 ${wordBufferPx + 3}px`
-                            : undefined,
-                          marginRight: !isWordActive && gapRight > 0
-                            ? `${gapRight}px`
-                            : undefined,
-                          transform: isWordActive && isScaled
-                            ? `scale(${scaleMultiplier})`
-                            : 'scale(1)',
-                          border: isWordActive
-                            ? '1px solid rgba(255, 255, 255, 0.7)'
-                            : 'none',
-                          boxShadow: isWordActive
-                            ? `0 0 14px ${hexToRgba(style.highlightColor || '#FACC15', 75)}, 0 4px 10px rgba(0,0,0,0.5)`
-                            : 'none',
-                          textShadow: !isWordActive && shadowsCss !== 'none'
-                            ? shadowsCss
-                            : 'none',
+                          marginRight: gapRight > 0 ? `${gapRight}px` : undefined,
                         }}
                       >
-                        {w.word}
+                        {/* Absolute Sticker Pill Backdrop - Never pushes surrounding words or line wraps */}
+                        {isWordActive && (
+                          <span
+                            className="absolute -inset-x-2 -inset-y-0.5 rounded-lg pointer-events-none -z-10"
+                            style={{
+                              backgroundColor: style.highlightColor || '#FACC15',
+                              border: '1px solid rgba(255, 255, 255, 0.7)',
+                              boxShadow: `0 0 14px ${hexToRgba(style.highlightColor || '#FACC15', 75)}, 0 4px 10px rgba(0,0,0,0.5)`,
+                            }}
+                          />
+                        )}
+                        {/* Word Text (Fixed metrics across all frames) */}
+                        <span
+                          style={{
+                            color: isWordActive
+                              ? '#121216'
+                              : (style.textColor || '#FFFFFF'),
+                            fontWeight: isWordActive
+                              ? 800
+                              : (style.fontWeight === 'bold' || style.fontWeight === '700'
+                              ? 700
+                              : style.fontWeight === '800'
+                              ? 800
+                              : 500),
+                            textShadow: !isWordActive && shadowsCss !== 'none'
+                              ? shadowsCss
+                              : 'none',
+                          }}
+                        >
+                          {cleanWord}
+                        </span>
                       </span>
                     </React.Fragment>
                   );
@@ -317,8 +304,8 @@ export function SubtitleOverlay({
                   const shouldRenderTypewriter = isWordActive || (isLastWordInCaption && hasFinishedAllWords);
 
                   if (shouldRenderTypewriter) {
-                    const slice = getTypewriterSlice(w.word, w.start, w.end, currentTime);
-                    const remainder = w.word.slice(slice.visibleText.length);
+                    const slice = getTypewriterSlice(cleanWord, w.start, w.end, currentTime);
+                    const remainder = cleanWord.slice(slice.visibleText.length);
                     const isCurrentlyTyping = slice.isTyping && !slice.isComplete;
 
                     return (
@@ -333,6 +320,7 @@ export function SubtitleOverlay({
                             {prefixSpace}
                           </span>
                         )}
+                        {/* Zero-Layout-Shift Typewriter Container */}
                         <span
                           className="relative z-20 inline-block origin-center font-extrabold"
                           style={{
@@ -342,21 +330,20 @@ export function SubtitleOverlay({
                           }}
                         >
                           <span>{slice.visibleText}</span>
-                          {/* Blinking cursor positioned naturally */}
-                          <span
-                            className={`inline-block font-mono font-bold ${
-                              isCurrentlyTyping ? 'animate-pulse text-orange-400' : 'text-amber-300'
-                            }`}
-                            style={{ width: '0.45em', marginLeft: '0.05em' }}
-                          >
-                            |
-                          </span>
-                          {/* Ghost untyped remainder to lock paragraph width & line wrap perfectly */}
+                          {/* Ghost untyped remainder to lock word width & line wrap 100% */}
                           {remainder && (
                             <span className="opacity-0 select-none pointer-events-none" aria-hidden="true">
                               {remainder}
                             </span>
                           )}
+                          {/* Floating Cursor with Zero Layout Disruption */}
+                          <span
+                            className={`absolute -right-1.5 top-0 font-mono font-bold pointer-events-none select-none ${
+                              isCurrentlyTyping ? 'animate-pulse text-orange-400' : 'text-amber-300'
+                            }`}
+                          >
+                            |
+                          </span>
                         </span>
                       </React.Fragment>
                     );
@@ -375,14 +362,15 @@ export function SubtitleOverlay({
                         {prefixSpace}
                       </span>
                     )}
+                    {/* Zero-Layout-Shift Pop & Classic Word */}
                     <span
-                      className={`inline-block origin-center transition-[transform] duration-120 ease-out ${
+                      className={`inline-block origin-center transition-transform duration-100 ease-out ${
                         isWordActive ? 'relative z-20' : 'relative z-10'
                       }`}
                       style={{
                         opacity: isVisible ? 1 : 0,
                         visibility: isVisible ? 'visible' : 'hidden',
-                        color: isWordActive ? style.highlightColor || '#FACC15' : style.textColor || '#FFFFFF',
+                        color: isWordActive ? (style.highlightColor || '#FACC15') : (style.textColor || '#FFFFFF'),
                         fontWeight: isWordActive
                           ? 800
                           : style.fontWeight === 'bold' || style.fontWeight === '700'
@@ -391,12 +379,11 @@ export function SubtitleOverlay({
                           ? 800
                           : 500,
                         transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
-                        marginLeft: isScaled ? `${wordBufferPx}px` : undefined,
-                        marginRight: isScaled ? `${wordBufferPx + gapRight}px` : (gapRight > 0 ? `${gapRight}px` : undefined),
+                        marginRight: gapRight > 0 ? `${gapRight}px` : undefined,
                         textShadow: isWordActive ? activeWordShadowCss : (shadowsCss !== 'none' ? shadowsCss : 'none'),
                       }}
                     >
-                      {w.word}
+                      {cleanWord}
                     </span>
                   </React.Fragment>
                 );

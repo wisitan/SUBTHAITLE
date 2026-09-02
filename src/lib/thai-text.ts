@@ -410,34 +410,56 @@ export function formatCaptionWordsText<T extends CaptionWordLike | string>(
 
 /**
  * Distributes a string of text into an array of words with proportional timestamps.
- * Used to regenerate word tokens when a user manually edits a caption block.
+ * Preserves explicit user spaces and newlines between words accurately.
  */
 export function distributeTextToWords(text: string, start: number, end: number): { word: string; start: number; end: number }[] {
-  if (!text.trim()) return [];
+  if (!text || !text.trim()) return [];
 
   const segmenter = getThaiSegmenter();
-  let tokens: string[] = [];
+  const tokens: { word: string; hasLeadingSpace: boolean }[] = [];
 
-  if (segmenter) {
-    const segments = Array.from(segmenter.segment(text));
-    tokens = segments.flatMap((s) => splitCompoundSegment(s.segment.trim())).filter(Boolean);
-  } else {
-    // Fallback: split by space
-    tokens = text.split(/\s+/).flatMap((s) => splitCompoundSegment(s.trim())).filter(Boolean);
+  // Split by whitespace tokens while retaining space flags
+  const parts = text.split(/( +|\n+)/);
+  let isNextLeadingSpace = false;
+
+  for (const part of parts) {
+    if (/^ +$/.test(part) || /^\n+$/.test(part)) {
+      isNextLeadingSpace = true;
+      continue;
+    }
+    if (!part.trim()) continue;
+
+    if (segmenter) {
+      const segs = Array.from(segmenter.segment(part.trim()));
+      const subTokens = segs.flatMap((s) => splitCompoundSegment(s.segment.trim())).filter(Boolean);
+      subTokens.forEach((sub, subIdx) => {
+        tokens.push({
+          word: sub,
+          hasLeadingSpace: subIdx === 0 && isNextLeadingSpace,
+        });
+      });
+    } else {
+      const subTokens = splitCompoundSegment(part.trim()).filter(Boolean);
+      subTokens.forEach((sub, subIdx) => {
+        tokens.push({
+          word: sub,
+          hasLeadingSpace: subIdx === 0 && isNextLeadingSpace,
+        });
+      });
+    }
+    isNextLeadingSpace = false;
   }
 
-  const duration = end - start;
-  const totalLength = text.length || 1;
-
+  const duration = Math.max(0.1, end - start);
+  const totalChars = tokens.reduce((acc, t) => acc + t.word.length, 0) || 1;
   let currentStart = start;
 
-  return tokens.map((token) => {
-    // Proportional duration based on string length
-    const tokenDuration = (token.length / totalLength) * duration;
+  return tokens.map((t) => {
+    const tokenDuration = (t.word.length / totalChars) * duration;
     const tokenEnd = currentStart + tokenDuration;
 
     const result = {
-      word: token,
+      word: t.hasLeadingSpace ? ` ${t.word}` : t.word,
       start: Number(currentStart.toFixed(3)),
       end: Number(tokenEnd.toFixed(3)),
     };

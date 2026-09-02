@@ -138,7 +138,6 @@ export async function renderSubtitleCanvas(
   // Sticker pill metrics
   const pillPadX = Math.round(7 * scale);
   const pillPadY = Math.round(3 * scale);
-  const pillMargin = Math.round(3 * scale);
   const pillRadius = Math.round(6 * scale);
 
   // Build rendered items / words with spacing
@@ -170,12 +169,23 @@ export async function renderSubtitleCanvas(
         }
       }
 
+      // Preserve user-typed spaces accurately
+      const hasLeadingSpace = w.word.startsWith(' ');
+      const cleanWord = w.word.trim();
+
       let prefixSpace = '';
-      if (!isStickerMode && idx > 0) {
+      if (hasLeadingSpace) {
+        prefixSpace = ' ';
+      } else if (idx > 0) {
         const prevW = displayWords[idx - 1];
-        const testJoin = formatCaptionWordsText([prevW, w]);
-        if (testJoin.includes(' ')) {
+        const prevClean = prevW.word.trim();
+        if (caption.text && (caption.text.includes(`${prevClean} ${cleanWord}`) || caption.text.includes(`${prevClean}  ${cleanWord}`))) {
           prefixSpace = ' ';
+        } else {
+          const testJoin = formatCaptionWordsText([prevW, w]);
+          if (testJoin.includes(' ')) {
+            prefixSpace = ' ';
+          }
         }
       }
 
@@ -199,15 +209,19 @@ export async function renderSubtitleCanvas(
       }
 
       const isLastWord = idx === displayWords.length - 1;
-      const nextHasSpace = !isLastWord && formatCaptionWordsText([w, displayWords[idx + 1]]).includes(' ');
+      const nextHasSpace = !isLastWord && (
+        displayWords[idx + 1].word.startsWith(' ') ||
+        (caption.text ? caption.text.includes(`${cleanWord} ${displayWords[idx + 1].word.trim()}`) : false) ||
+        formatCaptionWordsText([w, displayWords[idx + 1]]).includes(' ')
+      );
       const gapRight = (!isLastWord && !nextHasSpace) ? microGapPx : 0;
 
       ctx.font = `${wordWeight} ${fontSize}px "${fontName}", sans-serif`;
-      const rawWidth = ctx.measureText(w.word).width;
-      const totalWordWidth = rawWidth + (isStickerMode ? (pillPadX * 2 + pillMargin * 2) : 0) + scaleBufferPx * 2 + gapRight;
+      const rawWidth = ctx.measureText(cleanWord).width;
+      const totalWordWidth = rawWidth + scaleBufferPx * 2 + gapRight;
 
       renderWords.push({
-        text: w.word,
+        text: cleanWord,
         isActive,
         isVisible,
         color: wordColor,
