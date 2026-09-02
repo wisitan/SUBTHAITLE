@@ -645,7 +645,7 @@ export function RecentProjects() {
             <div
               key={project.id}
               onClick={() => handleOpenProject(project)}
-              className="group relative bg-zinc-900/90 hover:bg-zinc-900 border border-zinc-800/90 hover:border-orange-500/60 rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer shadow-md hover:shadow-orange-500/5 flex flex-col justify-between"
+              className="group relative bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800/80 hover:border-orange-500/70 rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer shadow-md hover:shadow-[0_0_30px_-5px_rgba(249,115,22,0.18)] hover:scale-[1.01] flex flex-col justify-between"
             >
               {/* Full-width Top Thumbnail Container */}
               <div className="relative w-full aspect-[4/3] bg-zinc-950 flex items-center justify-center overflow-hidden border-b border-zinc-800/80">

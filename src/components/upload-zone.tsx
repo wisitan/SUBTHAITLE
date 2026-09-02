@@ -352,48 +352,53 @@ export function UploadZone() {
       />
 
       {!file ? (
-        /* Drag & Drop Upload Zone */
-        <div
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`relative cursor-pointer border-2 border-dashed rounded-3xl p-6 sm:p-8 text-center transition-all flex flex-col items-center justify-center min-h-[210px] sm:min-h-[230px] group ${
-            isDragging
-              ? 'border-orange-500 bg-orange-500/15 scale-[1.01] shadow-2xl'
-              : 'border-zinc-700/80 bg-zinc-900/95 hover:border-orange-500/80 hover:bg-[#1a1a20] shadow-xl'
-          }`}
-        >
-          {/* Subtle glow background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-orange-500/5 via-transparent to-transparent rounded-3xl pointer-events-none" />
+        /* Drag & Drop Upload Zone with Ambient Glowing Aura */
+        <div className="relative group">
+          {/* Ambient Glow Aura Behind Card (Just like competitor) */}
+          <div className="absolute -inset-1.5 bg-gradient-to-r from-orange-500/20 via-amber-500/15 to-orange-600/20 rounded-[32px] blur-xl opacity-40 group-hover:opacity-80 transition-all duration-500 pointer-events-none" />
 
-          {/* Upload Icon */}
-          <div className="w-13 h-13 rounded-2xl bg-zinc-950/90 border border-zinc-700/80 flex items-center justify-center text-orange-400 mb-3 group-hover:scale-110 group-hover:border-orange-500/60 group-hover:text-orange-300 transition-all shadow-xl">
-            <UploadCloud className="w-7 h-7" />
-          </div>
+          <div
+            onDragOver={onDragOver}
+            onDragLeave={onDragLeave}
+            onDrop={onDrop}
+            onClick={() => fileInputRef.current?.click()}
+            className={`relative cursor-pointer border-2 border-dashed rounded-3xl p-6 sm:p-8 text-center transition-all duration-300 flex flex-col items-center justify-center min-h-[210px] sm:min-h-[230px] overflow-hidden ${
+              isDragging
+                ? 'border-orange-500 bg-orange-500/20 scale-[1.01] shadow-[0_0_50px_rgba(249,115,22,0.3)]'
+                : 'border-orange-500/30 bg-gradient-to-b from-zinc-900/90 via-zinc-950/90 to-zinc-950/95 hover:border-orange-500/70 hover:shadow-[0_0_40px_-5px_rgba(249,115,22,0.2)]'
+            }`}
+          >
+            {/* Top subtle radial glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-36 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
 
-          <h3 className="text-lg sm:text-xl font-bold text-zinc-100 mb-1">
-            แตะหรือลากไฟล์วิดีโอมาวางที่นี่
-          </h3>
-          <p className="text-xs sm:text-sm text-zinc-400 mb-3.5">
-            หรือ <span className="text-orange-400 font-semibold underline underline-offset-4">คลิกเพื่อเลือกไฟล์</span> จากอุปกรณ์ของคุณ
-          </p>
+            {/* Upload Icon with warm glow */}
+            <div className="w-13 h-13 rounded-2xl bg-gradient-to-b from-orange-500/20 to-orange-500/5 border border-orange-500/40 flex items-center justify-center text-orange-400 mb-3 group-hover:scale-110 group-hover:border-orange-400 group-hover:text-orange-300 group-hover:shadow-[0_0_20px_rgba(249,115,22,0.4)] transition-all shadow-lg">
+              <UploadCloud className="w-7 h-7" />
+            </div>
 
-          {/* Badges & Limit notice */}
-          <div className="flex flex-wrap items-center justify-center gap-2 max-w-md">
-            <span className="px-2.5 py-1 text-[11px] rounded-lg bg-zinc-950/80 border border-zinc-700/80 text-zinc-400 font-medium">
-              MP4, MOV, WebM, MKV, MP3, WAV
-            </span>
-            {isFreeMode ? (
-              <span className="px-2.5 py-1 text-[11px] rounded-lg bg-amber-950/50 border border-amber-800/60 text-amber-300 font-semibold">
-                โหมดฟรี: สูงสุด 100 MB • ยาว 2 นาที
+            <h3 className="text-lg sm:text-xl font-bold text-zinc-100 mb-1 tracking-tight">
+              แตะหรือลากไฟล์วิดีโอมาวางที่นี่
+            </h3>
+            <p className="text-xs sm:text-sm text-zinc-400 mb-3.5">
+              หรือ <span className="text-orange-400 font-semibold underline underline-offset-4">คลิกเพื่อเลือกไฟล์</span> จากอุปกรณ์ของคุณ
+            </p>
+
+            {/* Badges & Limit notice */}
+            <div className="flex flex-wrap items-center justify-center gap-2 max-w-md relative z-10">
+              <span className="px-2.5 py-1 text-[11px] rounded-lg bg-zinc-900/90 border border-zinc-800 text-zinc-400 font-medium">
+                MP4, MOV, WebM, MKV, MP3, WAV
               </span>
-            ) : (
-              <span className="px-2.5 py-1 text-[11px] rounded-lg bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 font-semibold flex items-center gap-1">
-                <Zap className="w-3 h-3" />
-                โหมดเครดิต: สูงสุด 1.5 GB • ยาว 30 นาที
-              </span>
-            )}
+              {isFreeMode ? (
+                <span className="px-2.5 py-1 text-[11px] rounded-lg bg-amber-950/50 border border-amber-800/60 text-amber-300 font-semibold shadow-sm">
+                  โหมดฟรี: สูงสุด 100 MB • ยาว 2 นาที
+                </span>
+              ) : (
+                <span className="px-2.5 py-1 text-[11px] rounded-lg bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 font-semibold flex items-center gap-1 shadow-sm">
+                  <Zap className="w-3 h-3" />
+                  โหมดเครดิต: สูงสุด 1.5 GB • ยาว 30 นาที
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ) : (

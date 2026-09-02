@@ -9,6 +9,7 @@ import {
   Coins,
   CheckCircle2,
   Plus,
+  Sparkles,
 } from 'lucide-react';
 
 export function ProviderSelector() {
@@ -21,28 +22,11 @@ export function ProviderSelector() {
   } = useAppStore();
 
   const { user, refreshProfile } = useAuth();
-  const [systemEnergy, setSystemEnergy] = React.useState<{
-    energyLevel: 'full' | 'medium' | 'low' | 'empty';
-    percentage: number;
-    isExhausted: boolean;
-  }>({
-    energyLevel: 'full',
-    percentage: 100,
-    isExhausted: false,
-  });
 
   useEffect(() => {
     if (user) {
       refreshProfile();
     }
-    fetch('/api/system/quota')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data && typeof data.percentage === 'number') {
-          setSystemEnergy(data);
-        }
-      })
-      .catch(() => {});
   }, [user, refreshProfile]);
 
   const remainingDaily = Math.max(0, maxGroqDailyQuota - groqDailyUsageCount);
@@ -51,23 +35,28 @@ export function ProviderSelector() {
 
   return (
     <div className="w-full max-w-full">
-      {/* Compact Selector Bar */}
+      {/* Compact Glowing Selector Bar */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
         {/* 1. โหมดฟรีประจำวัน */}
         <button
           type="button"
           onClick={() => setProviderMode('free')}
-          className={`relative p-3 sm:p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between gap-3 cursor-pointer shadow-sm ${
+          className={`relative p-3 sm:p-3.5 rounded-2xl border transition-all duration-300 text-left flex items-center justify-between gap-3 cursor-pointer overflow-hidden ${
             isFreeSelected
-              ? 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/40 shadow-amber-500/5'
-              : 'border-zinc-800 bg-zinc-900/70 hover:border-zinc-700 hover:bg-zinc-900'
+              ? 'border-amber-500/80 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-zinc-900/80 ring-1 ring-amber-500/40 shadow-[0_0_30px_-5px_rgba(245,158,11,0.25)]'
+              : 'border-zinc-800/90 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900/80 hover:shadow-[0_0_20px_-5px_rgba(245,158,11,0.1)]'
           }`}
         >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
+          {/* Subtle Inner Glow on Selected */}
+          {isFreeSelected && (
+            <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+          )}
+
+          <div className="flex items-center gap-2.5 min-w-0 relative z-10">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
               isFreeSelected
-                ? 'bg-amber-500/20 border-amber-500/30 text-amber-400'
-                : 'bg-zinc-800 border-zinc-700 text-zinc-400'
+                ? 'bg-amber-500/25 border-amber-500/40 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                : 'bg-zinc-800/80 border-zinc-700 text-zinc-400'
             }`}>
               <Zap className="w-4 h-4" />
             </div>
@@ -86,43 +75,9 @@ export function ProviderSelector() {
             </div>
           </div>
 
-          {/* Mini Battery Gauge */}
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-zinc-950/80 border border-zinc-800 shrink-0">
-            {/* Battery Casing */}
-            <div className="relative flex items-center">
-              <div className="w-5 h-3 rounded-2xs border border-zinc-600 bg-zinc-900 p-0.5 flex items-center">
-                <div
-                  className={`h-full rounded-3xs transition-all duration-500 ${
-                    systemEnergy.energyLevel === 'empty'
-                      ? 'w-0'
-                      : systemEnergy.energyLevel === 'low'
-                      ? 'w-1/4 bg-rose-500'
-                      : systemEnergy.energyLevel === 'medium'
-                      ? 'w-2/3 bg-amber-400'
-                      : 'w-full bg-emerald-400 shadow-[0_0_4px_rgba(52,211,153,0.8)]'
-                  }`}
-                />
-              </div>
-              <div className="w-0.5 h-1 bg-zinc-600 rounded-r-3xs ml-0.2" />
-            </div>
-
-            <span className={`text-[10px] font-bold ${
-              systemEnergy.energyLevel === 'empty'
-                ? 'text-rose-400'
-                : systemEnergy.energyLevel === 'low'
-                ? 'text-amber-400'
-                : systemEnergy.energyLevel === 'medium'
-                ? 'text-amber-300'
-                : 'text-emerald-400'
-            }`}>
-              {systemEnergy.energyLevel === 'empty'
-                ? 'โควต้าเต็ม'
-                : systemEnergy.energyLevel === 'low'
-                ? 'ใกล้หมด'
-                : systemEnergy.energyLevel === 'medium'
-                ? 'ปานกลาง'
-                : 'เต็มเปี่ยม ⚡'}
-            </span>
+          <div className="relative z-10 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10.5px] font-medium shrink-0 flex items-center gap-1">
+            <Sparkles className="w-3 h-3" />
+            <span>วันละ 5 คลิป</span>
           </div>
         </button>
 
@@ -130,17 +85,22 @@ export function ProviderSelector() {
         <button
           type="button"
           onClick={() => setProviderMode('credits')}
-          className={`relative p-3 sm:p-3.5 rounded-2xl border transition-all text-left flex items-center justify-between gap-3 cursor-pointer shadow-sm ${
+          className={`relative p-3 sm:p-3.5 rounded-2xl border transition-all duration-300 text-left flex items-center justify-between gap-3 cursor-pointer overflow-hidden ${
             isCreditsSelected
-              ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/40 shadow-emerald-500/5'
-              : 'border-zinc-800 bg-zinc-900/70 hover:border-zinc-700 hover:bg-zinc-900'
+              ? 'border-emerald-500/80 bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-zinc-900/80 ring-1 ring-emerald-500/40 shadow-[0_0_30px_-5px_rgba(16,185,129,0.25)]'
+              : 'border-zinc-800/90 bg-zinc-900/60 hover:border-zinc-700 hover:bg-zinc-900/80 hover:shadow-[0_0_20px_-5px_rgba(16,185,129,0.1)]'
           }`}
         >
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border ${
+          {/* Subtle Inner Glow on Selected */}
+          {isCreditsSelected && (
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+          )}
+
+          <div className="flex items-center gap-2.5 min-w-0 relative z-10">
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 border transition-colors ${
               isCreditsSelected
-                ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
-                : 'bg-zinc-800 border-zinc-700 text-zinc-400'
+                ? 'bg-emerald-500/25 border-emerald-500/40 text-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                : 'bg-zinc-800/80 border-zinc-700 text-zinc-400'
             }`}>
               <Coins className="w-4 h-4" />
             </div>
@@ -163,7 +123,7 @@ export function ProviderSelector() {
           <Link
             href="/donate"
             onClick={(e) => e.stopPropagation()}
-            className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 hover:text-white text-[11px] font-bold flex items-center gap-1 transition-all shrink-0"
+            className="relative z-10 px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 hover:text-white text-[11px] font-bold flex items-center gap-1 transition-all shrink-0 shadow-sm"
           >
             <span>เติมเวลา</span>
             <Plus className="w-3 h-3" />

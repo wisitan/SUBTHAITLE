@@ -18,7 +18,12 @@ export default function Home() {
   }, [loadDictionary]);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col selection:bg-orange-500/30 selection:text-orange-200">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col selection:bg-orange-500/30 selection:text-orange-200 relative overflow-x-hidden">
+      {/* Background Ambient Glows (Cinematic warm lighting) */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[850px] h-[450px] bg-gradient-to-b from-orange-500/15 via-amber-500/8 to-transparent blur-[140px] pointer-events-none -z-10" />
+      <div className="fixed top-1/3 -left-20 w-[450px] h-[450px] bg-orange-600/10 blur-[150px] pointer-events-none -z-10" />
+      <div className="fixed top-1/2 -right-20 w-[450px] h-[450px] bg-amber-500/8 blur-[160px] pointer-events-none -z-10" />
+
       {/* Navigation Header */}
       <Header />
 
