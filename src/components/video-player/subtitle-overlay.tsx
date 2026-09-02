@@ -220,12 +220,6 @@ export function SubtitleOverlay({
                     isVisible = currentTime >= w.start || isWordActive;
                   }
 
-                  let displayWordText = w.word;
-                  if (animMode === 'typewriter' && isWordActive) {
-                    const slice = getTypewriterSlice(w.word, w.start, w.end, currentTime);
-                    displayWordText = slice.visibleText;
-                  }
-
                   let prefixSpace = '';
                   if (idx > 0) {
                     const prevW = displayWords[idx - 1];
@@ -241,6 +235,39 @@ export function SubtitleOverlay({
 
                   const scaleMultiplier = style.enableWordHighlight ? (style.highlightScale ?? 1.15) : 1;
                   const isScaled = isWordActive && scaleMultiplier > 1 && animMode !== 'typewriter';
+
+                  if (animMode === 'typewriter' && isWordActive) {
+                    const slice = getTypewriterSlice(w.word, w.start, w.end, currentTime);
+                    const remainder = w.word.slice(slice.visibleText.length);
+
+                    return (
+                      <React.Fragment key={idx}>
+                        {prefixSpace && (
+                          <span
+                            style={{
+                              opacity: isVisible ? 1 : 0,
+                              visibility: isVisible ? 'visible' : 'hidden',
+                            }}
+                          >
+                            {prefixSpace}
+                          </span>
+                        )}
+                        <span
+                          className="inline-block origin-center font-extrabold"
+                          style={{
+                            marginRight: gapRight > 0 ? `${gapRight}px` : undefined,
+                          }}
+                        >
+                          <span>{slice.visibleText}</span>
+                          {remainder && (
+                            <span className="opacity-0 select-none pointer-events-none" aria-hidden="true">
+                              {remainder}
+                            </span>
+                          )}
+                        </span>
+                      </React.Fragment>
+                    );
+                  }
 
                   return (
                     <React.Fragment key={idx}>
@@ -271,10 +298,7 @@ export function SubtitleOverlay({
                           marginRight: isScaled ? `${wordBufferPx + gapRight}px` : (gapRight > 0 ? `${gapRight}px` : undefined),
                         }}
                       >
-                        {displayWordText}
-                        {animMode === 'typewriter' && isWordActive && (
-                          <span className="opacity-0">|</span>
-                        )}
+                        {w.word}
                       </span>
                     </React.Fragment>
                   );
@@ -300,14 +324,6 @@ export function SubtitleOverlay({
                 let isVisible = true;
                 if (animMode === 'pop' || animMode === 'sticker' || animMode === 'typewriter') {
                   isVisible = currentTime >= w.start || isWordActive;
-                }
-
-                let displayWordText = w.word;
-                let isCurrentlyTyping = false;
-                if (animMode === 'typewriter' && isWordActive) {
-                  const slice = getTypewriterSlice(w.word, w.start, w.end, currentTime);
-                  displayWordText = slice.visibleText;
-                  isCurrentlyTyping = slice.isTyping && !slice.isComplete;
                 }
 
                 let prefixSpace = '';
@@ -391,6 +407,52 @@ export function SubtitleOverlay({
                   );
                 }
 
+                if (animMode === 'typewriter' && isWordActive) {
+                  const slice = getTypewriterSlice(w.word, w.start, w.end, currentTime);
+                  const remainder = w.word.slice(slice.visibleText.length);
+                  const isCurrentlyTyping = slice.isTyping && !slice.isComplete;
+
+                  return (
+                    <React.Fragment key={idx}>
+                      {prefixSpace && (
+                        <span
+                          style={{
+                            opacity: isVisible ? 1 : 0,
+                            visibility: isVisible ? 'visible' : 'hidden',
+                          }}
+                        >
+                          {prefixSpace}
+                        </span>
+                      )}
+                      <span
+                        className="relative z-20 inline-block origin-center font-extrabold"
+                        style={{
+                          color: style.highlightColor || '#FACC15',
+                          textShadow: activeWordShadowCss,
+                          marginRight: gapRight > 0 ? `${gapRight}px` : undefined,
+                        }}
+                      >
+                        <span>{slice.visibleText}</span>
+                        {/* Blinking cursor positioned naturally */}
+                        <span
+                          className={`inline-block font-mono font-bold ${
+                            isCurrentlyTyping ? 'animate-pulse text-orange-400' : 'text-amber-300'
+                          }`}
+                          style={{ width: '0.45em', marginLeft: '0.05em' }}
+                        >
+                          |
+                        </span>
+                        {/* Ghost untyped remainder to lock paragraph width & line wrap perfectly */}
+                        {remainder && (
+                          <span className="opacity-0 select-none pointer-events-none" aria-hidden="true">
+                            {remainder}
+                          </span>
+                        )}
+                      </span>
+                    </React.Fragment>
+                  );
+                }
+
                 return (
                   <React.Fragment key={idx}>
                     {prefixSpace && (
@@ -424,12 +486,7 @@ export function SubtitleOverlay({
                         textShadow: isWordActive ? activeWordShadowCss : (shadowsCss !== 'none' ? shadowsCss : 'none'),
                       }}
                     >
-                      {displayWordText}
-                      {animMode === 'typewriter' && isWordActive && (
-                        <span className={`inline-block font-mono font-bold ml-0.5 ${isCurrentlyTyping ? 'animate-pulse text-orange-400' : 'text-amber-300'}`}>
-                          |
-                        </span>
-                      )}
+                      {w.word}
                     </span>
                   </React.Fragment>
                 );
