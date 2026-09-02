@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ArrowLeft, Search, MoreHorizontal, BarChart2 } from 'lucide-react';
+import { ArrowLeft, Search, MoreHorizontal } from 'lucide-react';
 
 interface TikTokSafeZoneProps {
   visible: boolean;
@@ -36,30 +36,12 @@ export function TikTokSafeZone({ visible }: TikTokSafeZoneProps) {
       </div>
 
       {/* ========================================================================= */}
-      {/* 2. Floating Visual Search Button (Center Right / Image 1)                 */}
+      {/* 2. Right Action Column (Positioned accurately at right edge)              */}
       {/* ========================================================================= */}
-      <div className="absolute top-[52%] left-1/2 -translate-x-1/2 z-20">
-        <div className="bg-black/40 backdrop-blur-md border border-white/25 rounded-full px-3 py-1 text-white text-[11px] font-semibold flex items-center gap-1.5 shadow-md">
-          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-none stroke-white stroke-2">
-            <path d="M3 7V5a2 2 0 012-2h2m12 0h2a2 2 0 012 2v2m0 10v2a2 2 0 01-2 2h-2M7 21H5a2 2 0 01-2-2v-2" />
-            <circle cx="12" cy="12" r="3" />
-          </svg>
-          <span>ค้นหารูปภาพนี้</span>
-          <span className="text-[10px] text-white/70">›</span>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* 3. Right Action Column (Positioned accurately matching Image 1)           */}
-      {/* ========================================================================= */}
-      <div className="absolute right-2.5 bottom-12 flex flex-col items-center gap-3.5 z-20 drop-shadow-[0_2px_5px_rgba(0,0,0,0.95)]">
-        {/* Profile Avatar with Overlapping + Badge */}
+      <div className="absolute right-2.5 bottom-6 flex flex-col items-center gap-3.5 z-20 drop-shadow-[0_2px_5px_rgba(0,0,0,0.95)]">
+        {/* Profile Avatar (Plain Orange Circle with + Badge) */}
         <div className="relative mb-0.5">
-          <div className="w-9 h-9 rounded-full border-1.5 border-white bg-zinc-800 flex items-center justify-center text-white text-xs font-black shadow-lg overflow-hidden">
-            <span className="bg-gradient-to-tr from-orange-500 to-amber-500 w-full h-full flex items-center justify-center text-white font-bold">
-              เฮียเอ
-            </span>
-          </div>
+          <div className="w-9 h-9 rounded-full border-1.5 border-white bg-gradient-to-tr from-amber-500 to-orange-500 shadow-lg" />
           <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-rose-500 text-white flex items-center justify-center border-1.5 border-white shadow-md">
             <span className="text-[9.5px] font-black leading-none">+</span>
           </div>
@@ -109,11 +91,11 @@ export function TikTokSafeZone({ visible }: TikTokSafeZoneProps) {
       </div>
 
       {/* ========================================================================= */}
-      {/* 4. Bottom Area: Yellow Basket + Creator Info + Caption + Scrubber + Stats */}
+      {/* 3. Bottom Area: Yellow Basket + Creator Info + Caption + Scrubber Bar     */}
       {/* ========================================================================= */}
       <div className="w-full flex flex-col gap-1.5 drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] z-20 pb-0.5">
-        {/* TikTok Shop Yellow Shopping Basket Badge (49% Opacity Frosted Glass / Image 1) */}
-        <div className="w-fit max-w-[80%] bg-black/[0.49] backdrop-blur-sm border border-white/15 rounded-md px-2 py-1 flex items-center gap-1.5 shadow-md">
+        {/* TikTok Shop Yellow Shopping Basket Badge (Almost fully transparent background) */}
+        <div className="w-fit max-w-[80%] bg-black/15 backdrop-blur-[2px] border border-white/10 rounded-md px-2 py-0.5 flex items-center gap-1.5 shadow-sm">
           {/* Yellow Shopping Bag Icon */}
           <div className="w-4.5 h-4.5 rounded bg-amber-400 flex items-center justify-center shrink-0 shadow-sm">
             <svg viewBox="0 0 24 24" className="w-3 h-3 fill-white stroke-white stroke-[0.8]">
@@ -121,8 +103,8 @@ export function TikTokSafeZone({ visible }: TikTokSafeZoneProps) {
             </svg>
           </div>
           <div className="min-w-0 flex-1 leading-tight">
-            <p className="text-[10.5px] font-bold text-white truncate">
-              Kimiso สายชาร์จ 240w
+            <p className="text-[10.5px] font-medium text-white truncate">
+              ชื่อสินค้าในตะกร้า TikTok
             </p>
           </div>
         </div>
@@ -130,41 +112,23 @@ export function TikTokSafeZone({ visible }: TikTokSafeZoneProps) {
         {/* Creator Handle & Description */}
         <div className="w-[78%] px-0.5 space-y-0.5">
           <p className="text-xs font-bold text-white tracking-wide flex items-center gap-1 leading-tight">
-            <span>เฮียเอ สายเดต้า</span>
-            <span className="text-white/70 text-[10px] font-normal">• 2 วันที่แล้ว</span>
+            <span>ชื่อครีเอเตอร์</span>
+            <span className="text-white/70 text-[10px] font-normal">• 1 วันที่แล้ว</span>
           </p>
           <p className="text-[10.5px] text-white/95 line-clamp-2 leading-tight font-normal">
-            สายชาร์จด่วนแนวตั้งสำหรับสายเกม หรือสายเสพซีรี่ส์ #สายชาร์จ #สายชาร์จเร็...เพิ่มเติม
+            ข้อความอธิบายวิดีโอ แคปชัน และแฮชแท็ก #fyp #ครีเอเตอร์ #รีวิว...เพิ่มเติม
           </p>
         </div>
 
-        {/* Video Scrubber Line Indicator with Circle Thumb */}
+        {/* Video Scrubber Line Indicator with Circle Thumb at bottom */}
         <div className="w-full h-1 bg-white/25 rounded-full relative mt-0.5">
           <div className="w-1/4 h-full bg-white rounded-full relative">
             <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-md" />
-          </div>
-        </div>
-
-        {/* Bottom Insight & Analytics Bar (Matching Image 1) */}
-        <div className="w-full flex items-center justify-between text-white pt-0.5 px-0.5">
-          <div className="flex items-center gap-3 text-[10.5px] font-bold text-white/95">
-            <span className="flex items-center gap-1">
-              <span>▶</span>
-              <span>226</span>
-            </span>
-            <span className="flex items-center gap-1">
-              <span>➜</span>
-              <span>0</span>
-            </span>
-          </div>
-
-          <div className="bg-black/50 backdrop-blur-sm border border-white/25 px-2.5 py-0.5 rounded-full text-[10px] font-semibold text-white flex items-center gap-1 shadow-sm">
-            <BarChart2 className="w-3 h-3 text-white" />
-            <span>ข้อมูลเชิงลึกเพิ่มเติม</span>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
 
