@@ -20,9 +20,16 @@ import {
   Calendar,
   Filter,
   HardDrive,
+  LayoutGrid,
+  List,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 type TimeFilterType = 'all' | 'today' | '7days' | '30days' | 'custom';
+type ViewMode = 'grid' | 'list';
+type SortMode = 'updated_desc' | 'created_desc' | 'title_asc';
 
 function getTodayDateString(): string {
   const d = new Date();
@@ -61,6 +68,11 @@ export function RecentProjects() {
   const [isLoading, setIsLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
+  // View, Sort & Pagination state
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [sortMode, setSortMode] = useState<SortMode>('updated_desc');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [timeFilter, setTimeFilter] = useState<TimeFilterType>('all');
@@ -87,6 +99,11 @@ export function RecentProjects() {
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
+
+  // Reset to page 1 whenever filters, search or sort change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, timeFilter, customStartDate, customEndDate, sortMode, viewMode]);
 
   const handleOpenProject = async (project: UserProject) => {
     loadProject(project);
@@ -171,6 +188,38 @@ export function RecentProjects() {
     });
   }, [projects, searchQuery, timeFilter, customStartDate, customEndDate]);
 
+  // Sorted projects
+  const sortedProjects = useMemo(() => {
+    const list = [...filteredProjects];
+    list.sort((a, b) => {
+      if (sortMode === 'updated_desc') {
+        const dateA = new Date(a.updated_at || a.created_at || 0).getTime();
+        const dateB = new Date(b.updated_at || b.created_at || 0).getTime();
+        return dateB - dateA;
+      }
+      if (sortMode === 'created_desc') {
+        const dateA = new Date(a.created_at || a.updated_at || 0).getTime();
+        const dateB = new Date(b.created_at || b.updated_at || 0).getTime();
+        return dateB - dateA;
+      }
+      if (sortMode === 'title_asc') {
+        return a.title.localeCompare(b.title, 'th');
+      }
+      return 0;
+    });
+    return list;
+  }, [filteredProjects, sortMode]);
+
+  // Pagination metrics (6 per page for grid, 10 per page for list)
+  const pageSize = viewMode === 'grid' ? 6 : 10;
+  const totalPages = Math.max(1, Math.ceil(sortedProjects.length / pageSize));
+  const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const pagedProjects = useMemo(() => {
+    const startIndex = (validCurrentPage - 1) * pageSize;
+    return sortedProjects.slice(startIndex, startIndex + pageSize);
+  }, [sortedProjects, validCurrentPage, pageSize]);
+
   // If user is not logged in, render an inviting banner
   if (!user) {
     return (
@@ -223,7 +272,7 @@ export function RecentProjects() {
       {/* Search & Filter Toolbar */}
       {projects.length > 0 && (
         <div className="p-3 sm:p-4 rounded-2xl bg-zinc-900/90 border border-zinc-800 shadow-md space-y-3">
-          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
             {/* Search Bar */}
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" />
@@ -245,13 +294,61 @@ export function RecentProjects() {
               )}
             </div>
 
-            {/* Time Filter Toggles */}
-            <div className="flex items-center gap-1 overflow-x-auto pb-1 md:pb-0 scrollbar-none shrink-0">
+            {/* View Switcher & Sort Selector */}
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Sort Selector */}
+              <div className="relative inline-flex items-center">
+                <ArrowUpDown className="w-3.5 h-3.5 text-zinc-400 absolute left-2.5 pointer-events-none" />
+                <select
+                  value={sortMode}
+                  onChange={(e) => setSortMode(e.target.value as SortMode)}
+                  className="pl-8 pr-7 py-1.5 rounded-xl bg-zinc-950 border border-zinc-700/80 hover:border-orange-500/60 text-xs text-zinc-200 font-medium cursor-pointer focus:outline-none focus:border-orange-500 transition-colors appearance-none"
+                >
+                  <option value="updated_desc">🕒 แก้ไขล่าสุด</option>
+                  <option value="created_desc">📅 สร้างล่าสุด</option>
+                  <option value="title_asc">🔤 ชื่อ A-Z (ก-ฮ)</option>
+                </select>
+                <div className="absolute right-2.5 pointer-events-none text-zinc-500 text-[10px]">▼</div>
+              </div>
+
+              {/* View Mode Toggle */}
+              <div className="flex items-center bg-zinc-950 p-1 rounded-xl border border-zinc-800 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    viewMode === 'grid'
+                      ? 'bg-orange-500 text-zinc-950 shadow-sm'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                  title="มุมมองการ์ด (Card View)"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                    viewMode === 'list'
+                      ? 'bg-orange-500 text-zinc-950 shadow-sm'
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                  title="มุมมองรายการ (List View)"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Time Filter Toggles */}
+          <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
               <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
                 <button
                   type="button"
                   onClick={() => setTimeFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                     timeFilter === 'all'
                       ? 'bg-orange-500 text-zinc-950 shadow-sm font-bold'
                       : 'text-zinc-400 hover:text-white'
@@ -262,7 +359,7 @@ export function RecentProjects() {
                 <button
                   type="button"
                   onClick={() => setTimeFilter('today')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                     timeFilter === 'today'
                       ? 'bg-orange-500 text-zinc-950 shadow-sm font-bold'
                       : 'text-zinc-400 hover:text-white'
@@ -273,7 +370,7 @@ export function RecentProjects() {
                 <button
                   type="button"
                   onClick={() => setTimeFilter('7days')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                     timeFilter === '7days'
                       ? 'bg-orange-500 text-zinc-950 shadow-sm font-bold'
                       : 'text-zinc-400 hover:text-white'
@@ -284,7 +381,7 @@ export function RecentProjects() {
                 <button
                   type="button"
                   onClick={() => setTimeFilter('30days')}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                     timeFilter === '30days'
                       ? 'bg-orange-500 text-zinc-950 shadow-sm font-bold'
                       : 'text-zinc-400 hover:text-white'
@@ -299,7 +396,7 @@ export function RecentProjects() {
                     if (!customStartDate) setCustomStartDate(getTodayDateString());
                     if (!customEndDate) setCustomEndDate(getTodayDateString());
                   }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 ${
+                  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-1 ${
                     timeFilter === 'custom'
                       ? 'bg-orange-500 text-zinc-950 shadow-sm font-bold'
                       : 'text-zinc-400 hover:text-white'
@@ -310,6 +407,11 @@ export function RecentProjects() {
                 </button>
               </div>
             </div>
+
+            {/* Sub-counter status */}
+            <span className="text-[11.5px] text-zinc-400 font-medium">
+              พบ {filteredProjects.length} โปรเจกต์
+            </span>
           </div>
 
           {/* Custom Date Range Picker */}
@@ -409,17 +511,17 @@ export function RecentProjects() {
               setCustomStartDate('');
               setCustomEndDate('');
             }}
-            className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-colors"
+            className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold transition-colors cursor-pointer"
           >
             ล้างตัวกรองทั้งหมด
           </button>
         </div>
       )}
 
-      {/* Projects Grid */}
-      {!isLoading && filteredProjects.length > 0 && (
+      {/* Projects Display: Card Grid View */}
+      {!isLoading && pagedProjects.length > 0 && viewMode === 'grid' && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4">
-          {filteredProjects.map((project) => (
+          {pagedProjects.map((project) => (
             <div
               key={project.id}
               onClick={() => handleOpenProject(project)}
@@ -523,6 +625,157 @@ export function RecentProjects() {
           ))}
         </div>
       )}
+
+      {/* Projects Display: Compact List View */}
+      {!isLoading && pagedProjects.length > 0 && viewMode === 'list' && (
+        <div className="space-y-2">
+          {pagedProjects.map((project) => (
+            <div
+              key={project.id}
+              onClick={() => handleOpenProject(project)}
+              className="group relative bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-orange-500/60 rounded-xl p-2.5 sm:p-3 transition-all duration-200 cursor-pointer shadow-md hover:shadow-orange-500/5 flex items-center justify-between gap-3 overflow-hidden"
+            >
+              {/* Left: Thumbnail & Project Info */}
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                {/* Thumbnail */}
+                <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-zinc-950 border border-zinc-800 flex items-center justify-center shrink-0 overflow-hidden group-hover:border-orange-500/40 transition-colors">
+                  {project.thumbnail_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={project.thumbnail_url}
+                      alt={project.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-zinc-600 group-hover:text-orange-400 transition-colors">
+                      <FileVideo className="w-5 h-5" />
+                    </div>
+                  )}
+
+                  {/* Play Overlay */}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <div className="w-6 h-6 rounded-full bg-orange-500 text-zinc-950 flex items-center justify-center shadow-md">
+                      <Play className="w-3 h-3 fill-zinc-950 ml-0.5" />
+                    </div>
+                  </div>
+
+                  {project.duration > 0 && (
+                    <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded bg-black/80 backdrop-blur-sm text-[8.5px] font-mono font-bold text-white shadow">
+                      {formatDuration(project.duration)}
+                    </span>
+                  )}
+                </div>
+
+                {/* Info */}
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-300 transition-colors">
+                      {project.title}
+                    </h4>
+                    {project.proxy_url ? (
+                      <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-950/60 border border-amber-800/60 text-amber-300 text-[9px] font-semibold shrink-0">
+                        <Cloud className="w-2.5 h-2.5 text-amber-400" />
+                        <span>Cloud Proxy</span>
+                      </span>
+                    ) : (
+                      <span className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-zinc-800/80 border border-zinc-700/80 text-zinc-400 text-[9px] font-medium shrink-0">
+                        <HardDrive className="w-2.5 h-2.5 text-zinc-400" />
+                        <span>เครื่องนี้</span>
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-400">
+                    <span>{project.captions?.length || 0} ท่อนซับ</span>
+                    <span className="text-zinc-600">•</span>
+                    <span className="text-zinc-500 text-[10px]">
+                      {formatRelativeTime(project.updated_at || project.created_at)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Actions */}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  disabled={deletingId === project.id}
+                  onClick={(e) => handleDeleteProject(e, project.id)}
+                  className="p-1.5 text-zinc-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors cursor-pointer"
+                  title="ลบโปรเจกต์"
+                >
+                  {deletingId === project.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                </button>
+
+                <div className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-lg bg-orange-500/10 text-orange-400 font-semibold text-xs border border-orange-500/30 group-hover:bg-orange-500 group-hover:text-zinc-950 transition-all">
+                  <span>เปิดใน Editor</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Pagination Footer */}
+      {!isLoading && sortedProjects.length > pageSize && (
+        <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-zinc-800/80 text-xs">
+          <span className="text-zinc-400">
+            แสดง <span className="font-semibold text-zinc-200">{(validCurrentPage - 1) * pageSize + 1} - {Math.min(validCurrentPage * pageSize, sortedProjects.length)}</span> จาก <span className="font-semibold text-zinc-200">{sortedProjects.length}</span> โปรเจกต์
+          </span>
+
+          <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+            <button
+              type="button"
+              disabled={validCurrentPage === 1}
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              className="px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[11px]">ก่อนหน้า</span>
+            </button>
+
+            {/* Page Numbers */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - validCurrentPage) <= 1)
+              .map((page, idx, arr) => {
+                const prev = arr[idx - 1];
+                const showEllipsis = prev && page - prev > 1;
+                return (
+                  <React.Fragment key={page}>
+                    {showEllipsis && <span className="px-1 text-zinc-600">...</span>}
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage(page)}
+                      className={`w-7 h-7 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                        validCurrentPage === page
+                          ? 'bg-orange-500 text-zinc-950 shadow-sm'
+                          : 'text-zinc-400 hover:text-white hover:bg-zinc-800'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  </React.Fragment>
+                );
+              })}
+
+            <button
+              type="button"
+              disabled={validCurrentPage === totalPages}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              className="px-2.5 py-1.5 rounded-lg text-zinc-400 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <span className="hidden sm:inline text-[11px]">ถัดไป</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
