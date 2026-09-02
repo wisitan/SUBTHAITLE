@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   X,
@@ -10,14 +10,15 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  Lock,
   Tv,
   Zap,
   RotateCcw,
+  Upload,
+  HardDrive,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { useAuth } from '@/context/auth-context';
-import { burnSubtitlesToVideo, cancelBurn, VideoResolution, BurnProgress } from '@/lib/burn';
+import { burnSubtitlesToVideo, VideoResolution, BurnProgress } from '@/lib/burn';
+import { saveVideoToCache } from '@/lib/video-cache';
 
 interface Props {
   isOpen: boolean;
@@ -26,9 +27,12 @@ interface Props {
 
 export function BurnVideoModal({ isOpen, onClose }: Props) {
   const file = useAppStore((s) => s.file);
+  const setFile = useAppStore((s) => s.setFile);
+  const setVideoUrl = useAppStore((s) => s.setVideoUrl);
   const captions = useAppStore((s) => s.captions);
   const style = useAppStore((s) => s.style);
-  const { isPro } = useAuth();
+  const currentProjectId = useAppStore((s) => s.currentProjectId);
+  const projectTitle = useAppStore((s) => s.projectTitle);
 
   const [mounted, setMounted] = useState(false);
   const [resolution, setResolution] = useState<VideoResolution>('1080p');
@@ -37,6 +41,8 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [renderedBlob, setRenderedBlob] = useState<Blob | null>(null);
   const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
+
+  const filePickerRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -52,7 +58,6 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
     const url = URL.createObjectURL(renderedBlob);
     setDownloadUrl(url);
 
-    // Auto cleanup when renderedBlob changes or when unmounting
     return () => {
       URL.revokeObjectURL(url);
     };
@@ -67,14 +72,21 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
     setIsBurning(false);
   };
 
+  const handleLocateFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
+      setVideoUrl(URL.createObjectURL(selectedFile));
+      const key = currentProjectId || projectTitle || selectedFile.name;
+      if (key) saveVideoToCache(key, selectedFile);
+      if (currentProjectId) saveVideoToCache(currentProjectId, selectedFile);
+      setErrorMsg(null);
+    }
+  };
+
   const handleStartBurn = async () => {
     if (!file) {
-      setErrorMsg('กรุณาอัปโหลดไฟล์วิดีโอก่อนทำการเรนเดอร์');
-      return;
-    }
-
-    if (resolution === '4k' && !isPro) {
-      setErrorMsg('ความละเอียด 4K Ultra HD ปลดล็อกเฉพาะระดับ Pro Creator (299฿) ค่ะ');
+      setErrorMsg('กรุณาเลือกหรือเชื่อมต่อไฟล์วิดีโอต้นฉบับก่อนทำการเรนเดอร์ค่ะ');
       return;
     }
 
@@ -103,7 +115,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
 
   const handleDownload = () => {
     if (!downloadUrl) return;
-    const originalName = file?.name ? file.name.replace(/\.[^/.]+$/, '') : 'video';
+    const originalName = file?.name ? file.name.replace(/\.[^/.]+$/, '') : (projectTitle || 'subthaitle_video');
     const filename = `${originalName}_with_subtitles.mp4`;
 
     const a = document.createElement('a');
@@ -119,14 +131,22 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
       if (!confirm('การเรนเดอร์กำลังดำเนินอยู่ ต้องการยกเลิกและปิดหน้าต่างหรือไม่?')) {
         return;
       }
-      cancelBurn();
     }
     onClose();
   };
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto">
-      <div className="relative w-full max-w-lg my-auto bg-zinc-950 border border-zinc-800 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4 text-zinc-100 max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200 font-sans">
+      <div className="relative w-full max-w-lg p-5 sm:p-6 rounded-3xl bg-[#12121c] border border-zinc-700/80 shadow-2xl space-y-4">
+        {/* Hidden File Picker for Relinking Media */}
+        <input
+          ref={filePickerRef}
+          type="file"
+          accept="video/*,audio/*"
+          className="hidden"
+          onChange={handleLocateFile}
+        />
+
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
           <div className="flex items-center gap-2.5">
@@ -137,8 +157,8 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <span>ฝังซับไตเติลลงวิดีโอ MP4 (Burn Subtitles)</span>
               </h3>
-              <p className="text-xs text-zinc-300 mt-0.5">
-                ประมวลผลบนเครื่องของคุณ 100% ปลอดภัย ไม่ต้องอัปโหลดวิดีโอไปเซิร์ฟเวอร์
+              <p className="text-xs text-zinc-400 mt-0.5">
+                ประมวลผลบน GPU เครื่องของคุณ 100% ปลอดภัย คมชัดระดับ Master
               </p>
             </div>
           </div>
@@ -151,6 +171,29 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
             <X className="w-4 h-4" />
           </button>
         </div>
+
+        {/* Missing File / Media Offline Warning & Relink Box */}
+        {!file && (
+          <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/50 space-y-2.5">
+            <div className="flex items-start gap-2.5">
+              <HardDrive className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="space-y-0.5">
+                <h4 className="text-sm font-bold text-white">ต้องการไฟล์วิดีโอต้นฉบับสำหรับการเรนเดอร์</h4>
+                <p className="text-xs text-zinc-300 leading-relaxed">
+                  เนื่องจากคุณเปิดโปรเจกต์นี้จากคลาวด์ กรุณาเลือกไฟล์วิดีโอ <strong className="text-amber-300">{projectTitle || 'ต้นฉบับ'}</strong> จากเครื่องนี้เพื่อเริ่มเรนเดอร์ความละเอียดสูงค่ะ
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => filePickerRef.current?.click()}
+              className="w-full py-2.5 px-4 rounded-xl bg-orange-500 hover:bg-orange-400 text-zinc-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+            >
+              <Upload className="w-4 h-4" />
+              <span>📂 เชื่อมต่อไฟล์วิดีโอต้นฉบับ (Locate Media)</span>
+            </button>
+          </div>
+        )}
 
         {/* Error Alert */}
         {errorMsg && (
@@ -184,7 +227,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                     720p HD
                   </span>
                 </div>
-                <p className="text-xs text-zinc-300 mt-1">เรนเดอร์ด่วน ไฟล์เบา ส่งงานไว</p>
+                <p className="text-xs text-zinc-400 mt-1">เรนเดอร์ด่วน ไฟล์เบา ส่งงานไว</p>
               </button>
 
               {/* Option 2: 1080p */}
@@ -203,25 +246,17 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                     1080p Full HD
                   </span>
                 </div>
-                <p className="text-xs text-zinc-300 mt-1">มาตรฐานคมชัด TikTok / Reels</p>
+                <p className="text-xs text-zinc-400 mt-1">มาตรฐานคมชัด TikTok / Reels</p>
               </button>
 
-              {/* Option 3: 4K (Tier 299 Exclusive) */}
+              {/* Option 3: 4K */}
               <button
                 type="button"
-                onClick={() => {
-                  if (isPro) {
-                    setResolution('4k');
-                  } else {
-                    setErrorMsg('ความละเอียด 4K Ultra HD ปลดล็อกเฉพาะระดับ Pro Creator (299฿) ค่ะ');
-                  }
-                }}
-                className={`p-3.5 rounded-2xl border text-left transition-all relative flex flex-col justify-between gap-1.5 ${
-                  !isPro
-                    ? 'bg-zinc-900/30 border-zinc-800/60 text-zinc-500 cursor-not-allowed opacity-80'
-                    : resolution === '4k'
-                    ? 'bg-rose-500/15 border-rose-500 text-white shadow-md shadow-rose-500/10 ring-1 ring-rose-500/40 cursor-pointer'
-                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700 cursor-pointer'
+                onClick={() => setResolution('4k')}
+                className={`p-3.5 rounded-2xl border text-left transition-all relative flex flex-col justify-between gap-1.5 cursor-pointer ${
+                  resolution === '4k'
+                    ? 'bg-rose-500/15 border-rose-500 text-white shadow-md shadow-rose-500/10 ring-1 ring-rose-500/40'
+                    : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:border-zinc-700'
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -229,12 +264,9 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                     <Film className="w-4 h-4 text-rose-400" />
                     4K Ultra HD
                   </span>
-                  {!isPro && (
-                    <Lock className="w-3.5 h-3.5 text-rose-400" />
-                  )}
                 </div>
-                <p className="text-xs text-zinc-300 mt-1">
-                  {isPro ? 'คมชัดสูงสุดสำหรับโปรดักชั่น' : 'ปลดล็อกเฉพาะ Pro Creator (299฿)'}
+                <p className="text-xs text-zinc-400 mt-1">
+                  คมชัดสูงสุดสำหรับโปรดักชั่น
                 </p>
               </button>
             </div>
@@ -243,7 +275,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
             <div className="p-3.5 rounded-2xl bg-zinc-900/60 border border-zinc-800 text-xs text-zinc-200 space-y-1">
               <div className="flex items-center gap-1.5 text-amber-400 font-semibold">
                 <Sparkles className="w-4 h-4" />
-                <span>สไตล์และเอฟเฟกต์ที่ระบบจะฝังลงในวิดีโอ:</span>
+                <span>สไตล์และเอฟเฟกต์ที่จะฝังลงในวิดีโอ:</span>
               </div>
               <p className="text-zinc-300 pl-5.5 leading-relaxed">
                 ฟอนต์ <strong>{style.fontFamily}</strong> • ขนาด {style.fontSize}px • {style.hasOutline ? `ขอบหนา ${style.outlineWidth}px` : 'ไร้ขอบ'} • {style.enableWordHighlight ? 'ไฮไลท์คำพูดตามเสียงจริง ✨' : 'ข้อความนิ่ง'}
@@ -271,7 +303,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
               />
             </div>
 
-            <p className="text-xs text-zinc-300 text-center">
+            <p className="text-xs text-zinc-400 text-center">
               💡 กรุณาอย่าปิดแท็บเบราว์เซอร์ขณะที่ระบบกำลังเรนเดอร์วิดีโอ
             </p>
           </div>
@@ -313,8 +345,8 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
               <button
                 type="button"
                 onClick={handleStartBurn}
-                disabled={isBurning}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                disabled={isBurning || !file}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-sm shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isBurning ? (
                   <>
