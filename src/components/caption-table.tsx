@@ -122,7 +122,7 @@ export function CaptionTable({ onPlayCue }: Props) {
       )}
 
       {/* Slim Top Header Section */}
-      <div className="shrink-0 px-4 py-3 bg-[#181824] border-b border-zinc-700/80 space-y-2.5">
+      <div className="shrink-0 px-4 py-3 bg-[#181824] border-b border-zinc-700/80 space-y-2.5 relative z-30">
         {/* Row 1: Title & Primary Action (+ เพิ่มท่อน) */}
         <div className="flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -153,7 +153,7 @@ export function CaptionTable({ onPlayCue }: Props) {
         </div>
 
         {/* Row 2: Secondary Quick Toolbar Tools */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+        <div className="flex flex-wrap items-center gap-1.5">
           {/* Undo / Redo Buttons */}
           <div className="flex items-center bg-[#0f0f18] border border-zinc-700/80 rounded-xl p-0.5 shadow-sm shrink-0">
             <Tooltip content="ย้อนกลับการแก้ไข (Undo) • Cmd+Z / Ctrl+Z" position="bottom">
