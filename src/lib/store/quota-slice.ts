@@ -147,9 +147,9 @@ export const createQuotaSlice: StateCreator<AppState, [], [], QuotaSlice> = (set
   googleMonthlyUsageCount: 0,
   maxGoogleMonthlyQuota: 5,
   groqDailyUsageCount: 0,
-  maxGroqDailyQuota: 3,
+  maxGroqDailyQuota: 5,
   dailyUsageCount: 0,
-  maxDailyFreeQuota: 3,
+  maxDailyFreeQuota: 5,
   isAdmin: false,
   adminToken: null,
 

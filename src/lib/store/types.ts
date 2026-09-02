@@ -97,7 +97,7 @@ export interface AppState {
   googleMonthlyUsageCount: number;
   maxGoogleMonthlyQuota: number; // 5 clips / month
   groqDailyUsageCount: number;
-  maxGroqDailyQuota: number;     // 3 clips / day
+  maxGroqDailyQuota: number;     // 5 clips / day
   
   dailyUsageCount: number;
   maxDailyFreeQuota: number;

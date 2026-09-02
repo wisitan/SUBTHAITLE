@@ -557,7 +557,7 @@ export function UploadZone() {
                       โหมดที่เลือก:{' '}
                       <span className="text-zinc-100 font-bold">
                         {isFreeMode
-                          ? 'ฟรี 3 คลิป/วัน (สูงสุด 2 นาที)'
+                          ? 'ฟรี 5 คลิป/วัน (สูงสุด 2 นาที)'
                           : providerMode === 'credits'
                           ? `Credit ที่มี (ใช้ ${requiredCredits} นาที / คงเหลือ ${creditsMinutes} นาที)`
                           : 'Credit ที่มี'}

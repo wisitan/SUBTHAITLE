@@ -244,7 +244,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 7. Stored Procedure: Consume Groq Free Quota (3 clips / day)
+-- 7. Stored Procedure: Consume Groq Free Quota (5 clips / day)
 CREATE OR REPLACE FUNCTION public.consume_groq_free_quota(
   p_user_id UUID
 )
@@ -271,8 +271,8 @@ BEGIN
     v_count := 0;
   END IF;
 
-  IF v_count >= 3 THEN
-    RETURN QUERY SELECT false, v_count, 'โควต้าใช้งานฟรีด้วย Groq AI ประจำวันนี้ครบ 3 คลิปแล้วค่ะ กรุณากลับมาใหม่ในวันพรุ่งนี้ หรือเติมเครดิตเพื่อใช้งานต่อ';
+  IF v_count >= 5 THEN
+    RETURN QUERY SELECT false, v_count, 'โควต้าใช้งานฟรีด้วย Groq AI ประจำวันนี้ครบ 5 คลิปแล้วค่ะ กรุณากลับมาใหม่ในวันพรุ่งนี้ หรือเติมเครดิตเพื่อใช้งานต่อ';
     RETURN;
   END IF;
 

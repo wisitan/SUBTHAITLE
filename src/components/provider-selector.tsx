@@ -80,7 +80,7 @@ export function ProviderSelector() {
 
       {/* 2 Provider Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 items-stretch">
-        {/* 1. ฟรี 3 คลิป / วัน (Free Mode) */}
+        {/* 1. ฟรี 5 คลิป / วัน (Free Mode) */}
         <div
           onClick={() => setProviderMode('free')}
           className={`relative p-5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between h-full ${
@@ -97,10 +97,10 @@ export function ProviderSelector() {
                 </div>
                 <div className="min-w-0">
                   <span className="font-bold text-base text-zinc-100 block">
-                    ฟรี 3 คลิป / วัน
+                    ฟรี 5 คลิป / วัน
                   </span>
                   <span className="text-xs font-semibold text-amber-400">
-                    Free 3 คลิป : วัน
+                    Free 5 คลิป : วัน
                   </span>
                 </div>
               </div>

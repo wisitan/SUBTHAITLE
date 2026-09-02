@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
         }
         if (firstRow && typeof firstRow.count === 'number') {
           usedQuotaCount = firstRow.count;
-          remainingQuota = Math.max(0, 3 - firstRow.count);
+          remainingQuota = Math.max(0, 5 - firstRow.count);
         }
       }
 
