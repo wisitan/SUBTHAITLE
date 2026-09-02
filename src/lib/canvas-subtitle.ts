@@ -334,76 +334,43 @@ export async function renderSubtitleCanvas(
     const activeWords = positionedWords.filter((pw) => pw.isVisible && pw.isActive && style.enableWordHighlight);
 
     // --- PHASE 1: Base Layer (Inactive Words) ---
-    if (isStickerMode) {
-      inactiveWords.forEach((pw) => {
-        const pillX = pw.x - pillPadX;
-        const pillY = startY - fontSize * 0.75 - pillPadY;
-        const pillW = pw.textWidth + pillPadX * 2;
-        const pillH = fontSize * 1.35 + pillPadY * 2;
-
-        // Draw pill background
-        ctx.save();
-        ctx.fillStyle = 'rgba(18, 18, 26, 0.85)';
-        drawRoundRect(ctx, pillX, pillY, pillW, pillH, pillRadius);
-        ctx.restore();
-
-        // Draw pill border
-        ctx.save();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.lineWidth = Math.max(1, 1 * scale);
-        if (typeof ctx.roundRect === 'function') {
-          ctx.beginPath();
-          ctx.roundRect(pillX, pillY, pillW, pillH, pillRadius);
-          ctx.stroke();
-        }
-        ctx.restore();
-
-        // Draw text
-        ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
-        ctx.save();
-        ctx.fillStyle = pw.color;
-        ctx.fillText(pw.text, pw.x, startY);
-        ctx.restore();
-      });
-    } else {
-      // A. Inactive Shadows
-      if (style.hasShadow) {
-        inactiveWords.forEach((pw) => {
-          ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
-          ctx.save();
-          ctx.shadowColor = hexToRgba(style.shadowColor || '#000000', (style.shadowOpacity ?? 0.8) * 100);
-          ctx.shadowBlur = (style.shadowBlur || 8) * scale;
-          ctx.shadowOffsetX = 0;
-          ctx.shadowOffsetY = 4 * scale;
-          ctx.fillStyle = pw.color;
-          ctx.fillText(pw.text, pw.x, startY);
-          ctx.restore();
-        });
-      }
-
-      // B. Inactive Outlines
-      if (style.hasOutline && style.outlineWidth > 0) {
-        inactiveWords.forEach((pw) => {
-          ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
-          ctx.save();
-          ctx.strokeStyle = style.outlineColor || '#000000';
-          ctx.lineWidth = style.outlineWidth * scale * 2.2;
-          ctx.lineJoin = 'round';
-          ctx.lineCap = 'round';
-          ctx.strokeText(pw.text, pw.x, startY);
-          ctx.restore();
-        });
-      }
-
-      // C. Inactive Text Fills
+    // A. Inactive Shadows
+    if (style.hasShadow) {
       inactiveWords.forEach((pw) => {
         ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
         ctx.save();
+        ctx.shadowColor = hexToRgba(style.shadowColor || '#000000', (style.shadowOpacity ?? 0.8) * 100);
+        ctx.shadowBlur = (style.shadowBlur || 8) * scale;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 4 * scale;
         ctx.fillStyle = pw.color;
         ctx.fillText(pw.text, pw.x, startY);
         ctx.restore();
       });
     }
+
+    // B. Inactive Outlines
+    if (style.hasOutline && style.outlineWidth > 0) {
+      inactiveWords.forEach((pw) => {
+        ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
+        ctx.save();
+        ctx.strokeStyle = style.outlineColor || '#000000';
+        ctx.lineWidth = style.outlineWidth * scale * 2.2;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.strokeText(pw.text, pw.x, startY);
+        ctx.restore();
+      });
+    }
+
+    // C. Inactive Text Fills
+    inactiveWords.forEach((pw) => {
+      ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
+      ctx.save();
+      ctx.fillStyle = pw.color;
+      ctx.fillText(pw.text, pw.x, startY);
+      ctx.restore();
+    });
 
     // --- PHASE 2: Sticker Pop-up Layer (Active Highlighted Words on Top) ---
     activeWords.forEach((pw) => {

@@ -328,37 +328,66 @@ export function SubtitleOverlay({
 
                 if (isStickerMode) {
                   return (
-                    <span
-                      key={idx}
-                      className={`inline-block origin-center transition-all duration-150 ease-out ${
-                        isWordActive ? 'relative z-30' : 'relative z-10'
-                      }`}
-                      style={{
-                        opacity: isVisible ? 1 : 0,
-                        visibility: isVisible ? 'visible' : 'hidden',
-                        backgroundColor: isWordActive
-                          ? style.highlightColor || '#FACC15'
-                          : 'rgba(18, 18, 26, 0.85)',
-                        color: isWordActive
-                          ? '#121216'
-                          : style.textColor || '#FFFFFF',
-                        fontWeight: isWordActive ? 800 : 700,
-                        padding: `${stickerStyles.pillPadY}px ${stickerStyles.pillPadX}px`,
-                        borderRadius: `${stickerStyles.pillRadius}px`,
-                        margin: isScaled
-                          ? `2px ${stickerStyles.pillMargin + wordBufferPx}px`
-                          : `2px ${stickerStyles.pillMargin}px`,
-                        transform: isScaled ? `scale(${scaleMultiplier})` : 'scale(1)',
-                        border: isWordActive
-                          ? '1px solid rgba(255, 255, 255, 0.6)'
-                          : '1px solid rgba(255, 255, 255, 0.15)',
-                        boxShadow: isWordActive
-                          ? `0 0 14px ${hexToRgba(style.highlightColor || '#FACC15', 75)}, 0 4px 10px rgba(0,0,0,0.5)`
-                          : '0 2px 6px rgba(0,0,0,0.4)',
-                      }}
-                    >
-                      {w.word}
-                    </span>
+                    <React.Fragment key={idx}>
+                      {prefixSpace && (
+                        <span
+                          style={{
+                            opacity: isVisible ? 1 : 0,
+                            visibility: isVisible ? 'visible' : 'hidden',
+                          }}
+                        >
+                          {prefixSpace}
+                        </span>
+                      )}
+                      <span
+                        className={`inline-block origin-center transition-all duration-150 ease-out ${
+                          isWordActive ? 'relative z-30' : 'relative z-10'
+                        }`}
+                        style={{
+                          opacity: isVisible ? 1 : 0,
+                          visibility: isVisible ? 'visible' : 'hidden',
+                          backgroundColor: isWordActive
+                            ? (style.highlightColor || '#FACC15')
+                            : 'transparent',
+                          color: isWordActive
+                            ? '#121216'
+                            : (style.textColor || '#FFFFFF'),
+                          fontWeight: isWordActive
+                            ? 800
+                            : (style.fontWeight === 'bold' || style.fontWeight === '700'
+                            ? 700
+                            : style.fontWeight === '800'
+                            ? 800
+                            : 500),
+                          padding: isWordActive
+                            ? `${stickerStyles.pillPadY}px ${stickerStyles.pillPadX}px`
+                            : '0',
+                          borderRadius: isWordActive
+                            ? `${stickerStyles.pillRadius}px`
+                            : '0',
+                          margin: isWordActive
+                            ? `0 ${wordBufferPx + 3}px`
+                            : undefined,
+                          marginRight: !isWordActive && gapRight > 0
+                            ? `${gapRight}px`
+                            : undefined,
+                          transform: isWordActive && isScaled
+                            ? `scale(${scaleMultiplier})`
+                            : 'scale(1)',
+                          border: isWordActive
+                            ? '1px solid rgba(255, 255, 255, 0.7)'
+                            : 'none',
+                          boxShadow: isWordActive
+                            ? `0 0 14px ${hexToRgba(style.highlightColor || '#FACC15', 75)}, 0 4px 10px rgba(0,0,0,0.5)`
+                            : 'none',
+                          textShadow: !isWordActive && shadowsCss !== 'none'
+                            ? shadowsCss
+                            : 'none',
+                        }}
+                      >
+                        {w.word}
+                      </span>
+                    </React.Fragment>
                   );
                 }
 
