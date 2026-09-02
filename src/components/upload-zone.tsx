@@ -20,6 +20,7 @@ import {
   Loader2,
   Sparkles,
   LogIn,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -51,6 +52,7 @@ export function UploadZone() {
   const [transcribeMessage, setTranscribeMessage] = useState('');
   const [transcribeProgressPercent, setTranscribeProgressPercent] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -192,6 +194,17 @@ export function UploadZone() {
     }
   };
 
+  const handleCancelTranscribe = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsTranscribing(false);
+    setStatus('idle', 0, '');
+    setTranscribeMessage('');
+    setErrorMessage('ยกเลิกการถอดเสียงเรียบร้อยแล้ว');
+  };
+
   const handleStartTranscribe = async () => {
     if (!user && !isBYOK && providerMode !== 'local') {
       signInWithGoogle();
@@ -206,6 +219,8 @@ export function UploadZone() {
     setErrorMessage(null);
     setIsTranscribing(true);
     setStatus('transcribing', 20, 'กำลังเตรียมส่งไฟล์เสียง...');
+    setTranscribeMessage('กำลังส่งไฟล์เสียงไปยัง AI...');
+    abortControllerRef.current = new AbortController();
 
     try {
       const results = await transcribeAudio(
@@ -213,13 +228,10 @@ export function UploadZone() {
         (msg) => {
           setTranscribeMessage(msg);
         },
-        { userId: user?.id, tier }
+        { userId: user?.id, tier, signal: abortControllerRef.current.signal }
       );
 
       setCaptions(results);
-      setStatus('ready', 100, 'ถอดเสียงภาษาไทยสำเร็จ!');
-      setIsTranscribing(false);
-
       const projectName = file?.name || 'SUBTHAITLE Project';
       useAppStore.getState().setProjectTitle(projectName);
 
@@ -230,9 +242,15 @@ export function UploadZone() {
           let proxyUrl: string | null = null;
 
           if (file) {
-            setStatus('uploading', 95, 'กำลังซิงค์วิดีโอขึ้น Cloudflare R2...');
+            setStatus('uploading', 88, 'กำลังซิงค์วิดีโอขึ้น Cloudflare R2...');
+            setTranscribeMessage('กำลังบันทึกวิดีโอขึ้น Cloudflare R2 (720p Proxy)...');
+            setTranscribeProgressPercent(88);
             proxyUrl = await uploadProxyToR2(file, 'initial', file.name);
           }
+
+          setStatus('uploading', 96, 'กำลังบันทึกโปรเจกต์ลงคลาวด์...');
+          setTranscribeMessage('กำลังบันทึกโปรเจกต์ลงคลาวด์...');
+          setTranscribeProgressPercent(96);
 
           const savedProject = await saveProjectToCloud({
             userId: user.id,
@@ -265,14 +283,29 @@ export function UploadZone() {
         saveVideoToCache(projectName, file);
       }
 
-      router.push('/editor');
-    } catch (err) {
+      setStatus('ready', 100, 'เสร็จสมบูรณ์! กำลังเปิดหน้าตัดต่อ...');
+      setTranscribeMessage('เสร็จสมบูรณ์! กำลังเปิดหน้าโปรแกรมตัดต่อ...');
+      setTranscribeProgressPercent(100);
+
+      setTimeout(() => {
+        router.push('/editor');
+      }, 350);
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('Transcription cancelled by user');
+        setIsTranscribing(false);
+        setStatus('idle', 0, '');
+        setTranscribeMessage('');
+        return;
+      }
       console.error('Transcription error:', err);
       setIsTranscribing(false);
       setStatus('error', 0, 'การถอดเสียงล้มเหลว');
       setErrorMessage(
         err instanceof Error ? err.message : 'เกิดข้อผิดพลาดไม่ทราบสาเหตุในการถอดเสียง'
       );
+    } finally {
+      abortControllerRef.current = null;
     }
   };
 
@@ -409,7 +442,7 @@ export function UploadZone() {
                 <div className="flex items-center gap-3">
                   <Loader2 className="w-6 h-6 text-orange-400 animate-spin shrink-0" />
                   <div>
-                    <h5 className="text-base font-bold text-white">กำลังถอดเสียงภาษาไทยด้วย AI...</h5>
+                    <h5 className="text-base font-bold text-white">กำลังถอดเสียงภาษาไทยและซิงค์โปรเจกต์...</h5>
                     <p className="text-sm text-orange-200 mt-0.5">
                       {transcribeMessage ||
                         (transcribeProgressPercent < 35
@@ -418,13 +451,24 @@ export function UploadZone() {
                           ? 'AI กำลังฟังและจับตำแหน่งเวลาของแต่ละคำ...'
                           : transcribeProgressPercent < 90
                           ? 'กำลังปรับแต่งคำศัพท์ภาษาไทยให้ถูกต้องแม่นยำ...'
-                          : 'กำลังจัดวรรคและคำนวณจังหวะซับ (Smart Pacing)...')}
+                          : 'กำลังซิงค์วิดีโอขึ้น Cloudflare R2 และจัดเตรียมหน้าตัดต่อ...')}
                     </p>
                   </div>
                 </div>
-                <span className="text-lg font-black font-mono text-orange-400">
-                  {Math.round(transcribeProgressPercent)}%
-                </span>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-lg font-black font-mono text-orange-400">
+                    {Math.round(transcribeProgressPercent)}%
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCancelTranscribe}
+                    className="px-2.5 py-1 rounded-xl bg-zinc-800/90 hover:bg-rose-950 border border-zinc-700 hover:border-rose-700/80 text-zinc-300 hover:text-rose-300 text-xs font-semibold transition-all flex items-center gap-1 cursor-pointer shadow-sm"
+                    title="ยกเลิกการถอดเสียง"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    <span>ยกเลิก</span>
+                  </button>
+                </div>
               </div>
 
               {/* Progress Track */}
@@ -446,11 +490,11 @@ export function UploadZone() {
                 </span>
                 <span>•</span>
                 <span className={transcribeProgressPercent >= 75 ? 'text-amber-400 font-semibold' : ''}>
-                  3. ตรวจสอบความถูกต้อง
+                  3. ปรับแต่งคำไทย
                 </span>
                 <span>•</span>
-                <span className={transcribeProgressPercent >= 90 ? 'text-amber-400 font-semibold' : ''}>
-                  4. จัดวรรคซับไตเติล
+                <span className={transcribeProgressPercent >= 88 ? 'text-amber-400 font-semibold' : ''}>
+                  4. ซิงค์ R2 & คลาวด์
                 </span>
               </div>
             </div>

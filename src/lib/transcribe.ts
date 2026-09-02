@@ -34,7 +34,7 @@ export interface TranscribeResponse {
 export async function transcribeAudio(
   audioBlob: Blob,
   onProgress?: (stage: string) => void,
-  authInfo?: { userId?: string; tier?: string }
+  authInfo?: { userId?: string; tier?: string; signal?: AbortSignal }
 ): Promise<CaptionItem[]> {
   const store = useAppStore.getState();
   const { providerMode, creditsMinutes, mediaDuration } = store;
@@ -81,6 +81,7 @@ export async function transcribeAudio(
   const res = await fetch('/api/transcribe', {
     method: 'POST',
     body: formData,
+    signal: authInfo?.signal,
   });
 
   let resText = '';
