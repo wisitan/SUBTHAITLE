@@ -302,24 +302,55 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
 
   autoAlignAllCaptions: () =>
     set((state) => {
-      if (state.captions.length <= 1) return state;
+      if (state.captions.length <= 0) return state;
       const history = pushSnapshot(state);
       const aligned = [...state.captions];
 
-      for (let i = 1; i < aligned.length; i++) {
-        const prev = aligned[i - 1];
-        const curr = aligned[i];
-        if (curr.start < prev.end) {
-          // Adjust overlap by aligning start to prev.end
-          const dur = Math.max(0.2, curr.end - curr.start);
-          const newStart = Number(prev.end.toFixed(2));
-          const newEnd = Number((newStart + dur).toFixed(2));
-          aligned[i] = {
-            ...curr,
-            start: newStart,
-            end: newEnd,
-            words: curr.text ? distributeTextToWords(curr.text, newStart, newEnd) : curr.words,
-          };
+      for (let i = 0; i < aligned.length; i++) {
+        // 1. Fix overlap with previous
+        if (i > 0) {
+          const prev = aligned[i - 1];
+          const curr = aligned[i];
+          if (curr.start < prev.end) {
+            const dur = Math.max(0.2, curr.end - curr.start);
+            const newStart = Number(prev.end.toFixed(2));
+            const newEnd = Number((newStart + dur).toFixed(2));
+            aligned[i] = {
+              ...curr,
+              start: newStart,
+              end: newEnd,
+              words: curr.text ? distributeTextToWords(curr.text, newStart, newEnd) : curr.words,
+            };
+          }
+        }
+
+        // 2. Smart Gap Bridging & Hang Time Hold for current cue
+        if (i < aligned.length - 1) {
+          const curr = aligned[i];
+          const next = aligned[i + 1];
+          const gap = next.start - curr.end;
+          const currDur = curr.end - curr.start;
+
+          // Only extend if current duration is reasonable (< 5.0s)
+          if (gap > 0.05 && currDur < 5.0) {
+            let newEnd = curr.end;
+
+            if (gap <= 1.25) {
+              // Short-to-medium gap (<= 1.25s): bridge gap directly to eliminate flickering
+              newEnd = Number((next.start - 0.05).toFixed(2));
+            } else if (gap <= 2.5) {
+              // Medium gap (1.25s - 2.5s): add 0.80s reading hold time, leave 0.5s pause before next
+              newEnd = Number(Math.min(next.start - 0.5, curr.end + 0.85).toFixed(2));
+            }
+
+            if (newEnd > curr.end) {
+              aligned[i] = {
+                ...curr,
+                end: newEnd,
+                words: curr.text ? distributeTextToWords(curr.text, curr.start, newEnd) : curr.words,
+              };
+            }
+          }
         }
       }
 

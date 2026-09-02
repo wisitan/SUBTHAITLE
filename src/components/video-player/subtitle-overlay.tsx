@@ -329,21 +329,23 @@ export function SubtitleOverlay({
                             marginRight: gapRight > 0 ? `${gapRight}px` : undefined,
                           }}
                         >
-                          <span>{slice.visibleText}</span>
+                          <span className="relative inline-block">
+                            <span>{slice.visibleText}</span>
+                            {/* Floating Cursor attached directly to active character edge */}
+                            <span
+                              className={`absolute left-full top-0 ml-[2px] font-mono font-bold pointer-events-none select-none ${
+                                isCurrentlyTyping ? 'animate-pulse text-orange-400' : 'text-amber-300'
+                              }`}
+                            >
+                              |
+                            </span>
+                          </span>
                           {/* Ghost untyped remainder to lock word width & line wrap 100% */}
                           {remainder && (
                             <span className="opacity-0 select-none pointer-events-none" aria-hidden="true">
                               {remainder}
                             </span>
                           )}
-                          {/* Floating Cursor with Zero Layout Disruption */}
-                          <span
-                            className={`absolute -right-1.5 top-0 font-mono font-bold pointer-events-none select-none ${
-                              isCurrentlyTyping ? 'animate-pulse text-orange-400' : 'text-amber-300'
-                            }`}
-                          >
-                            |
-                          </span>
                         </span>
                       </React.Fragment>
                     );
