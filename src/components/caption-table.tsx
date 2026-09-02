@@ -122,8 +122,9 @@ export function CaptionTable({ onPlayCue }: Props) {
       )}
 
       {/* Slim Top Header Section */}
-      <div className="shrink-0 px-4 py-3 bg-[#181824] border-b border-zinc-700/80">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+      <div className="shrink-0 px-4 py-3 bg-[#181824] border-b border-zinc-700/80 space-y-2.5">
+        {/* Row 1: Title & Primary Action (+ เพิ่มท่อน) */}
+        <div className="flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-7 h-7 rounded-xl bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0">
               {captions.length}
@@ -131,110 +132,110 @@ export function CaptionTable({ onPlayCue }: Props) {
             <div className="min-w-0">
               <h3 className="text-sm font-bold text-white flex items-center gap-1.5 truncate">
                 <span>รายการซับไตเติล</span>
-                <span className="text-xs font-normal text-zinc-300">
+                <span className="text-xs font-normal text-zinc-400">
                   (~{totalWords} คำ)
                 </span>
               </h3>
             </div>
           </div>
 
-          {/* Quick Toolbar Tools */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {/* Undo / Redo Buttons */}
-            <div className="flex items-center bg-[#0f0f18] border border-zinc-700/80 rounded-xl p-0.5 shadow-sm">
-              <Tooltip content="ย้อนกลับการแก้ไข (Undo) • Cmd+Z / Ctrl+Z" position="bottom">
-                <button
-                  type="button"
-                  onClick={() => {
-                    useAppStore.getState().undo();
-                    showToast('ย้อนกลับ (Undo)');
-                  }}
-                  className="p-1 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
-                >
-                  <Undo2 className="w-3.5 h-3.5" />
-                </button>
-              </Tooltip>
-              <div className="w-px h-3.5 bg-zinc-700" />
-              <Tooltip content="ทำซ้ำการแก้ไข (Redo) • Cmd+Shift+Z / Ctrl+Y" position="bottom">
-                <button
-                  type="button"
-                  onClick={() => {
-                    useAppStore.getState().redo();
-                    showToast('ทำซ้ำ (Redo)');
-                  }}
-                  className="p-1 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
-                >
-                  <Redo2 className="w-3.5 h-3.5" />
-                </button>
-              </Tooltip>
-            </div>
+          {/* Add new row (Primary CTA) */}
+          <Tooltip content="เพิ่มกล่องซับไตเติลใหม่ต่อท้าย (Add Caption)" position="bottom" align="right">
+            <button
+              type="button"
+              onClick={() => addCaption()}
+              className="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-xs rounded-xl shadow transition-all flex items-center gap-1.5 cursor-pointer shrink-0"
+            >
+              <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>เพิ่มท่อน</span>
+            </button>
+          </Tooltip>
+        </div>
 
-            {/* Auto-scroll toggle */}
-            <Tooltip content="เปิด/ปิดเลื่อนหน้าจอตามวิดีโอ (Auto-Scroll)" position="bottom">
-              <button
-                type="button"
-                onClick={() => setAutoScroll(!autoScroll)}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-xl border transition-all cursor-pointer ${
-                  autoScroll
-                    ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/50'
-                    : 'bg-[#0f0f18] border-zinc-700 text-zinc-300 hover:text-white hover:bg-[#242434]'
-                }`}
-              >
-                Auto-Scroll: {autoScroll ? 'ON' : 'OFF'}
-              </button>
-            </Tooltip>
-
-            {/* Auto-Align Timestamps */}
-            <Tooltip content="จัดระเบียบเวลาซับทั้งหมด ป้องกันเวลาซ้อนกัน (Auto-Align)" position="bottom">
+        {/* Row 2: Secondary Quick Toolbar Tools */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+          {/* Undo / Redo Buttons */}
+          <div className="flex items-center bg-[#0f0f18] border border-zinc-700/80 rounded-xl p-0.5 shadow-sm shrink-0">
+            <Tooltip content="ย้อนกลับการแก้ไข (Undo) • Cmd+Z / Ctrl+Z" position="bottom">
               <button
                 type="button"
                 onClick={() => {
-                  useAppStore.getState().autoAlignAllCaptions();
-                  showToast('จัดระเบียบเวลาซับทั้งหมดสำเร็จ! ป้องกันเวลาชนกันเรียบร้อย');
+                  useAppStore.getState().undo();
+                  showToast('ย้อนกลับ (Undo)');
                 }}
-                className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-[#0f0f18] hover:bg-[#242434] text-emerald-300 border border-emerald-500/30 hover:border-emerald-400/60 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                className="p-1 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                <span>จัดเวลา</span>
+                <Undo2 className="w-3.5 h-3.5" />
               </button>
             </Tooltip>
-
-            {/* Time Shift Button */}
-            <Tooltip content="ขยับเวลาซับไตเติลทั้งหมดพร้อมกัน (+- Offset Seconds)" position="bottom">
+            <div className="w-px h-3.5 bg-zinc-700" />
+            <Tooltip content="ทำซ้ำการแก้ไข (Redo) • Cmd+Shift+Z / Ctrl+Y" position="bottom">
               <button
                 type="button"
-                onClick={() => setTimeShiftModalOpen(true)}
-                className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-[#0f0f18] hover:bg-[#242434] text-zinc-200 border border-zinc-700 hover:border-zinc-500 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
+                onClick={() => {
+                  useAppStore.getState().redo();
+                  showToast('ทำซ้ำ (Redo)');
+                }}
+                className="p-1 rounded-lg text-zinc-300 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
               >
-                <Clock className="w-3.5 h-3.5 text-orange-400" />
-                <span>ขยับเวลา</span>
-              </button>
-            </Tooltip>
-
-            {/* Find & Replace Button */}
-            <Tooltip content="ค้นหาและแทนที่คำผิดทั้งหมดในคลิป (Find & Replace)" position="bottom">
-              <button
-                type="button"
-                onClick={() => setFindReplaceModalOpen(true)}
-                className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-[#0f0f18] hover:bg-[#242434] text-zinc-200 border border-zinc-700 hover:border-zinc-500 flex items-center gap-1 transition-all cursor-pointer shadow-sm"
-              >
-                <Replace className="w-3.5 h-3.5 text-amber-400" />
-                <span>ค้นหา/แทนที่</span>
-              </button>
-            </Tooltip>
-
-            {/* Add new row */}
-            <Tooltip content="เพิ่มกล่องซับไตเติลใหม่ต่อท้าย (Add Caption)" position="bottom" align="right">
-              <button
-                type="button"
-                onClick={() => addCaption()}
-                className="px-3 py-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-zinc-950 font-bold text-xs rounded-xl shadow transition-all flex items-center gap-1 cursor-pointer shrink-0"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>เพิ่มท่อน</span>
+                <Redo2 className="w-3.5 h-3.5" />
               </button>
             </Tooltip>
           </div>
+
+          {/* Auto-scroll toggle */}
+          <Tooltip content="เปิด/ปิดเลื่อนหน้าจอตามวิดีโอ (Auto-Scroll)" position="bottom">
+            <button
+              type="button"
+              onClick={() => setAutoScroll(!autoScroll)}
+              className={`px-2.5 py-1 text-xs font-semibold rounded-xl border transition-all cursor-pointer shrink-0 ${
+                autoScroll
+                  ? 'bg-orange-500/20 border-orange-500 text-orange-300 ring-1 ring-orange-500/50'
+                  : 'bg-[#0f0f18] border-zinc-700 text-zinc-300 hover:text-white hover:bg-[#242434]'
+              }`}
+            >
+              Auto-Scroll: {autoScroll ? 'ON' : 'OFF'}
+            </button>
+          </Tooltip>
+
+          {/* Auto-Align Timestamps */}
+          <Tooltip content="จัดระเบียบเวลาซับทั้งหมด ป้องกันเวลาซ้อนกัน (Auto-Align)" position="bottom">
+            <button
+              type="button"
+              onClick={() => {
+                useAppStore.getState().autoAlignAllCaptions();
+                showToast('จัดระเบียบเวลาซับทั้งหมดสำเร็จ! ป้องกันเวลาชนกันเรียบร้อย');
+              }}
+              className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-[#0f0f18] hover:bg-[#242434] text-emerald-300 border border-emerald-500/30 hover:border-emerald-400/60 flex items-center gap-1 transition-all cursor-pointer shadow-sm shrink-0"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <span>จัดเวลา</span>
+            </button>
+          </Tooltip>
+
+          {/* Time Shift Button */}
+          <Tooltip content="ขยับเวลาซับไตเติลทั้งหมดพร้อมกัน (+- Offset Seconds)" position="bottom">
+            <button
+              type="button"
+              onClick={() => setTimeShiftModalOpen(true)}
+              className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-[#0f0f18] hover:bg-[#242434] text-zinc-200 border border-zinc-700 hover:border-zinc-500 flex items-center gap-1 transition-all cursor-pointer shadow-sm shrink-0"
+            >
+              <Clock className="w-3.5 h-3.5 text-orange-400" />
+              <span>ขยับเวลา</span>
+            </button>
+          </Tooltip>
+
+          {/* Find & Replace Button */}
+          <Tooltip content="ค้นหาและแทนที่คำผิดทั้งหมดในคลิป (Find & Replace)" position="bottom">
+            <button
+              type="button"
+              onClick={() => setFindReplaceModalOpen(true)}
+              className="px-2.5 py-1 text-xs font-semibold rounded-xl bg-[#0f0f18] hover:bg-[#242434] text-zinc-200 border border-zinc-700 hover:border-zinc-500 flex items-center gap-1 transition-all cursor-pointer shadow-sm shrink-0"
+            >
+              <Replace className="w-3.5 h-3.5 text-amber-400" />
+              <span>ค้นหา/แทนที่</span>
+            </button>
+          </Tooltip>
         </div>
       </div>
 
