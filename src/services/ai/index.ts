@@ -22,7 +22,7 @@ export function getSTTProvider(providerName?: string): STTProvider {
   const selectedName =
     providerName ||
     process.env.STT_PROVIDER?.toLowerCase() ||
-    (process.env.GEMINI_API_KEY ? 'gemini' : process.env.GROQ_API_KEY ? 'groq' : 'openai');
+    'deepgram';
 
   const provider = providers[selectedName];
   if (!provider) {
