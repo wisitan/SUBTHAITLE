@@ -567,8 +567,8 @@ export function UploadZone() {
                           ? `Credit ที่มี (ใช้ ${requiredCredits} นาที / คงเหลือ ${creditsMinutes} นาที)`
                           : 'Credit ที่มี'}
                       </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/20 text-violet-300 border border-violet-500/30">
-                        ⚡ ทดสอบ: Deepgram Nova-2
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                        ⚡ ทดสอบ: Google Gemini Flash
                       </span>
                     </p>
 

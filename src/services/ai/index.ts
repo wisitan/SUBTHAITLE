@@ -22,7 +22,7 @@ export function getSTTProvider(providerName?: string): STTProvider {
   const selectedName =
     providerName ||
     process.env.STT_PROVIDER?.toLowerCase() ||
-    'deepgram';
+    'gemini';
 
   const provider = providers[selectedName];
   if (!provider) {
