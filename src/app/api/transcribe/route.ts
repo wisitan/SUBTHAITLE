@@ -127,6 +127,7 @@ export async function POST(request: NextRequest) {
       const result = await transcribeAudioBuffer(audioBuffer, {
         provider: customProvider,
         language,
+        mode,
       });
 
       return NextResponse.json({
@@ -138,9 +139,36 @@ export async function POST(request: NextRequest) {
         usedQuotaCount,
         remainingQuota,
       });
-    } catch (sttError) {
+    } catch (sttError: unknown) {
       await refundCreditsIfFailed();
       console.error('[Transcribe Route STT Error]:', sttError);
+
+      const errObj = sttError && typeof sttError === 'object' ? (sttError as Record<string, unknown>) : null;
+      const errMsg = sttError instanceof Error ? sttError.message : String(sttError);
+
+      const isRateLimit = Boolean(
+        errObj?.isRateLimit ||
+        errObj?.status === 429 ||
+        errMsg.includes('GEMINI_RATE_LIMIT_EXCEEDED') ||
+        errMsg.includes('429') ||
+        errMsg.includes('RESOURCE_EXHAUSTED')
+      );
+
+      if (isRateLimit) {
+        return NextResponse.json(
+          {
+            error: 'RATE_LIMIT_EXCEEDED',
+            isRateLimit: true,
+            retryAfter: mode === 'credits' ? 5 : 15,
+            message:
+              mode === 'credits'
+                ? 'ช่องสัญญาณระบบกำลังรอคิวชั่วคราว ระบบจะลองส่งซ้ำให้อัตโนมัติค่ะ'
+                : 'ช่องสัญญาณใช้งานฟรีกำลังหนาแน่น (จำกัด 15 ครั้ง/นาที) ระบบกำลังรอคิวส่งซ้ำให้อัตโนมัติค่ะ',
+          },
+          { status: 429 }
+        );
+      }
+
       return NextResponse.json(
         {
           error:

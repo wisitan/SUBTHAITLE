@@ -1,5 +1,17 @@
 import { STTProvider, STTResult, STTWord } from '../types';
 
+export class GeminiAPIError extends Error {
+  status: number;
+  isRateLimit: boolean;
+
+  constructor(status: number, message: string, isRateLimit: boolean) {
+    super(message);
+    this.name = 'GeminiAPIError';
+    this.status = status;
+    this.isRateLimit = isRateLimit;
+  }
+}
+
 export class GeminiSTTProvider implements STTProvider {
   name = 'gemini';
 
@@ -71,6 +83,26 @@ Rules:
         if (!res.ok) {
           const errBody = await res.text();
           console.warn(`[Gemini STT] Model ${model} returned status ${res.status}: ${errBody.slice(0, 150)}`);
+
+          const isRateLimit =
+            res.status === 429 ||
+            errBody.includes('RESOURCE_EXHAUSTED') ||
+            errBody.includes('quota') ||
+            errBody.includes('rate limit');
+
+          const err = new GeminiAPIError(
+            res.status,
+            isRateLimit
+              ? 'GEMINI_RATE_LIMIT_EXCEEDED'
+              : `Gemini API error (${res.status}): ${errBody.slice(0, 150)}`,
+            isRateLimit
+          );
+          lastError = err;
+
+          // If rate-limited on this key, do not waste time calling other models under the same key
+          if (isRateLimit) {
+            break;
+          }
           continue;
         }
 

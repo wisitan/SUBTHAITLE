@@ -71,35 +71,83 @@ export async function transcribeAudio(
     onProgress('กำลังส่งไฟล์เสียงไปถอดข้อความด้วย AI...');
   }
 
-  // 2. Single-Step Transcription Request to Backend
-  const formData = new FormData();
-  formData.append('file', audioBlob, 'audio.mp3');
-  formData.append('language', 'th');
-  formData.append('mode', isFreeMode ? 'free' : 'credits');
-  formData.append('duration', mediaDuration.toString());
-  if (authInfo?.userId) {
-    formData.append('userId', authInfo.userId);
+  // 2. Transcription Request to Backend with Auto-Queue & Retry on Rate Limit
+  const MAX_QUEUE_ATTEMPTS = 5;
+  let attempt = 0;
+  let data: (TranscribeResponse & { usedQuotaCount?: number; remainingQuota?: number }) | null = null;
+
+  while (attempt < MAX_QUEUE_ATTEMPTS) {
+    attempt++;
+    if (onProgress && attempt > 1) {
+      onProgress(`กำลังส่งคำร้องขอไปถอดเสียงใหม่ตามคิว (รอบที่ ${attempt}/${MAX_QUEUE_ATTEMPTS})...`);
+    }
+
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'audio.mp3');
+    formData.append('language', 'th');
+    formData.append('mode', isFreeMode ? 'free' : 'credits');
+    formData.append('duration', mediaDuration.toString());
+    if (authInfo?.userId) {
+      formData.append('userId', authInfo.userId);
+    }
+
+    const res = await fetch('/api/transcribe', {
+      method: 'POST',
+      body: formData,
+      signal: authInfo?.signal,
+    });
+
+    let resText = '';
+    interface BackendResponse extends Partial<TranscribeResponse> {
+      usedQuotaCount?: number;
+      remainingQuota?: number;
+      isRateLimit?: boolean;
+      retryAfter?: number;
+      message?: string;
+    }
+    let parsedJson: BackendResponse | null = null;
+    try {
+      resText = await res.text();
+      parsedJson = JSON.parse(resText) as BackendResponse;
+    } catch {
+      // Non-JSON response
+    }
+
+    // Check for Rate Limit / Queue (HTTP 429)
+    if (res.status === 429 || parsedJson?.isRateLimit || parsedJson?.error === 'RATE_LIMIT_EXCEEDED') {
+      if (attempt >= MAX_QUEUE_ATTEMPTS) {
+        throw new Error(parsedJson?.message || 'ช่องสัญญาณหนาแน่นเกินกำหนด กรุณาลองใหม่อีกครั้งในภายหลังค่ะ');
+      }
+
+      const waitSeconds = Number(parsedJson?.retryAfter) || (isFreeMode ? 15 : 5);
+      for (let sec = waitSeconds; sec > 0; sec--) {
+        if (authInfo?.signal?.aborted) {
+          throw new Error('การถอดเสียงถูกยกเลิก');
+        }
+        if (onProgress) {
+          const queueMsg = isFreeMode
+            ? `⚠️ ช่องสัญญาณฟรีกำลังหนาแน่น (15 ครั้ง/นาที) • กำลังรอคิวส่งซ้ำอัตโนมัติในอีก ${sec} วินาที... (รอบที่ ${attempt}/${MAX_QUEUE_ATTEMPTS})`
+            : `⏳ สัญญาณระบบกำลังรอคิว • กำลังลองใหม่อัตโนมัติในอีก ${sec} วินาที... (รอบที่ ${attempt}/${MAX_QUEUE_ATTEMPTS})`;
+          onProgress(queueMsg);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      }
+      continue;
+    }
+
+    if (!res.ok || !parsedJson || !parsedJson.success) {
+      throw new Error(
+        parsedJson?.error ||
+        `เซิร์ฟเวอร์ส่งการตอบกลับที่ไม่ถูกต้อง (${res.status}): ${resText.slice(0, 150) || 'กรุณาลองใหม่อีกครั้ง'}`
+      );
+    }
+
+    data = parsedJson as TranscribeResponse & { usedQuotaCount?: number; remainingQuota?: number };
+    break; // Success!
   }
 
-  const res = await fetch('/api/transcribe', {
-    method: 'POST',
-    body: formData,
-    signal: authInfo?.signal,
-  });
-
-  let resText = '';
-  let data: TranscribeResponse & { usedQuotaCount?: number; remainingQuota?: number };
-  try {
-    resText = await res.text();
-    data = JSON.parse(resText);
-  } catch {
-    throw new Error(
-      `เซิร์ฟเวอร์ส่งการตอบกลับที่ไม่ถูกต้อง (${res.status}): ${resText.slice(0, 150) || 'กรุณาลองใหม่อีกครั้ง'}`
-    );
-  }
-
-  if (!res.ok || !data || !data.success) {
-    throw new Error(data?.error || 'เกิดข้อผิดพลาดในการถอดเสียงจากเซิร์ฟเวอร์');
+  if (!data) {
+    throw new Error('เกิดข้อผิดพลาดในการรับข้อมูลการถอดเสียงจากเซิร์ฟเวอร์');
   }
 
   // Update Quota / Credits on successful transcription

@@ -36,17 +36,72 @@ export function getSTTProvider(providerName?: string): STTProvider {
  * Main transcribe entrypoint.
  * Transcribes audio buffer in a single step with native word-level timestamps.
  */
+function isRateLimitError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  if ('isRateLimit' in err && Boolean((err as { isRateLimit?: boolean }).isRateLimit)) return true;
+  if ('status' in err && (err as { status?: number }).status === 429) return true;
+  if (err instanceof Error) {
+    return (
+      err.message.includes('429') ||
+      err.message.includes('RESOURCE_EXHAUSTED') ||
+      err.message.includes('GEMINI_RATE_LIMIT_EXCEEDED')
+    );
+  }
+  return false;
+}
+
 export async function transcribeAudioBuffer(
   audioBuffer: Buffer,
   options?: {
     provider?: string;
     language?: string;
     apiKey?: string;
+    mode?: 'free' | 'credits' | string;
   }
 ): Promise<STTResult> {
   const provider = getSTTProvider(options?.provider);
-  console.log(`[STT Service] Transcribing audio with provider: ${provider.name}`);
+  const isPaidUser = options?.mode === 'credits';
 
+  console.log(`[STT Service] Transcribing audio with provider: ${provider.name} (Tier: ${isPaidUser ? 'Paid' : 'Free'})`);
+
+  // --- Dual-Tier Gemini Engine Routing ---
+  if (provider.name === 'gemini') {
+    const freeKey = process.env.GEMINI_FREE_API_KEY || process.env.GEMINI_API_KEY;
+    const paidKey = process.env.GEMINI_PAID_API_KEY;
+
+    if (isPaidUser) {
+      // 1. Paid User: Try Free tier first to optimize cost
+      try {
+        console.log('[STT Service] [Paid User] Trying Gemini Free Tier first to save credits...');
+        return await provider.transcribe(audioBuffer, { ...options, apiKey: freeKey });
+      } catch (err: unknown) {
+        // If Free Tier is full (Rate limit / quota exceeded), immediately escalate to Gemini Paid Tier!
+        if (isRateLimitError(err)) {
+          console.warn('[STT Service] [Paid User] Gemini Free tier full (429). Escalating to Gemini Paid Tier...');
+          if (paidKey) {
+            try {
+              return await provider.transcribe(audioBuffer, { ...options, apiKey: paidKey });
+            } catch (paidErr: unknown) {
+              console.error('[STT Service] [Paid User] Gemini Paid tier also failed:', paidErr);
+              throw paidErr;
+            }
+          }
+        }
+        throw err;
+      }
+    } else {
+      // 2. Free User: Use Free Tier key only
+      try {
+        return await provider.transcribe(audioBuffer, { ...options, apiKey: freeKey });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn('[STT Service] [Free User] Gemini Free tier error/limit:', msg);
+        throw err;
+      }
+    }
+  }
+
+  // Generic provider invocation with fallback
   try {
     return await provider.transcribe(audioBuffer, options);
   } catch (err) {

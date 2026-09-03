@@ -90,7 +90,8 @@ SUBTHAITLE/
 ---
 
 ## 🔑 4. Environment Variables ที่จำเป็น
-* `GEMINI_API_KEY`: Key สำหรับ Google Gemini Flash (สำคัญที่สุด! ต้องมีทั้งใน `.env.local` และบน **Vercel Settings ➔ Environment Variables** ทั้ง **Production** และ **Preview**)
+* `GEMINI_API_KEY`: Key สำหรับ Google Gemini Flash Free Tier (15 RPM)
+* `GEMINI_PAID_API_KEY`: Key สำหรับ Google Gemini Flash Paid Tier (1,000+ RPM) สำหรับลูกค้าระดับเครดิต / VIP
 * `GROQ_API_KEY`: Key สำรองสำหรับ Groq Whisper (Auto-fallback)
 * `DEEPGRAM_API_KEY`: Key สำหรับ Deepgram (มีใน `.env.local` และ Vercel แล้ว)
 * `R2_*`: ค่าการเชื่อมต่อ Cloud Proxy Storage

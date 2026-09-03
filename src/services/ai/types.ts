@@ -14,5 +14,5 @@ export interface STTResult {
 
 export interface STTProvider {
   name: string;
-  transcribe(audioBuffer: Buffer, options?: { language?: string }): Promise<STTResult>;
+  transcribe(audioBuffer: Buffer, options?: { language?: string; apiKey?: string }): Promise<STTResult>;
 }
