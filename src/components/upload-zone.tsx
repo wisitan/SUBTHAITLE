@@ -558,14 +558,17 @@ export function UploadZone() {
                       </span>
                     </div>
 
-                    <p className="text-xs text-zinc-300">
-                      โหมดที่เลือก:{' '}
+                    <p className="text-xs text-zinc-300 flex flex-wrap items-center gap-1.5">
+                      <span>โหมดที่เลือก:</span>{' '}
                       <span className="text-zinc-100 font-bold">
                         {isFreeMode
                           ? 'ฟรี 5 คลิป/วัน (สูงสุด 2 นาที)'
                           : providerMode === 'credits'
                           ? `Credit ที่มี (ใช้ ${requiredCredits} นาที / คงเหลือ ${creditsMinutes} นาที)`
                           : 'Credit ที่มี'}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                        ⚡ ทดสอบ: Google Gemini Flash
                       </span>
                     </p>
 

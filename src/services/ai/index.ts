@@ -1,4 +1,5 @@
 import { STTProvider, STTResult } from './types';
+import { GeminiSTTProvider } from './providers/gemini';
 import { GroqSTTProvider } from './providers/groq';
 import { OpenAISTTProvider } from './providers/openai';
 import { DeepgramSTTProvider } from './providers/deepgram';
@@ -7,6 +8,7 @@ import { GoogleSTTProvider } from './providers/google';
 export * from './types';
 
 const providers: Record<string, STTProvider> = {
+  gemini: new GeminiSTTProvider(),
   groq: new GroqSTTProvider(),
   openai: new OpenAISTTProvider(),
   deepgram: new DeepgramSTTProvider(),
@@ -20,12 +22,12 @@ export function getSTTProvider(providerName?: string): STTProvider {
   const selectedName =
     providerName ||
     process.env.STT_PROVIDER?.toLowerCase() ||
-    'groq';
+    (process.env.GEMINI_API_KEY ? 'gemini' : process.env.GROQ_API_KEY ? 'groq' : 'openai');
 
   const provider = providers[selectedName];
   if (!provider) {
-    console.warn(`[STT Service] Provider "${selectedName}" not found, falling back to groq.`);
-    return providers.groq;
+    console.warn(`[STT Service] Provider "${selectedName}" not found, falling back to gemini or groq.`);
+    return providers.gemini || providers.groq;
   }
   return provider;
 }
