@@ -330,8 +330,8 @@ export function RecentProjects() {
     return list;
   }, [filteredProjects, sortMode]);
 
-  // Pagination metrics (6 per page for grid, 10 per page for list)
-  const pageSize = viewMode === 'grid' ? 6 : 10;
+  // Pagination metrics (8 per page for both card and list view)
+  const pageSize = 8;
   const totalPages = Math.max(1, Math.ceil(sortedProjects.length / pageSize));
   const validCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
 
