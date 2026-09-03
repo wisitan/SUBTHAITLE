@@ -1,14 +1,15 @@
 # 📑 SUBTHAITLE — Session Handoff & Architecture Summary
 **Date:** 2026-09-04  
-**Active Baseline Commit:** [`789ae5f`](https://github.com/wisitan/SUBTHAITLE/commit/789ae5fdbc85c83cf0d63b1187d2f74a7c64d773) (`main` == `uat`)  
+**Active Baseline Commit:** [`4ed13f3`](https://github.com/wisitan/SUBTHAITLE/commit/4ed13f3) (`main` == `uat`)  
 **Project Goal:** Web Application สำหรับถอดเสียงคำพูดในวิดีโอเป็นซับไตเติลภาษาไทยอัตโนมัติ แม่นยำระดับคำ มีคาราโอเกะไฮไลท์ และรองรับคำทับศัพท์/บริบทภาษาไทยของ Creator ยุคใหม่
 
 ---
 
 ## 🎯 1. ภาพรวมสถานะปัจจุบัน (Current State)
-* **Production & UAT Parity:** สาขา `main` และ `uat` ซิงค์เท่ากัน 100% ที่ Commit `789ae5f`
+* **Production & UAT Parity:** สาขา `main` และ `uat` ซิงค์เท่ากัน 100% ที่ Commit `4ed13f3`
 * **Core STT Engine:** เปลี่ยนเครื่องยนต์ถอดเสียงหลักจาก Whisper (Groq/OpenAI) มาเป็น **Google Gemini Flash (Multimodal Audio Native)** อย่างถาวร
-* **User Feedback:** ทดสอบกับคลิปวิดีโอจริงแล้วมีความแม่นยำภาษาไทยสูงที่สุด ศัพท์ไอทีและคำทับศัพท์ถูกต้อง ไม่เพี้ยนเป็นคำหลอน และต้นทุนถูกที่สุด
+* **Grammar-based Clause Splitting:** ตัดแบ่งกล่องซับไตเติลภาษาไทยตามคำเชื่อมไวยากรณ์ (เช่น "เพราะว่า", "แต่ว่า", "ดังนั้น") สำเร็จแล้ว
+* **UI Grid 8 Cards:** หน้า Recent Projects แสดง 8 การ์ดต่อหน้า เต็ม 2 แถวสวยงามพอดีบน Desktop ทั้ง Card & List view
 
 ---
 
