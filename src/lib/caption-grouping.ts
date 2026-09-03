@@ -5,6 +5,7 @@ import {
   resegmentThaiWords,
   THAI_NON_INITIAL,
   THAI_TRAILING_INCOMPLETE,
+  isClauseBoundaryWord,
 } from './thai-text';
 
 export type PacingMode = 'short' | 'medium' | 'long' | 'custom';
@@ -91,6 +92,19 @@ export function groupWordsIntoCaptions(
     const exceedsChars = potentialText.length > config.maxCharsPerLine;
     const exceedsDuration = currentDuration > config.maxDurationSec;
 
+    // Grammar-based Clause Splitting:
+    // If incoming word starts a syntactic clause (e.g. "เพราะว่า", "แต่ว่า", "ดังนั้น"),
+    // split if the current bucket already has sufficient content to avoid mid-sentence breaks.
+    const isClauseStart = isClauseBoundaryWord(word.word, validWords[i + 1]?.word);
+    const gap = prevWord ? word.start - prevWord.end : 0;
+    const minWordsForClause = config.mode === 'short' ? 2 : 3;
+    const hasEnoughContent = currentWordCount >= minWordsForClause && currentDuration >= 0.7;
+    const isClauseSplit = isClauseStart && hasEnoughContent && (
+      gap >= 0.15 ||
+      currentWordCount >= Math.floor(config.maxWordsPerLine * 0.5) ||
+      potentialText.length >= Math.floor(config.maxCharsPerLine * 0.5)
+    );
+
     // Linguistic Safety: Never split if the new cue would start with a non-initial Thai character (tone mark, vowel),
     // or if the previous word ended with a leading Thai vowel (เ, แ, โ, ใ, ไ).
     const cannotSplitHere = THAI_NON_INITIAL.test(word.word) ||
@@ -98,11 +112,11 @@ export function groupWordsIntoCaptions(
 
     // Split cue if:
     // 1. We are at a safe split point (!cannotSplitHere), AND
-    // 2. Long pause detected, OR limit exceeded (words, chars, or duration) AND we already have at least 1 word
+    // 2. Long pause detected, OR clause boundary, OR limit exceeded (words, chars, or duration) AND we already have at least 1 word
     if (
       currentWords.length > 0 &&
       !cannotSplitHere &&
-      (isLongPause || exceedsWords || exceedsChars || exceedsDuration)
+      (isLongPause || isClauseSplit || exceedsWords || exceedsChars || exceedsDuration)
     ) {
       // Close current bucket
       const cueText = cleanThaiText(formatCaptionWordsText(currentWords));

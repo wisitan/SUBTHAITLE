@@ -19,6 +19,59 @@ export const THAI_NON_INITIAL = /^[\s]*[\u0E2F\u0E30-\u0E3A\u0E45\u0E46\u0E47-\u
 // Regex for Thai leading vowels (เ, แ, โ, ใ, ไ) that cannot end a token alone
 export const THAI_TRAILING_INCOMPLETE = /[\u0E40-\u0E44]$/;
 
+/**
+ * Common Thai clause-initiating conjunctions and discourse markers.
+ * Used by caption grouping to break subtitles at natural syntactic boundaries.
+ */
+export const THAI_CLAUSE_CONJUNCTIONS = new Set([
+  // เหตุผล / Cause & Reason
+  'เพราะว่า', 'เพราะ', 'เนื่องจาก', 'เนื่องด้วย', 'สืบเนื่องจาก',
+  // ขัดแย้ง / Contrast & Concession
+  'แต่ว่า', 'แต่', 'แต่ทว่า', 'ทว่า', 'อย่างไรก็ตาม', 'ถึงแม้ว่า', 'แม้ว่า', 'ทั้งนี้',
+  // ผลลัพธ์ / Result & Consequence
+  'ดังนั้น', 'ฉะนั้น', 'เพราะฉะนั้น', 'ส่งผลให้', 'ทำให้',
+  // เงื่อนไข / Condition
+  'ถ้าหากว่า', 'ถ้าหาก', 'หากว่า', 'ในกรณีที่',
+  // เสริมความ / Transition & Addition
+  'นอกจากนี้', 'ยิ่งไปกว่านั้น', 'อีกทั้ง', 'ในขณะที่', 'รวมถึง',
+  // ตัวอย่าง / Exemplification
+  'เช่น', 'ตัวอย่างเช่น', 'อาทิเช่น',
+  // English common conjunctions in mixed speech
+  'because', 'however', 'therefore', 'although',
+]);
+
+/**
+ * Checks if a word or 2-word sequence acts as a clause-initiating boundary.
+ */
+export function isClauseBoundaryWord(currentWord: string, nextWord?: string): boolean {
+  if (!currentWord) return false;
+  const w = currentWord.trim();
+  const lower = w.toLowerCase();
+
+  // Guard against temporal/idiomatic phrases like "แต่เช้า", "แต่แรก", "แต่เด็ก", "แต่ก่อน"
+  if (w === 'แต่' && nextWord) {
+    const nw = nextWord.trim();
+    if (nw === 'เช้า' || nw === 'แรก' || nw === 'เด็ก' || nw === 'ก่อน') {
+      return false;
+    }
+  }
+
+  // Exact match
+  if (THAI_CLAUSE_CONJUNCTIONS.has(w) || THAI_CLAUSE_CONJUNCTIONS.has(lower)) {
+    return true;
+  }
+
+  // 2-token compound match (e.g. "เพราะ" + "ว่า" -> "เพราะว่า")
+  if (nextWord) {
+    const combined = (w + nextWord.trim()).toLowerCase();
+    if (THAI_CLAUSE_CONJUNCTIONS.has(combined)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 let thaiSegmenter: Intl.Segmenter | null = null;
 
 function getThaiSegmenter() {
