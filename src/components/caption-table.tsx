@@ -156,7 +156,7 @@ export function CaptionTable({ onPlayCue }: Props) {
         <div className="flex flex-wrap items-center gap-1.5">
           {/* Undo / Redo Buttons */}
           <div className="flex items-center bg-[#0f0f18] border border-zinc-700/80 rounded-xl p-0.5 shadow-sm shrink-0">
-            <Tooltip content="ย้อนกลับการแก้ไข (Undo) • Cmd+Z / Ctrl+Z" position="bottom">
+            <Tooltip content="ย้อนกลับ (Undo) • Cmd+Z / Ctrl+Z" position="bottom" align="left">
               <button
                 type="button"
                 onClick={() => {
@@ -169,7 +169,7 @@ export function CaptionTable({ onPlayCue }: Props) {
               </button>
             </Tooltip>
             <div className="w-px h-3.5 bg-zinc-700" />
-            <Tooltip content="ทำซ้ำการแก้ไข (Redo) • Cmd+Shift+Z / Ctrl+Y" position="bottom">
+            <Tooltip content="ทำซ้ำ (Redo) • Cmd+Shift+Z / Ctrl+Y" position="bottom" align="left">
               <button
                 type="button"
                 onClick={() => {
@@ -226,7 +226,7 @@ export function CaptionTable({ onPlayCue }: Props) {
           </Tooltip>
 
           {/* Find & Replace Button */}
-          <Tooltip content="ค้นหาและแทนที่คำผิดทั้งหมดในคลิป (Find & Replace)" position="bottom">
+          <Tooltip content="ค้นหาและแทนที่คำผิดทั้งหมดในคลิป (Find & Replace)" position="bottom" align="right">
             <button
               type="button"
               onClick={() => setFindReplaceModalOpen(true)}
