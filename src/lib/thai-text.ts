@@ -200,7 +200,8 @@ export function resegmentThaiWords<T extends { word: string; start: number; end:
 
     // Build the final timed words for this phrase
     for (const item of fusedSegments) {
-      const wordText = item.segment;
+      const wordText = item.segment.replace(/(?<!\d),(?!\d)/g, '').trim();
+      if (!wordText) continue;
       const startCharIdx = item.index;
       const endCharIdx = Math.min(startCharIdx + wordText.length - 1, charTimes.length - 1);
 
@@ -283,6 +284,9 @@ export function cleanThaiText(rawText: string): string {
   // 9. Normalize multi-spaces into single space
   text = text.replace(/\s+/g, ' ');
 
+  // 10. Strip non-numeric commas (Thai subtitles do not use commas, preserve numbers like 1,000)
+  text = text.replace(/(?<!\d),(?!\d)/g, '');
+
   return text.trim();
 }
 
@@ -324,7 +328,7 @@ export function formatCaptionWordsText<T extends CaptionWordLike | string>(
   for (let i = 0; i < words.length; i++) {
     const currentItem = words[i];
     const rawWord = typeof currentItem === 'string' ? currentItem : currentItem.word;
-    const w = rawWord.trim();
+    const w = rawWord.replace(/(?<!\d),(?!\d)/g, '').trim();
     if (!w) continue;
 
     if (result.length === 0) {
