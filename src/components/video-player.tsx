@@ -354,7 +354,7 @@ export function VideoPlayer({ className = '' }: Props) {
             {/* Cloud Proxy Badge */}
             {!file && proxyUrl && (
               <div className="absolute top-2 left-2 z-30 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md border border-amber-500/40 text-amber-300 text-[10px] font-semibold flex items-center gap-1 shadow">
-                <span>⚡ Cloudflare R2 Proxy (720p)</span>
+                <span>⚡ Cloud Proxy (720p)</span>
               </div>
             )}
 

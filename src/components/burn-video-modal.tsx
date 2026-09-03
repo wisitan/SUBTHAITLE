@@ -98,11 +98,11 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
         percent: 5,
         ratio: 0.05,
         stage: 'preparing_media',
-        message: 'กำลังดาวน์โหลดวิดีโอ Proxy จาก Cloudflare R2...',
+        message: 'กำลังดาวน์โหลดวิดีโอ Proxy จากระบบคลาวด์...',
       });
       try {
         const res = await fetch(proxyUrl);
-        if (!res.ok) throw new Error('ไม่สามารถดาวน์โหลดวิดีโอ Proxy จาก Cloudflare R2 ได้');
+        if (!res.ok) throw new Error('ไม่สามารถดาวน์โหลดวิดีโอ Proxy จากระบบคลาวด์ได้');
         const blob = await res.blob();
         videoToBurn = new File([blob], `${projectTitle || 'proxy_video'}.mp4`, { type: 'video/mp4' });
       } catch (fetchErr) {
@@ -195,7 +195,7 @@ export function BurnVideoModal({ isOpen, onClose }: Props) {
                 {file
                   ? '⚡ เรนเดอร์ด้วยไฟล์ Master คมชัดเต็ม 100% ในเครื่อง'
                   : proxyUrl
-                  ? '☁️ เรนเดอร์ด้วย Cloudflare R2 Proxy หรือเชื่อมต่อไฟล์ต้นฉบับ'
+                  ? '☁️ เรนเดอร์ด้วย Cloud Proxy หรือเชื่อมต่อไฟล์ต้นฉบับ'
                   : 'ประมวลผลบน GPU เครื่องของคุณ 100% ปลอดภัย'}
               </p>
             </div>

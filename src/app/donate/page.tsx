@@ -59,7 +59,7 @@ const DONATE_TIERS: DonateTier[] = [
     hoursDisplay: '2 ชั่วโมง (120 นาที)',
     estimatedClips: '~90 คลิป',
     icon: UtensilsCrossed,
-    description: 'ร่วมสมทบทุนค่าเซิร์ฟเวอร์ & Cloudflare R2 ให้ระบบถอดเสียงทำงานได้อย่างเสถียร 24 ชม.',
+    description: 'ร่วมสมทบทุนค่าเซิร์ฟเวอร์ & ระบบคลาวด์ ให้ระบบถอดเสียงทำงานได้อย่างเสถียร 24 ชม.',
     perks: [
       'รับโควต้าถอดเสียงขอบคุณ 120 นาที (2 ชั่วโมงเต็ม)',
       'ทำคลิปสั้น TikTok / Reels / Shorts ได้ ~90 คลิป',
@@ -78,7 +78,7 @@ const DONATE_TIERS: DonateTier[] = [
     popular: true,
     tag: '🔥 ผู้สนับสนุนยอดนิยม',
     icon: Flame,
-    description: 'สุดยอดผู้สนับสนุนตัวจริง ช่วยค้ำจุนค่า Cloudflare R2, Server และการพัฒนาฟีเจอร์ใหม่ ๆ',
+    description: 'สุดยอดผู้สนับสนุนตัวจริง ช่วยค้ำจุนค่าระบบคลาวด์, Server และการพัฒนาฟีเจอร์ใหม่ ๆ',
     perks: [
       'รับโควต้าถอดเสียงขอบคุณ 300 นาที (5 ชั่วโมงเต็ม)',
       'ทำคลิปสั้น TikTok / Reels / Shorts ได้ ~250 คลิป',
@@ -308,7 +308,7 @@ export default function DonatePage() {
             <div className="p-4 rounded-2xl bg-zinc-950/60 border border-zinc-800/60 space-y-1.5">
               <div className="flex items-center gap-2 text-amber-400 font-bold">
                 <ShieldCheck className="w-4 h-4" />
-                <span>Cloudflare R2 Storage</span>
+                <span>ระบบจัดเก็บบนคลาวด์ (Cloud Storage)</span>
               </div>
               <p className="text-zinc-400 leading-relaxed">
                 บันทึก Proxy วิดีโอและโปรเจกต์งานซับไตเติลบนคลาวด์ ปลอดภัย เปิดดูข้ามอุปกรณ์ได้ตลอด 7 วัน (เครื่องเดิมเปิดตัดต่อได้ตลอด)

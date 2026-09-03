@@ -254,8 +254,8 @@ export function UploadZone() {
           let thumbnailUrl: string | null = null;
 
           if (file) {
-            setStatus('uploading', 88, 'กำลังสร้างรูปตัวอย่าง Thumbnail และซิงค์วิดีโอขึ้น Cloudflare R2...');
-            setTranscribeMessage('กำลังบันทึกวิดีโอขึ้น Cloudflare R2 (720p Proxy)...');
+            setStatus('uploading', 88, 'กำลังสร้างรูปตัวอย่าง Thumbnail และซิงค์วิดีโอขึ้นระบบคลาวด์...');
+            setTranscribeMessage('กำลังบันทึกวิดีโอขึ้นระบบคลาวด์ (720p Proxy)...');
             setTranscribeProgressPercent(88);
 
             // Generate thumbnail and upload proxy in parallel
@@ -484,7 +484,7 @@ export function UploadZone() {
                           ? 'AI กำลังฟังและจับตำแหน่งเวลาของแต่ละคำ...'
                           : transcribeProgressPercent < 90
                           ? 'กำลังปรับแต่งคำศัพท์ภาษาไทยให้ถูกต้องแม่นยำ...'
-                          : 'กำลังซิงค์วิดีโอขึ้น Cloudflare R2 และจัดเตรียมหน้าตัดต่อ...')}
+                          : 'กำลังซิงค์วิดีโอขึ้นระบบคลาวด์และจัดเตรียมหน้าตัดต่อ...')}
                     </p>
                   </div>
                 </div>
@@ -516,7 +516,7 @@ export function UploadZone() {
                 </span>
                 <span>•</span>
                 <span className={transcribeProgressPercent >= 88 ? 'text-amber-400 font-semibold' : ''}>
-                  4. ซิงค์ R2 & คลาวด์
+                  4. บันทึกและซิงค์คลาวด์
                 </span>
               </div>
             </div>
