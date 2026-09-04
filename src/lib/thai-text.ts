@@ -90,29 +90,83 @@ function getThaiSegmenter() {
 export function splitCompoundSegment(text: string): string[] {
   if (!text) return [];
   const parts: string[] = [];
-  const regex = /([\u0E00-\u0E7F]+|[A-Z]?[a-z]+|[A-Z]+(?=[A-Z][a-z]|\d|\b|[^\w])|[0-9]+|[^\s\u0E00-\u0E7FA-Za-z0-9]+)/g;
+  const regex = /([\u0E00-\u0E7F]+|[A-Z]?[a-z]+|[A-Z]+(?=[A-Z][a-z]|\d|\b|[^\w])|[0-9]+(?:\.[0-9]+)?|[^\s\u0E00-\u0E7FA-Za-z0-9]+)/g;
   let match;
   while ((match = regex.exec(text)) !== null) {
     if (match[0].trim()) {
       parts.push(match[0].trim());
     }
   }
-  return parts.length > 0 ? parts : [text];
+  if (parts.length === 0) return [text];
+
+  // Post-process: preserve hyphenated words like Type-C, Wi-Fi, e-Tax
+  const fused: string[] = [];
+  for (let i = 0; i < parts.length; i++) {
+    const p = parts[i];
+    const prev = fused.length > 0 ? fused[fused.length - 1] : null;
+    const isHyphen = p === '-' || p === '–' || p === '—';
+    const isPrevHyphen = prev && (prev.endsWith('-') || prev.endsWith('–') || prev.endsWith('—'));
+
+    if (prev && isHyphen) {
+      fused[fused.length - 1] += p;
+      continue;
+    }
+    if (prev && isPrevHyphen) {
+      fused[fused.length - 1] += p;
+      continue;
+    }
+    fused.push(p);
+  }
+
+  return fused;
 }
 
 /**
- * Expands an array of timed words so that any compound tokens are broken into fine-grained,
- * single-word units with proportionally distributed start and end timestamps.
+ * Expands an array of timed words so that any compound tokens or multi-word segments
+ * are broken into fine-grained, single-word units with proportionally distributed start and end timestamps.
+ * Crucially, each token's expansion is confined STRICTLY within its own start and end boundaries,
+ * guaranteeing zero cumulative drift across adjacent words.
  */
 export function expandWordsToFineGrained<T extends { word: string; start: number; end: number }>(words?: T[] | null): T[] {
   if (!words || words.length === 0) return [];
+  const segmenter = getThaiSegmenter();
   const result: T[] = [];
 
   for (const w of words) {
     const rawWord = w.word.trim();
     if (!rawWord) continue;
 
-    const subwords = splitCompoundSegment(rawWord);
+    // 1. Check for mixed compound tokens (e.g. "ราคา399บาท" -> ["ราคา", "399", "บาท"])
+    const compoundParts = splitCompoundSegment(rawWord);
+    let subwords: string[] = [];
+
+    if (compoundParts.length > 1) {
+      subwords = compoundParts;
+    } else if (segmenter && /[\u0E00-\u0E7F]/.test(rawWord) && rawWord.length >= 6) {
+      // 2. If a single token contains multiple Thai words (e.g. Gemini multi-word phrase "สวัสดีครับ" -> ["สวัสดี", "ครับ"])
+      const segs = Array.from(segmenter.segment(rawWord))
+        .map((s) => s.segment.trim())
+        .filter(Boolean);
+      const fusedSegs: string[] = [];
+      for (const s of segs) {
+        const prev = fusedSegs[fusedSegs.length - 1];
+        const isHyphen = s === '-' || s === '–' || s === '—';
+        const isPrevHyphen = prev && (prev.endsWith('-') || prev.endsWith('–') || prev.endsWith('—'));
+        if (prev && (isHyphen || isPrevHyphen)) {
+          fusedSegs[fusedSegs.length - 1] += s;
+        } else {
+          fusedSegs.push(s);
+        }
+      }
+      if (fusedSegs.length > 1) {
+        subwords = fusedSegs;
+      } else {
+        subwords = [rawWord];
+      }
+    } else {
+      subwords = [rawWord];
+    }
+
     if (subwords.length <= 1) {
       result.push(w);
       continue;
@@ -126,7 +180,7 @@ export function expandWordsToFineGrained<T extends { word: string; start: number
       const sub = subwords[i];
       const isLast = i === subwords.length - 1;
       const subDur = (sub.length / totalChars) * dur;
-      const subEnd = isLast ? w.end : currStart + subDur;
+      const subEnd = isLast ? Math.max(w.end, currStart + 0.04) : currStart + subDur;
 
       result.push({
         ...w,
@@ -143,14 +197,18 @@ export function expandWordsToFineGrained<T extends { word: string; start: number
 }
 
 /**
- * Re-segments Whisper's BPE subword tokens into linguistically correct Thai & English words
- * using the browser's built-in Intl.Segmenter('th', { granularity: 'word' }).
+ * Re-segments STT tokens into linguistically correct Thai & English words
+ * with STRICT acoustic timestamp preservation.
  *
- * Concatenates continuous token clusters and re-segments the unified text so that
- * mid-word splits like "เป็"+"น" -> "เป็น", "นะ"+"ครั"+"บ" -> "นะครับ", "Type"+"-C" -> "Type-C"
- * are 100% fused into proper, grammatically intact words.
+ * 1. Merges detached BPE subwords, combining marks (tone marks, upper/lower vowels),
+ *    and trailing incomplete vowels (เ, แ, โ, ใ, ไ) without disturbing unaffected words.
+ * 2. Glues hyphenated words (e.g. Type + - + C -> Type-C) only when acoustically close.
+ * 3. Expands compound words (e.g. "ราคา399.50บาท" or multi-word segments) STRICTLY
+ *    within their individual token boundaries, preventing any cross-token timing drift.
  */
-export function resegmentThaiWords<T extends { word: string; start: number; end: number }>(tokens: T[]): T[] {
+export function resegmentThaiWords<T extends { word: string; start: number; end: number; confidence?: number }>(
+  tokens: T[]
+): T[] {
   if (!tokens || tokens.length === 0) return [];
 
   const segmenter = getThaiSegmenter();
@@ -158,119 +216,68 @@ export function resegmentThaiWords<T extends { word: string; start: number; end:
     return mergeThaiSubwordsFallback(tokens);
   }
 
-  // 1. Group tokens into speech phrases (split on significant pauses >= 0.45s)
-  const phrases: T[][] = [];
-  let currentPhrase: T[] = [];
+  // 1. First Pass: Merge broken BPE subword fragments, combining marks, trailing vowels, and hyphens
+  const merged: T[] = [];
 
   for (let i = 0; i < tokens.length; i++) {
-    const tok = tokens[i];
-    const prev = currentPhrase[currentPhrase.length - 1];
-    const isBigGap = prev ? (tok.start - prev.end) >= 0.45 : false;
+    const rawTok = tokens[i];
+    const cleaned = cleanThaiText(rawTok.word);
+    if (!cleaned) continue;
 
-    if (isBigGap && currentPhrase.length > 0) {
-      phrases.push(currentPhrase);
-      currentPhrase = [tok];
-    } else {
-      currentPhrase.push(tok);
-    }
-  }
-  if (currentPhrase.length > 0) {
-    phrases.push(currentPhrase);
-  }
+    const tok: T = {
+      ...rawTok,
+      word: cleaned,
+    };
 
-  const result: T[] = [];
-
-  // 2. Process each phrase with global character-to-time projection
-  for (const phrase of phrases) {
-    let concatenatedText = '';
-    const charTimes: Array<{ start: number; end: number }> = [];
-
-    for (const tok of phrase) {
-      const cleaned = cleanThaiText(tok.word);
-      if (!cleaned) continue;
-
-      const dur = Math.max(0.05, tok.end - tok.start);
-      const len = cleaned.length;
-
-      for (let c = 0; c < len; c++) {
-        const cStart = tok.start + (c / len) * dur;
-        const cEnd = tok.start + ((c + 1) / len) * dur;
-        charTimes.push({
-          start: parseFloat(cStart.toFixed(3)),
-          end: parseFloat(cEnd.toFixed(3)),
-        });
-      }
-      concatenatedText += cleaned;
+    const prev = merged.length > 0 ? merged[merged.length - 1] : null;
+    if (!prev) {
+      merged.push(tok);
+      continue;
     }
 
-    if (!concatenatedText || charTimes.length === 0) continue;
+    const gap = tok.start - prev.end;
+    const isClose = gap < 0.25;
 
-    // Run Intl.Segmenter on the whole continuous phrase
-    const segs = Array.from(segmenter.segment(concatenatedText));
+    const isHyphen = cleaned === '-' || cleaned === '–' || cleaned === '—';
+    const isPrevHyphen = prev.word.endsWith('-') || prev.word.endsWith('–') || prev.word.endsWith('—');
+    const isNonInitial = THAI_NON_INITIAL.test(cleaned);
+    const isPrevIncomplete = THAI_TRAILING_INCOMPLETE.test(prev.word.trimEnd());
 
-    // Post-process segments: combine hyphens with surrounding words (e.g. Type + - + C -> Type-C)
-    const fusedSegments: Array<{ segment: string; index: number }> = [];
-
-    for (let s = 0; s < segs.length; s++) {
-      const seg = segs[s];
-      const txt = seg.segment.trim();
-      if (!txt) continue;
-
-      const prev = fusedSegments[fusedSegments.length - 1];
-
-      const isHyphen = txt === '-' || txt === '–' || txt === '—';
-      const isPrevHyphen = prev && (prev.segment.endsWith('-') || prev.segment.endsWith('–') || prev.segment.endsWith('—'));
-
-      // If current token is hyphen, glue to prev (e.g. "Type" + "-" -> "Type-")
-      if (prev && isHyphen) {
-        prev.segment += txt;
-        continue;
+    // Glue combining characters and incomplete vowels unconditionally,
+    // but only glue hyphens if tokens are acoustically close (prevents cross-sentence dash merging)
+    if (((isHyphen || isPrevHyphen) && isClose) || isNonInitial || isPrevIncomplete) {
+      prev.word += cleaned;
+      prev.end = Math.max(prev.end, tok.end);
+      if (typeof tok.confidence === 'number' && typeof prev.confidence === 'number') {
+        prev.confidence = Math.min(prev.confidence, tok.confidence);
       }
-
-      // If prev token ended with hyphen, glue current to prev (e.g. "Type-" + "C" -> "Type-C")
-      if (prev && isPrevHyphen) {
-        prev.segment += txt;
-        continue;
-      }
-
-      // If current token is a combining Thai mark with no consonant (safety fallback), glue to prev
-      if (prev && THAI_NON_INITIAL.test(txt)) {
-        prev.segment += txt;
-        continue;
-      }
-
-      // If previous ended with incomplete Thai vowel (เ, แ, โ, ใ, ไ), glue to prev
-      if (prev && THAI_TRAILING_INCOMPLETE.test(prev.segment)) {
-        prev.segment += txt;
-        continue;
-      }
-
-      fusedSegments.push({
-        segment: txt,
-        index: seg.index,
-      });
+      continue;
     }
 
-    // Build the final timed words for this phrase
-    for (const item of fusedSegments) {
-      const wordText = item.segment.replace(/(?<!\d),(?!\d)/g, '').trim();
-      if (!wordText) continue;
-      const startCharIdx = item.index;
-      const endCharIdx = Math.min(startCharIdx + wordText.length - 1, charTimes.length - 1);
+    // Whisper BPE Syllable Fusing: If two adjacent Thai tokens fuse into a single word according to Intl.Segmenter
+    // (e.g. "คื" + "อ" -> "คือ", "สวัส" + "ดี" -> "สวัสดี")
+    if (isClose) {
+      const combined = prev.word + cleaned;
+      const segs = Array.from(segmenter.segment(combined))
+        .map((s) => s.segment.trim())
+        .filter(Boolean);
 
-      const wStart = charTimes[startCharIdx]?.start ?? phrase[0].start;
-      const wEnd = charTimes[endCharIdx]?.end ?? phrase[phrase.length - 1].end;
-
-      result.push({
-        ...phrase[0],
-        word: wordText,
-        start: parseFloat(wStart.toFixed(2)),
-        end: parseFloat(Math.max(wStart + 0.05, wEnd).toFixed(2)),
-      });
+      if (segs.length === 1) {
+        prev.word = combined;
+        prev.end = Math.max(prev.end, tok.end);
+        if (typeof tok.confidence === 'number' && typeof prev.confidence === 'number') {
+          prev.confidence = Math.min(prev.confidence, tok.confidence);
+        }
+        continue;
+      }
     }
+
+    merged.push(tok);
   }
 
-  return expandWordsToFineGrained(result);
+  // 2. Second Pass: Fine-grained expansion of compound tokens within their own boundaries
+  // (Preserves exact start and end boundaries of every token, preventing any cumulative timing drift)
+  return expandWordsToFineGrained(merged);
 }
 
 /**

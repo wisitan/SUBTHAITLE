@@ -56,10 +56,10 @@ export async function getFFmpeg(
 /**
  * Extracts and preprocesses audio from any media file in the browser (Cost: ฿0)
  * Applies STT-optimized Audio Preprocessing Pipeline:
- *   1. highpass=f=200   — ตัดเสียงทุ้มรบกวน (พัดลม, แอร์, เสียงรถ)
- *   2. lowpass=f=7000   — ตัดเสียงแหลมสูง (เสียงจี่, ไฟฟ้า)
- *   3. loudnorm        — ปรับระดับเสียงให้สม่ำเสมอ (EBU R128)
- * Output: 16kHz mono MP3 optimized for Google Cloud STT / Whisper
+ *   1. highpass=f=80   — ตัดเสียงฮัม/แอร์ความถี่ต่ำมากใต้เสียงพูดมนุษย์
+ *   2. loudnorm        — ปรับระดับความดังเสียงพูดให้สม่ำเสมอตามมาตรฐาน EBU R128
+ *   (รักษา Transient พยัญชนะต้นและปราศจาก FFT buffer delay)
+ * Output: 16kHz mono MP3 optimized for Google Gemini / Whisper / STT
  */
 export async function extractAudioFromMedia(
   file: File,
@@ -90,16 +90,15 @@ export async function extractAudioFromMedia(
       });
     }
 
-    // STT-Optimized Voice Isolation & Noise Suppression Pipeline:
-    // 1. afftdn=nf=-20  — ตัดเสียง Noise และดนตรีพื้นหลัง (FFT-based Denoiser)
-    // 2. highpass=f=180 — ตัดเสียง Bass และเสียงเคาะดนตรีความถี่ต่ำ
-    // 3. lowpass=f=4500 — ตัดเสียงแหลมสูง/เสียงฉาบดนตรีเหนือย่านเสียงมนุษย์
-    // 4. loudnorm       — ปรับระดับความดังเสียงพูดให้สม่ำเสมอ (EBU R128)
+    // STT-Optimized Voice Audio Pipeline:
+    // 1. highpass=f=80  — ตัดเสียงฮัม/แอร์ความถี่ต่ำมากใต้เสียงพูดมนุษย์
+    // 2. loudnorm       — ปรับระดับความดังเสียงพูดให้สม่ำเสมอตามมาตรฐาน EBU R128
+    // หมายเหตุ: เอา afftdn และ lowpass ออกเพื่อป้องกัน FFT buffer latency และรักษา transient พยัญชนะต้น
     await ffmpeg.exec([
       '-i',
       inputName,
       '-vn',                      // No video
-      '-af', 'afftdn=nf=-20,highpass=f=180,lowpass=f=4500,loudnorm=I=-16:TP=-1.5:LRA=11',
+      '-af', 'highpass=f=80,loudnorm=I=-16:TP=-1.5:LRA=11',
       '-ar', '16000',             // 16kHz sample rate (STT standard)
       '-ac', '1',                 // Mono
       '-b:a', '128k',             // 128kbps bitrate

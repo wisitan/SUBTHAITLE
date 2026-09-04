@@ -30,23 +30,30 @@ export class GeminiSTTProvider implements STTProvider {
     }
 
     const base64Audio = audioBuffer.toString('base64');
-    const prompt = `Transcribe this Thai speech audio accurately for video subtitles.
-Rules:
-- Transcribe verbatim in natural Thai (preserving technical terms and English loanwords where appropriate).
-- Output accurate start and end timestamps in seconds for each spoken word or phrase segment.
-- DO NOT output any commas (,) or periods (.).
+    const prompt = `Transcribe this Thai speech audio verbatim for synchronized video subtitles with precise word-level timestamps.
+Strict Rules:
+- Output language: Thai (preserve natural spoken Thai, technical terms, and English loanwords verbatim).
+- Word-Level Timestamps: Provide STRICT word-level granularity in the "words" array. Each item must represent a single spoken word (do NOT group multiple words into long phrase segments).
+- Audio Alignment: "start" must be the exact second when the speaker begins uttering that specific word. "end" must be the exact second when the utterance of that word ends. Timestamps must strictly reflect acoustic timing.
+- DO NOT output any commas (,) or periods (.) in word text.
 - Return ONLY a valid JSON object matching this schema:
 {
   "fullText": "ข้อความทั้งหมด",
   "duration": 15.2,
   "words": [
-    { "word": "สวัสดีค่ะ", "start": 0.0, "end": 0.9 },
-    { "word": "วันนี้", "start": 0.9, "end": 1.3 }
+    { "word": "สวัสดี", "start": 0.05, "end": 0.45 },
+    { "word": "ครับ", "start": 0.46, "end": 0.75 },
+    { "word": "วันนี้", "start": 0.78, "end": 1.15 }
   ]
 }`;
 
-    // Available models supporting multimodal audio
-    const modelsToTry = ['gemini-3.5-flash', 'gemini-3.7-flash', 'gemini-flash-latest'];
+    // Available models supporting multimodal audio (prioritize highest accuracy flash models)
+    const modelsToTry = [
+      'gemini-3.8-flash',
+      'gemini-3.5-flash',
+      'gemini-2.5-flash',
+      'gemini-flash-latest',
+    ];
     let lastError: Error | null = null;
 
     for (const model of modelsToTry) {
@@ -127,7 +134,7 @@ Rules:
         const words: STTWord[] = rawWords
           .filter((w) => w && typeof w.word === 'string' && w.word.trim().length > 0)
           .map((w) => ({
-            word: w.word.replace(/(?<!\d),(?!\d)/g, '').replace(/,/g, '').trim(),
+            word: w.word.replace(/,/g, '').trim(),
             start: Number(Number(w.start).toFixed(2)),
             end: Number(Number(w.end).toFixed(2)),
             confidence: w.confidence ?? 0.96,
@@ -141,7 +148,6 @@ Rules:
           parsed.fullText ||
           words.map((w) => w.word).join(' ')
         )
-          .replace(/(?<!\d),(?!\d)/g, '')
           .replace(/,/g, '')
           .trim();
 
