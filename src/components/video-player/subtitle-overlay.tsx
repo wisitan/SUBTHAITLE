@@ -57,7 +57,11 @@ export function SubtitleOverlay({
     const baseDim = Math.min(visualBounds.w, visualBounds.h);
     const scale = (baseDim || 360) / 360;
 
-    const scaledFontSize = (style.fontSize || 24) * scale;
+    const effectiveFontSize = activeCaption?.overrideStyle?.fontSize ?? style.fontSize ?? 24;
+    const effectivePosY = activeCaption?.overrideStyle?.positionY ?? style.positionY ?? 28;
+    const effectivePosX = activeCaption?.overrideStyle?.positionX ?? style.positionX ?? 50;
+
+    const scaledFontSize = effectiveFontSize * scale;
     const scaledLetterSpacing = (style.letterSpacing ?? 0) * scale;
     const scaledOutline = (style.outlineWidth ?? 0) * scale;
     const scaledBoxPaddingX = (style.hasBackground ? 18 : 8) * scale;
@@ -67,25 +71,7 @@ export function SubtitleOverlay({
 
     const shadows: string[] = [];
 
-    // Drop shadow
-    if (style.hasShadow) {
-      const hex = style.shadowColor || '#000000';
-      const opacity = style.shadowOpacity ?? 0.8;
-      const r = parseInt(hex.slice(1, 3) || '0', 16);
-      const g = parseInt(hex.slice(3, 5) || '0', 16);
-      const b = parseInt(hex.slice(5, 7) || '0', 16);
-      shadows.push(`0 ${4 * scale}px ${scaledShadowBlur}px rgba(${r},${g},${b},${opacity})`);
-    }
-
-    // Glow effect (Neon aura around text)
-    if (style.hasGlow) {
-      const gColor = style.glowColor || '#FF6B00';
-      const gBlur = (style.glowBlur || 12) * scale;
-      shadows.push(`0 0 ${gBlur.toFixed(1)}px ${gColor}`);
-      shadows.push(`0 0 ${(gBlur * 1.8).toFixed(1)}px ${gColor}`);
-    }
-
-    // Outline using multi-angle radial text-shadow
+    // 1. Outline using multi-angle radial text-shadow (FIRST = closest to text fill, creates sharp boundary)
     if (style.hasOutline && scaledOutline > 0) {
       const oColor = style.outlineColor || '#000000';
 
@@ -105,6 +91,30 @@ export function SubtitleOverlay({
           shadows.push(`${x}px ${y}px 0 ${oColor}`);
         }
       }
+    } else if (style.hasGlow) {
+      // If outline is disabled but glow is enabled, add a razor-thin dark contrast boundary
+      // so the bright neon glow radiates outward from BEHIND the font instead of tinting the white font face!
+      shadows.push(`0 0 ${1 * scale}px rgba(0,0,0,0.95)`);
+      shadows.push(`0 0 ${2 * scale}px rgba(0,0,0,0.85)`);
+    }
+
+    // 2. Drop shadow (behind outline)
+    if (style.hasShadow) {
+      const hex = style.shadowColor || '#000000';
+      const opacity = style.shadowOpacity ?? 0.8;
+      const r = parseInt(hex.slice(1, 3) || '0', 16);
+      const g = parseInt(hex.slice(3, 5) || '0', 16);
+      const b = parseInt(hex.slice(5, 7) || '0', 16);
+      shadows.push(`0 ${4 * scale}px ${scaledShadowBlur}px rgba(${r},${g},${b},${opacity})`);
+    }
+
+    // 3. Glow effect (LAST in text-shadow = drawn at the VERY BACK, radiating outward as an ambient aura)
+    if (style.hasGlow) {
+      const gColor = style.glowColor || '#FF6B00';
+      const gBlur = (style.glowBlur || 12) * scale;
+      shadows.push(`0 0 ${gBlur.toFixed(1)}px ${gColor}`);
+      shadows.push(`0 0 ${(gBlur * 1.8).toFixed(1)}px ${gColor}`);
+      shadows.push(`0 0 ${(gBlur * 2.8).toFixed(1)}px ${hexToRgba(gColor, 65)}`);
     }
 
     const bgColor = style.hasBackground
@@ -130,8 +140,8 @@ export function SubtitleOverlay({
       textAlign,
       width: `${maxWidthPct}%`,
       maxWidth: `${maxWidthPct}%`,
-      bottom: `${style.positionY}%`,
-      left: `${style.positionX}%`,
+      bottom: `${effectivePosY}%`,
+      left: `${effectivePosX}%`,
       transform: 'translateX(-50%)',
       backgroundColor: bgColor,
       padding: `${scaledBoxPaddingY}px ${scaledBoxPaddingX}px`,
@@ -143,7 +153,7 @@ export function SubtitleOverlay({
       subtitleOverlayStyle: overlayStyle,
       shadowsCss: computedShadows,
     };
-  }, [style, visualBounds]);
+  }, [style, visualBounds, activeCaption]);
 
   // Dynamic micro-gap between adjacent words and highlight shadow glow
   const { microGapPx, activeWordShadowCss } = useMemo(() => {

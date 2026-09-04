@@ -105,7 +105,8 @@ export async function renderSubtitleCanvas(
   const baseDimension = Math.min(width, height);
   const scale = baseDimension / 360;
 
-  const fontSize = Math.round((style.fontSize || 24) * scale);
+  const effectiveFontSize = caption.overrideStyle?.fontSize ?? style.fontSize ?? 24;
+  const fontSize = Math.round(effectiveFontSize * scale);
   const baseWeight =
     style.fontWeight === 'bold' || style.fontWeight === '700'
       ? '700'
@@ -297,8 +298,10 @@ export async function renderSubtitleCanvas(
   const totalBoxHeight = totalTextHeight + boxPaddingY * 2;
 
   // Center position X & bottom percentage Y
-  const centerX = (width * (style.positionX ?? 50)) / 100;
-  const bottomDist = (height * (style.positionY ?? 15)) / 100;
+  const effectivePosX = caption.overrideStyle?.positionX ?? style.positionX ?? 50;
+  const effectivePosY = caption.overrideStyle?.positionY ?? style.positionY ?? 15;
+  const centerX = (width * effectivePosX) / 100;
+  const bottomDist = (height * effectivePosY) / 100;
   const boxBottomY = height - bottomDist;
   const boxTopY = boxBottomY - totalBoxHeight;
   const boxLeftX = centerX - totalBoxWidth / 2;
@@ -378,13 +381,25 @@ export async function renderSubtitleCanvas(
       });
     }
 
-    // B. Inactive Outlines
+    // B. Inactive Outlines & Contrast Barrier
     if (style.hasOutline && style.outlineWidth > 0) {
       inactiveWords.forEach((pw) => {
         ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
         ctx.save();
         ctx.strokeStyle = style.outlineColor || '#000000';
         ctx.lineWidth = style.outlineWidth * scale * 2.2;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.strokeText(pw.text, pw.x, startY);
+        ctx.restore();
+      });
+    } else if (style.hasGlow) {
+      // Barrier stroke when outline is disabled to ensure glow radiates strictly from behind
+      inactiveWords.forEach((pw) => {
+        ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+        ctx.lineWidth = 2 * scale;
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
         ctx.strokeText(pw.text, pw.x, startY);
@@ -487,12 +502,22 @@ export async function renderSubtitleCanvas(
           restoreScaleTransform();
         }
 
-        // 2. Active Word Outline
+        // 2. Active Word Outline & Contrast Barrier
         if (style.hasOutline && style.outlineWidth > 0) {
           applyScaleTransform();
           ctx.save();
           ctx.strokeStyle = style.outlineColor || '#000000';
           ctx.lineWidth = style.outlineWidth * scale * 2.2;
+          ctx.lineJoin = 'round';
+          ctx.lineCap = 'round';
+          ctx.strokeText(textToDraw, pw.x, startY);
+          ctx.restore();
+          restoreScaleTransform();
+        } else if (style.hasGlow) {
+          applyScaleTransform();
+          ctx.save();
+          ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+          ctx.lineWidth = 2 * scale;
           ctx.lineJoin = 'round';
           ctx.lineCap = 'round';
           ctx.strokeText(textToDraw, pw.x, startY);

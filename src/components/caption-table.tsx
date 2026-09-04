@@ -34,6 +34,7 @@ export function CaptionTable({ onPlayCue }: Props) {
   const requestSeek = useAppStore((s) => s.requestSeek);
   const updateCaptionText = useAppStore((s) => s.updateCaptionText);
   const updateCaptionTiming = useAppStore((s) => s.updateCaptionTiming);
+  const updateCaptionOverride = useAppStore((s) => s.updateCaptionOverride);
   const addCaption = useAppStore((s) => s.addCaption);
   const deleteCaption = useAppStore((s) => s.deleteCaption);
   const splitCaption = useAppStore((s) => s.splitCaption);
@@ -437,6 +438,7 @@ export function CaptionTable({ onPlayCue }: Props) {
                 }}
                 onTimingChange={(id, start, end) => updateCaptionTiming(id, start, end)}
                 onTextChange={(id, text) => updateCaptionText(id, text)}
+                onOverrideChange={(id, override) => updateCaptionOverride(id, override)}
                 onSplit={(id) => splitCaption(id)}
                 onMerge={(id, dir) => mergeCaption(id, dir)}
                 onMove={(id, dir) => useAppStore.getState().moveCaption(id, dir)}

@@ -18,6 +18,12 @@ export interface TranscriptionMeta {
   isFallback?: boolean;
 }
 
+export interface CaptionOverrideStyle {
+  positionY?: number; // percentage from bottom e.g. 5% - 85%
+  positionX?: number; // percentage from left e.g. 10% - 90%
+  fontSize?: number;  // in px e.g. 12 - 48
+}
+
 export interface CaptionItem {
   id: string;
   start: number; // in seconds
@@ -26,6 +32,7 @@ export interface CaptionItem {
   originalText?: string; // Original AI transcription text for manual edit detection
   words?: CaptionWord[];
   lowConfidence?: boolean;
+  overrideStyle?: CaptionOverrideStyle;
 }
 
 export type WordAnimationMode = 'classic' | 'pop' | 'sticker' | 'typewriter';
@@ -174,6 +181,7 @@ export interface AppState {
   setCaptions: (captions: CaptionItem[]) => void;
   updateCaptionText: (id: string, text: string) => void;
   updateCaptionTiming: (id: string, start: number, end: number) => void;
+  updateCaptionOverride: (id: string, override?: CaptionOverrideStyle | null) => void;
   addCaption: (afterId?: string) => void;
   deleteCaption: (id: string) => void;
   splitCaption: (id: string, splitWordIndex?: number) => void;

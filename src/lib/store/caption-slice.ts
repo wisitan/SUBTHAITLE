@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { AppState, CaptionItem, CaptionStyle, CaptionWord } from './types';
+import { AppState, CaptionItem, CaptionStyle, CaptionWord, CaptionOverrideStyle } from './types';
 import { groupWordsIntoCaptions, PacingMode } from '../caption-grouping';
 import { distributeTextToWords } from '../thai-text';
 
@@ -74,6 +74,7 @@ export interface CaptionSlice {
   setCaptions: (captions: CaptionItem[]) => void;
   updateCaptionText: (id: string, text: string) => void;
   updateCaptionTiming: (id: string, start: number, end: number) => void;
+  updateCaptionOverride: (id: string, override?: CaptionOverrideStyle | null) => void;
   addCaption: (afterId?: string) => void;
   deleteCaption: (id: string) => void;
   splitCaption: (id: string, splitWordIndex?: number) => void;
@@ -255,6 +256,19 @@ export const createCaptionSlice: StateCreator<AppState, [], [], CaptionSlice> = 
         captions: newCaptions,
       };
     }),
+
+  updateCaptionOverride: (id, override) =>
+    set((state) => ({
+      captions: state.captions.map((c) =>
+        c.id === id
+          ? {
+              ...c,
+              overrideStyle:
+                override && Object.keys(override).length > 0 ? override : undefined,
+            }
+          : c
+      ),
+    })),
 
   moveCaption: (id, direction) =>
     set((state) => {
