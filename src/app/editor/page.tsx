@@ -356,7 +356,7 @@ export default function EditorPage() {
                   {transcriptionMeta && (transcriptionMeta.provider === 'groq' || transcriptionMeta.isFallback) && (
                     <>
                       <span>•</span>
-                      <Tooltip content="Gemini คิวยาวชั่วคราว • สลับใช้ Groq Whisper สำรองอัตโนมัติ" position="bottom">
+                      <Tooltip content="Gemini คิวยาว • สลับใช้ Whisper สำรอง" position="bottom">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-300">
                           <span>⚠️ {getModelDisplayName(transcriptionMeta.provider, transcriptionMeta.model)} (สายสำรอง)</span>
                         </span>
@@ -366,7 +366,7 @@ export default function EditorPage() {
                   {file ? (
                     <>
                       <span>•</span>
-                      <Tooltip content="กำลังเล่นวิดีโอต้นฉบับความละเอียดสูงจากเครื่องนี้โดยตรง (ไม่เสียดาต้า)" position="bottom">
+                      <Tooltip content="ไฟล์ต้นฉบับในเครื่อง (ไม่เสียเน็ต)" position="bottom">
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium text-zinc-300 bg-zinc-900 border border-zinc-800">
                           <span>💾 ในเครื่องนี้</span>
                         </span>
@@ -375,7 +375,7 @@ export default function EditorPage() {
                   ) : videoUrl && proxyUrl ? (
                     <>
                       <span>•</span>
-                      <Tooltip content={storageTier === 'vip' ? "กำลังเล่นผ่าน 720p Proxy บน Cloudflare R2 (สิทธิประโยชน์ VIP จัดเก็บถาวร)" : "กำลังเล่นผ่าน 720p Proxy บน Cloudflare R2 (โควต้าฟรี จัดเก็บ 7 วัน)"} position="bottom">
+                      <Tooltip content={storageTier === 'vip' ? "วิดีโอบนคลาวด์ R2 (VIP ถาวร)" : "วิดีโอบนคลาวด์ R2 (ฟรี 7 วัน)"} position="bottom">
                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${storageTier === 'vip' ? 'text-purple-300 bg-purple-950/80 border-purple-500/40' : 'text-cyan-300 bg-cyan-950/80 border-cyan-500/30'}`}>
                           <span>{storageTier === 'vip' ? '⭐ Cloud R2 (VIP ถาวร)' : '☁️ Cloud R2 (ฟรี 7 วัน)'}</span>
                         </span>

@@ -88,8 +88,9 @@ export function StorageSourceBadge({ isLocal, hasProxy }: { isLocal: boolean; ha
   if (isLocal) {
     return (
       <Tooltip
-        content="💾 วิดีโอต้นฉบับอยู่ในเครื่องนี้: เปิดดูความคมชัดสูงเต็มรูปแบบได้ทันที ไม่เสียดาต้าอินเทอร์เน็ต"
-        position="top"
+        content="ไฟล์ในเครื่องนี้ (ไม่เสียเน็ต)"
+        position="bottom"
+        align="left"
       >
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/90 backdrop-blur-md border border-emerald-500/40 text-emerald-300 text-[10px] font-semibold shadow cursor-help hover:bg-emerald-900/90 transition-colors pointer-events-auto">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -102,8 +103,9 @@ export function StorageSourceBadge({ isLocal, hasProxy }: { isLocal: boolean; ha
   if (hasProxy) {
     return (
       <Tooltip
-        content="☁️ Cloudflare R2: กำลังสตรีมวิดีโอ 720p Proxy จากคลาวด์ เปิดดูและแก้ไขข้ามอุปกรณ์ได้ทันที"
-        position="top"
+        content="วิดีโอบนคลาวด์ ดูข้ามเครื่องได้"
+        position="bottom"
+        align="left"
       >
         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/90 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-[10px] font-semibold shadow cursor-help hover:bg-cyan-900/90 transition-colors pointer-events-auto">
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
@@ -115,8 +117,9 @@ export function StorageSourceBadge({ isLocal, hasProxy }: { isLocal: boolean; ha
 
   return (
     <Tooltip
-      content="📝 ซับไตเติล: บันทึกเฉพาะข้อมูลซับไตเติล (หากต้องการดูวิดีโอ ให้เปิดจากเครื่องเดิมหรืออัปโหลดวิดีโอใหม่)"
-      position="top"
+      content="เฉพาะข้อความซับ (ไม่มีวิดีโอ)"
+      position="bottom"
+      align="left"
     >
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-950/90 backdrop-blur-md border border-zinc-700/80 text-zinc-300 text-[10px] font-medium shadow cursor-help hover:bg-zinc-900 transition-colors pointer-events-auto">
         <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
@@ -130,8 +133,9 @@ export function StorageRetentionTag({ project }: { project: UserProject }) {
   if (project.storage_tier === 'vip') {
     return (
       <Tooltip
-        content="⭐ สิทธิพิเศษ VIP: วิดีโอ 720p Proxy จัดเก็บบน Cloudflare R2 ถาวร ไม่มีวันหมดอายุ เปิดดูและตัดต่อข้ามเครื่องได้ตลอดไป"
+        content="VIP คลาวด์ถาวร ไม่มีวันหมดอายุ"
         position="top"
+        align="right"
       >
         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-950/70 border border-purple-500/40 text-purple-300 text-[10px] font-bold shadow-sm cursor-help hover:bg-purple-900/80 transition-colors pointer-events-auto">
           <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
@@ -152,10 +156,11 @@ export function StorageRetentionTag({ project }: { project: UserProject }) {
       <Tooltip
         content={
           daysLeft > 0
-            ? `⏳ โควต้าฟรี: ซิงค์วิดีโอ 720p Proxy ดูข้ามเครื่องได้อีก ${daysLeft} วัน (ครบ 7 วันระบบจะลบเฉพาะไฟล์บนคลาวด์เพื่อประหยัดพื้นที่ แต่วิดีโอในเครื่องเดิมยังเปิดได้ตลอดไป)`
-            : '⌛ วิดีโอบน Cloud R2 หมดอายุแล้ว (ลบออกจากคลาวด์แล้ว) แต่ยังเปิดดูและแก้ไขจากเครื่องเดิมที่มีไฟล์ต้นฉบับได้ตามปกติ'
+            ? `ดูข้ามเครื่องได้อีก ${daysLeft} วัน (ครบกำหนดลบคลาวด์)`
+            : 'คลาวด์หมดอายุ (ในเครื่องเดิมยังดูได้)'
         }
         position="top"
+        align="right"
       >
         <span
           className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium shadow-sm cursor-help transition-colors pointer-events-auto ${
@@ -778,10 +783,10 @@ export function RecentProjects() {
             <div
               key={project.id}
               onClick={() => handleOpenProject(project)}
-              className="group relative bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800/80 hover:border-orange-500/70 rounded-2xl overflow-hidden transition-all duration-300 cursor-pointer shadow-md hover:shadow-[0_0_30px_-5px_rgba(249,115,22,0.18)] hover:scale-[1.01] flex flex-col justify-between"
+              className="group relative bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800/80 hover:border-orange-500/70 rounded-2xl transition-all duration-300 cursor-pointer shadow-md hover:shadow-[0_0_30px_-5px_rgba(249,115,22,0.18)] hover:scale-[1.01] flex flex-col justify-between"
             >
               {/* Full-width Top Thumbnail Container */}
-              <div className="relative w-full aspect-[4/3] bg-zinc-950 flex items-center justify-center overflow-hidden border-b border-zinc-800/80">
+              <div className="relative w-full aspect-[4/3] bg-zinc-950 flex items-center justify-center overflow-hidden border-b border-zinc-800/80 rounded-t-2xl">
                 <ProjectThumbnailImage
                   project={project}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -848,7 +853,7 @@ export function RecentProjects() {
             <div
               key={project.id}
               onClick={() => handleOpenProject(project)}
-              className="group relative bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-orange-500/60 rounded-xl p-2.5 sm:p-3 transition-all duration-200 cursor-pointer shadow-md hover:shadow-orange-500/5 flex items-center justify-between gap-3 overflow-hidden"
+              className="group relative bg-zinc-900/80 hover:bg-zinc-900 border border-zinc-800 hover:border-orange-500/60 rounded-xl p-2.5 sm:p-3 transition-all duration-200 cursor-pointer shadow-md hover:shadow-orange-500/5 flex items-center justify-between gap-3"
             >
               {/* Left: Thumbnail & Info */}
               <div className="flex items-center gap-3 min-w-0 flex-1">
