@@ -182,6 +182,19 @@ export async function transcribeAudio(
     })
     .filter((w) => w.word.trim().length > 0);
 
+  // Timeline Calibration: If AI timestamps accumulated late drift beyond actual media duration,
+  // linearly calibrate word timestamps to lock perfectly to the real media playback clock.
+  if (mediaDuration > 0 && rawWordTokens.length > 0) {
+    const maxEnd = Math.max(...rawWordTokens.map((w) => w.end));
+    if (maxEnd > mediaDuration + 0.3) {
+      const scale = Math.max(0.75, mediaDuration / maxEnd);
+      rawWordTokens.forEach((w) => {
+        w.start = Number((w.start * scale).toFixed(2));
+        w.end = Number((w.end * scale).toFixed(2));
+      });
+    }
+  }
+
   // Re-segment broken Whisper Thai subword tokens into proper linguistic words
   const segmentedWords = resegmentThaiWords(rawWordTokens);
 

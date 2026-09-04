@@ -128,6 +128,7 @@ export async function POST(request: NextRequest) {
         provider: customProvider,
         language,
         mode,
+        duration: clientDuration,
       });
 
       return NextResponse.json({

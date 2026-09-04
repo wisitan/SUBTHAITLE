@@ -45,6 +45,7 @@ export async function transcribeAudioBuffer(
     language?: string;
     apiKey?: string;
     mode?: 'free' | 'credits' | string;
+    duration?: number;
   }
 ): Promise<STTResult> {
   const provider = getSTTProvider(options?.provider);

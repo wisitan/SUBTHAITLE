@@ -19,6 +19,7 @@ export interface STTOptions {
   timeoutMs?: number;
   mode?: 'free' | 'credits' | string;
   provider?: string;
+  duration?: number;
 }
 
 export interface STTProvider {

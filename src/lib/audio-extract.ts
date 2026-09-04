@@ -56,9 +56,9 @@ export async function getFFmpeg(
 /**
  * Extracts and preprocesses audio from any media file in the browser (Cost: ฿0)
  * Applies STT-optimized Audio Preprocessing Pipeline:
- *   1. highpass=f=80   — ตัดเสียงฮัม/แอร์ความถี่ต่ำมากใต้เสียงพูดมนุษย์
- *   2. loudnorm        — ปรับระดับความดังเสียงพูดให้สม่ำเสมอตามมาตรฐาน EBU R128
- *   (รักษา Transient พยัญชนะต้นและปราศจาก FFT buffer delay)
+ *   1. highpass=f=80             — ตัดเสียงฮัม/แอร์ความถี่ต่ำมากใต้เสียงพูดมนุษย์
+ *   2. aresample=16000:async=1   — ล็อกเฟรมเสียงให้ตรงกับ presentation timestamp (PTS) ของวิดีโอ 1:1 ป้องกันเสียงดริฟต์
+ *   (รักษา Transient พยัญชนะต้นและปราศจาก buffer delay)
  * Output: 16kHz mono MP3 optimized for Google Gemini / Whisper / STT
  */
 export async function extractAudioFromMedia(
@@ -92,13 +92,12 @@ export async function extractAudioFromMedia(
 
     // STT-Optimized Voice Audio Pipeline:
     // 1. highpass=f=80  — ตัดเสียงฮัม/แอร์ความถี่ต่ำมากใต้เสียงพูดมนุษย์
-    // 2. loudnorm       — ปรับระดับความดังเสียงพูดให้สม่ำเสมอตามมาตรฐาน EBU R128
-    // หมายเหตุ: เอา afftdn และ lowpass ออกเพื่อป้องกัน FFT buffer latency และรักษา transient พยัญชนะต้น
+    // 2. aresample=16000:async=1 — ล็อก Presentation Timestamp (PTS) เข้ากับเฟรมวิดีโอ 1:1 ป้องกันเสียงดริฟท์
     await ffmpeg.exec([
       '-i',
       inputName,
       '-vn',                      // No video
-      '-af', 'highpass=f=80,loudnorm=I=-16:TP=-1.5:LRA=11',
+      '-af', 'highpass=f=80,aresample=16000:async=1',
       '-ar', '16000',             // 16kHz sample rate (STT standard)
       '-ac', '1',                 // Mono
       '-b:a', '128k',             // 128kbps bitrate
