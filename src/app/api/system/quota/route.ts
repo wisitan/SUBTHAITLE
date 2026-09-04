@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Global Daily Pool Config (500 clips / day)
-export const GLOBAL_DAILY_LIMIT = 500;
+// Global Daily Pool Config (1,500 clips / day matching Google free tier RPD)
+export const GLOBAL_DAILY_LIMIT = 1500;
 
 let currentDay = new Date().toISOString().split('T')[0];
 let dailyCount = 0;

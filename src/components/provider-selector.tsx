@@ -17,9 +17,6 @@ export function ProviderSelector() {
     providerMode,
     setProviderMode,
     creditsMinutes,
-    groqDailyUsageCount,
-    maxGroqDailyQuota,
-    isAdmin,
   } = useAppStore();
 
   const { user, refreshProfile } = useAuth();
@@ -30,33 +27,8 @@ export function ProviderSelector() {
     }
   }, [user, refreshProfile]);
 
-  const remainingDaily = Math.max(0, maxGroqDailyQuota - groqDailyUsageCount);
   const isFreeSelected = providerMode === 'free' || providerMode === 'groq_free' || providerMode === 'google_free';
   const isCreditsSelected = providerMode === 'credits';
-
-  const isDevOrUat =
-    typeof window !== 'undefined' &&
-    (window.location.hostname === 'localhost' ||
-      window.location.hostname.includes('uat') ||
-      window.location.hostname.includes('vercel.app'));
-
-  const handleResetQuota = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirm('ต้องการรีเซ็ตโควต้าฟรีประจำวันเป็น 5 คลิปเพื่อทดสอบต่อใช่ไหมคะ?')) return;
-    try {
-      if (user?.id) {
-        await fetch('/api/user/profile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'reset_quota', userId: user.id }),
-        });
-        await refreshProfile();
-      }
-      useAppStore.getState().resetQuotas(user?.id);
-    } catch (err) {
-      console.error('Reset quota error:', err);
-    }
-  };
 
   return (
     <div className="w-full max-w-full">
@@ -88,39 +60,23 @@ export function ProviderSelector() {
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="font-bold text-xs sm:text-sm text-zinc-100">
-                  โควต้าฟรีประจำวัน
+                  ใช้งานฟรี (ไม่จำกัดคลิป)
                 </span>
                 {isFreeSelected && (
                   <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 )}
               </div>
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className={`text-[11px] font-semibold ${remainingDaily > 0 ? 'text-amber-400' : 'text-rose-400'}`}>
-                  เหลือ {remainingDaily}/{maxGroqDailyQuota} คลิป
+                <span className="text-[11px] font-medium text-zinc-300">
+                  คลิปยาว &lt; 2 นาที • ขนาด &lt; 100 MB
                 </span>
-                {remainingDaily === 0 && (isDevOrUat || isAdmin) && (
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    onClick={handleResetQuota}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') {
-                        handleResetQuota(e as unknown as React.MouseEvent);
-                      }
-                    }}
-                    className="text-[10.5px] text-amber-300 underline hover:text-amber-200 cursor-pointer font-normal"
-                    title="คลิกเพื่อรีเซ็ตโควต้าฟรีประจำวันเป็น 5 คลิปสำหรับการทดสอบ"
-                  >
-                    (คลิกเพื่อรีเซ็ต)
-                  </span>
-                )}
               </div>
             </div>
           </div>
 
-          <div className="relative z-10 px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10.5px] font-medium shrink-0 flex items-center gap-1">
-            <Sparkles className="w-3 h-3" />
-            <span>วันละ 5 คลิป</span>
+          <div className="relative z-10 px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 text-[10.5px] font-semibold shrink-0 flex items-center gap-1">
+            <Sparkles className="w-3 h-3 text-amber-400" />
+            <span>ฟรีไม่อั้น</span>
           </div>
         </button>
 
@@ -150,15 +106,20 @@ export function ProviderSelector() {
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="font-bold text-xs sm:text-sm text-zinc-100">
-                  โควต้าผู้สนับสนุน
+                  โควต้าผู้สนับสนุน (VIP)
                 </span>
                 {isCreditsSelected && (
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 )}
               </div>
-              <span className="text-[11px] font-semibold text-emerald-400">
-                คงเหลือ {creditsMinutes} นาที
-              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-[11px] font-semibold text-emerald-400">
+                  คงเหลือ {creditsMinutes} นาที
+                </span>
+                <span className="text-[10px] text-zinc-300 hidden sm:inline">
+                  • คลิปยาว 30 นาที / 1.5GB
+                </span>
+              </div>
             </div>
           </div>
 

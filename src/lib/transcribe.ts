@@ -46,14 +46,9 @@ export async function transcribeAudio(
   let requiredCredits = 0;
 
   if (isFreeMode) {
-    if (store.groqDailyUsageCount >= store.maxGroqDailyQuota) {
-      throw new Error(
-        `โควต้าฟรีประจำวันของคุณครบ ${store.maxGroqDailyQuota} คลิปแล้วค่ะ (รีเซ็ตใหม่ทุกเที่ยงคืน) หรือสามารถเติมเครดิตเพื่อถอดเสียงต่อได้ทันทีค่ะ`
-      );
-    }
     if (mediaDuration > 125) {
       throw new Error(
-        'โหมดฟรีรองรับคลิปยาวไม่เกิน 2 นาที กรุณาเลือกโหมด "โควต้าผู้สนับสนุน" เพื่อถอดเสียงคลิปยาว หรือตัดแบ่งคลิปก่อนค่ะ'
+        'โหมดใช้งานฟรีรองรับคลิปยาวไม่เกิน 2 นาที กรุณาเลือกโหมด "โควต้าผู้สนับสนุน" เพื่อถอดเสียงคลิปยาวสูงสุด 30 นาที หรือตัดแบ่งคลิปก่อนค่ะ'
       );
     }
   } else if (providerMode === 'credits') {

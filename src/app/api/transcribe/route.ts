@@ -36,7 +36,15 @@ export async function POST(request: NextRequest) {
 
     // Mode validation & Pre-checks (READ-ONLY: DO NOT DEDUCT BEFORE TRANSCRIPTION SUCCEEDS)
     if (mode === 'free' || mode === 'groq_free' || mode === 'google_free') {
-      // 1. Check Global System-Wide Daily Limit (500 clips / day)
+      // 1. Anti-abuse guard: Require login even for free tier
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'กรุณาเข้าสู่ระบบด้วย Google ก่อนใช้งานโหมดฟรีค่ะ' },
+          { status: 401 }
+        );
+      }
+
+      // 2. Check Global System-Wide Daily Limit (1,500 clips / day)
       const systemUsage = getDailySystemUsage();
       if (systemUsage.isExhausted) {
         return NextResponse.json(
@@ -48,43 +56,15 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // 2. Free mode duration limit: max 2 minutes (125s)
+      // 3. Free mode duration limit: max 2 minutes (125s)
       if (clientDuration > 125) {
         return NextResponse.json(
           {
             error:
-              'คลิปวิดีโอมีความยาวเกิน 2 นาทีสำหรับโหมดใช้งานฟรี กรุณาเลือกโหมด "โควต้าผู้สนับสนุน" เพื่อถอดเสียงคลิปยาวค่ะ',
+              'คลิปวิดีโอมีความยาวเกิน 2 นาทีสำหรับโหมดใช้งานฟรี กรุณาเลือกโหมด "โควต้าผู้สนับสนุน" เพื่อถอดเสียงคลิปยาวสูงสุด 30 นาที หรือตัดแบ่งคลิปก่อนค่ะ',
           },
           { status: 400 }
         );
-      }
-
-      // 3. User Daily Quota Pre-check (Verify limit without consuming)
-      if (supabase && userId) {
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('groq_free_day, groq_free_count')
-            .eq('id', userId)
-            .maybeSingle();
-
-          if (profile) {
-            const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
-            const userDay = profile.groq_free_day;
-            const currentCount = userDay === today ? (profile.groq_free_count || 0) : 0;
-            if (currentCount >= 5) {
-              return NextResponse.json(
-                {
-                  error:
-                    'โควต้าใช้งานฟรีประจำวันของคุณครบ 5 คลิปแล้วค่ะ (รีเซ็ตใหม่ทุกเที่ยงคืน) กรุณาเลือกโหมด "โควต้าผู้สนับสนุน" เพื่อถอดเสียงต่อค่ะ',
-                },
-                { status: 429 }
-              );
-            }
-          }
-        } catch (checkErr) {
-          console.warn('[Transcribe Route] Quota pre-check warning:', checkErr);
-        }
       }
     } else if (mode === 'credits') {
       if (!userId) {
@@ -148,7 +128,7 @@ export async function POST(request: NextRequest) {
             const firstRow = Array.isArray(quotaRes) ? quotaRes[0] : quotaRes;
             if (firstRow && typeof firstRow.count === 'number') {
               usedQuotaCount = firstRow.count;
-              remainingQuota = Math.max(0, 5 - firstRow.count);
+              remainingQuota = 999; // Unlimited free clips
             }
           } catch (quotaDeductErr) {
             console.error('[Transcribe Route] Error consuming free quota on success:', quotaDeductErr);
