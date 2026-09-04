@@ -36,19 +36,7 @@ export function getSTTProvider(providerName?: string): STTProvider {
  * Main transcribe entrypoint.
  * Transcribes audio buffer in a single step with native word-level timestamps.
  */
-function isRateLimitError(err: unknown): boolean {
-  if (!err || typeof err !== 'object') return false;
-  if ('isRateLimit' in err && Boolean((err as { isRateLimit?: boolean }).isRateLimit)) return true;
-  if ('status' in err && (err as { status?: number }).status === 429) return true;
-  if (err instanceof Error) {
-    return (
-      err.message.includes('429') ||
-      err.message.includes('RESOURCE_EXHAUSTED') ||
-      err.message.includes('GEMINI_RATE_LIMIT_EXCEEDED')
-    );
-  }
-  return false;
-}
+
 
 export async function transcribeAudioBuffer(
   audioBuffer: Buffer,
@@ -75,16 +63,15 @@ export async function transcribeAudioBuffer(
         console.log('[STT Service] [Paid User] Trying Gemini Free Tier first to save credits...');
         return await provider.transcribe(audioBuffer, { ...options, apiKey: freeKey });
       } catch (err: unknown) {
-        // If Free Tier is full (Rate limit / quota exceeded), immediately escalate to Gemini Paid Tier!
-        if (isRateLimitError(err)) {
-          console.warn('[STT Service] [Paid User] Gemini Free tier full (429). Escalating to Gemini Paid Tier...');
-          if (paidKey) {
-            try {
-              return await provider.transcribe(audioBuffer, { ...options, apiKey: paidKey });
-            } catch (paidErr: unknown) {
-              console.error('[STT Service] [Paid User] Gemini Paid tier also failed:', paidErr);
-              throw paidErr;
-            }
+        // If Free Tier fails for ANY reason (429 rate limit, 503 high demand, or server error),
+        // immediately escalate to Gemini Paid Tier to guarantee 100% uptime for paid users!
+        console.warn('[STT Service] [Paid User] Gemini Free tier failed or congested. Escalating to Gemini Paid Tier...', err);
+        if (paidKey) {
+          try {
+            return await provider.transcribe(audioBuffer, { ...options, apiKey: paidKey });
+          } catch (paidErr: unknown) {
+            console.error('[STT Service] [Paid User] Gemini Paid tier also failed:', paidErr);
+            throw paidErr;
           }
         }
         throw err;

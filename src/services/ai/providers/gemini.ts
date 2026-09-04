@@ -50,8 +50,8 @@ Strict Rules:
     // Available models supporting multimodal audio (prioritize highest accuracy flash models)
     const modelsToTry = [
       'gemini-3.8-flash',
+      'gemini-3.6-flash',
       'gemini-3.5-flash',
-      'gemini-2.5-flash',
       'gemini-flash-latest',
     ];
     let lastError: Error | null = null;
@@ -91,11 +91,18 @@ Strict Rules:
           const errBody = await res.text();
           console.warn(`[Gemini STT] Model ${model} returned status ${res.status}: ${errBody.slice(0, 150)}`);
 
-          const isRateLimit =
+          const is429 =
             res.status === 429 ||
             errBody.includes('RESOURCE_EXHAUSTED') ||
             errBody.includes('quota') ||
             errBody.includes('rate limit');
+
+          const is503 =
+            res.status === 503 ||
+            errBody.includes('high demand') ||
+            errBody.includes('UNAVAILABLE');
+
+          const isRateLimit = is429 || is503;
 
           const err = new GeminiAPIError(
             res.status,
@@ -106,9 +113,14 @@ Strict Rules:
           );
           lastError = err;
 
-          // If rate-limited on this key, do not waste time calling other models under the same key
-          if (isRateLimit) {
+          // If quota exhausted (429), stop trying other models under the same key
+          if (is429) {
             break;
+          }
+
+          // If 503 (high demand on this model), brief pause and try the next model in modelsToTry
+          if (is503) {
+            await new Promise((r) => setTimeout(r, 600));
           }
           continue;
         }

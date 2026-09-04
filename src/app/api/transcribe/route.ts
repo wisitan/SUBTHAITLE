@@ -149,9 +149,13 @@ export async function POST(request: NextRequest) {
       const isRateLimit = Boolean(
         errObj?.isRateLimit ||
         errObj?.status === 429 ||
+        errObj?.status === 503 ||
         errMsg.includes('GEMINI_RATE_LIMIT_EXCEEDED') ||
         errMsg.includes('429') ||
-        errMsg.includes('RESOURCE_EXHAUSTED')
+        errMsg.includes('503') ||
+        errMsg.includes('RESOURCE_EXHAUSTED') ||
+        errMsg.includes('high demand') ||
+        errMsg.includes('UNAVAILABLE')
       );
 
       if (isRateLimit) {
@@ -163,7 +167,7 @@ export async function POST(request: NextRequest) {
             message:
               mode === 'credits'
                 ? 'ช่องสัญญาณระบบกำลังรอคิวชั่วคราว ระบบจะลองส่งซ้ำให้อัตโนมัติค่ะ'
-                : 'ช่องสัญญาณใช้งานฟรีกำลังหนาแน่น (จำกัด 15 ครั้ง/นาที) ระบบกำลังรอคิวส่งซ้ำให้อัตโนมัติค่ะ',
+                : 'ช่องสัญญาณใช้งานฟรีกำลังหนาแน่น (จำกัด 15 ครั้ง/นาที หรือระบบกำลังประมวลผลสูง) ระบบกำลังรอคิวส่งซ้ำให้อัตโนมัติค่ะ',
           },
           { status: 429 }
         );
