@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    const { filename, projectId } = await request.json();
+    const { filename, projectId, storageTier = 'free' } = await request.json();
 
     if (!filename) {
       return NextResponse.json({ error: 'Missing filename' }, { status: 400 });
@@ -20,7 +20,14 @@ export async function POST(request: NextRequest) {
     }
 
     const sanitizedFilename = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const key = `proxies/${projectId || 'guest'}/${Date.now()}_${sanitizedFilename}`;
+    const isThumb = String(projectId).startsWith('thumb_') || sanitizedFilename.endsWith('_thumb.jpg');
+    const folderPrefix = isThumb
+      ? 'thumbnails'
+      : storageTier === 'vip'
+      ? 'proxies/vip_perm'
+      : 'proxies/free_7d';
+    const cleanProjectId = String(projectId || 'guest').replace(/^thumb_/, '');
+    const key = `${folderPrefix}/${cleanProjectId}/${Date.now()}_${sanitizedFilename}`;
 
     const presignedData = await createPresignedUploadUrl(key, 3600);
 

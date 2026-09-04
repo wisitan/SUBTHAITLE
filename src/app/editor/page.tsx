@@ -53,6 +53,8 @@ export default function EditorPage() {
   const setFile = useAppStore((s) => s.setFile);
   const videoUrl = useAppStore((s) => s.videoUrl);
   const setVideoUrl = useAppStore((s) => s.setVideoUrl);
+  const proxyUrl = useAppStore((s) => s.proxyUrl);
+  const storageTier = useAppStore((s) => s.storageTier);
   const captions = useAppStore((s) => s.captions);
   const rawWords = useAppStore((s) => s.rawWords);
   const style = useAppStore((s) => s.style);
@@ -97,6 +99,8 @@ export default function EditorPage() {
           style,
           aspectRatio,
           file,
+          storageTier: storeState.storageTier || undefined,
+          proxyExpiresAt: storeState.proxyExpiresAt || undefined,
         });
 
         if (savedProject?.id) {
@@ -105,6 +109,12 @@ export default function EditorPage() {
           }
           if (savedProject.proxy_url && !storeState.proxyUrl) {
             useAppStore.getState().setProxyUrl(savedProject.proxy_url);
+          }
+          if (savedProject.storage_tier) {
+            useAppStore.getState().setStorageTier(savedProject.storage_tier);
+          }
+          if (savedProject.proxy_expires_at !== undefined) {
+            useAppStore.getState().setProxyExpiresAt(savedProject.proxy_expires_at || null);
           }
           setSaveStatus('saved');
         } else {
@@ -119,34 +129,41 @@ export default function EditorPage() {
     return () => clearTimeout(timer);
   }, [user, captions, style, aspectRatio, currentProjectId, projectTitle, file, mediaDuration, rawWords, setCurrentProjectId]);
 
-  // Auto-restore cached video from browser IndexedDB if videoUrl is missing
+  // Auto-restore cached video from browser IndexedDB if videoUrl is missing, or fallback to Cloudflare R2 proxy for cross-device
   useEffect(() => {
     if (videoUrl) return;
     const lookupKey = currentProjectId || projectTitle || file?.name;
-    if (!lookupKey) return;
+    const currentProxy = proxyUrl || useAppStore.getState().proxyUrl;
 
     let isMounted = true;
     (async () => {
       try {
-        const cachedBlob =
-          (await getVideoFromCache(lookupKey)) ||
-          (currentProjectId ? await getVideoFromCache(currentProjectId) : null) ||
-          (projectTitle ? await getVideoFromCache(projectTitle) : null);
+        const cachedBlob = lookupKey
+          ? (await getVideoFromCache(lookupKey)) ||
+            (currentProjectId ? await getVideoFromCache(currentProjectId) : null) ||
+            (projectTitle ? await getVideoFromCache(projectTitle) : null)
+          : null;
 
         if (cachedBlob && isMounted && !useAppStore.getState().videoUrl) {
           const url = URL.createObjectURL(cachedBlob);
           setVideoUrl(url);
           setFile(cachedBlob as File);
+        } else if (!cachedBlob && currentProxy && isMounted && !useAppStore.getState().videoUrl) {
+          // Seamless cross-device playback from Cloudflare R2 720p Proxy!
+          setVideoUrl(currentProxy);
         }
       } catch (err) {
         console.warn('[Editor] Auto-restore cached video error:', err);
+        if (currentProxy && isMounted && !useAppStore.getState().videoUrl) {
+          setVideoUrl(currentProxy);
+        }
       }
     })();
 
     return () => {
       isMounted = false;
     };
-  }, [currentProjectId, projectTitle, file, videoUrl, setVideoUrl, setFile]);
+  }, [currentProjectId, projectTitle, file, videoUrl, setVideoUrl, setFile, proxyUrl]);
 
   // Global Keyboard Shortcuts (Cmd+Z / Ctrl+Z for Undo, Cmd+Shift+Z / Ctrl+Y for Redo)
   useEffect(() => {
@@ -210,7 +227,8 @@ export default function EditorPage() {
               console.warn('[Reconnect Thumbnail Error]:', thumbErr);
             }
 
-            const proxyUrl = await uploadProxyToR2(selectedFile, currentProjectId, selectedFile.name);
+            const currentStorageTier = useAppStore.getState().storageTier || 'free';
+            const proxyUrl = await uploadProxyToR2(selectedFile, currentProjectId, selectedFile.name, currentStorageTier);
             if (proxyUrl) {
               useAppStore.getState().setProxyUrl(proxyUrl);
             }
@@ -226,6 +244,7 @@ export default function EditorPage() {
               rawWords,
               style,
               aspectRatio,
+              storageTier: currentStorageTier,
             });
           } catch (e) {
             console.warn('[Background Reconnect Sync Error]:', e);
@@ -358,7 +377,25 @@ export default function EditorPage() {
                       )}
                     </>
                   )}
-                  {!videoUrl && (
+                  {file ? (
+                    <>
+                      <span>•</span>
+                      <Tooltip content="กำลังเล่นวิดีโอต้นฉบับความละเอียดสูงจากเครื่องนี้โดยตรง (ไม่เสียดาต้า)" position="bottom">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium text-zinc-300 bg-zinc-900 border border-zinc-800">
+                          <span>💾 ในเครื่องนี้</span>
+                        </span>
+                      </Tooltip>
+                    </>
+                  ) : videoUrl && proxyUrl ? (
+                    <>
+                      <span>•</span>
+                      <Tooltip content={storageTier === 'vip' ? "กำลังเล่นผ่าน 720p Proxy บน Cloudflare R2 (สิทธิประโยชน์ VIP จัดเก็บถาวร)" : "กำลังเล่นผ่าน 720p Proxy บน Cloudflare R2 (โควต้าฟรี จัดเก็บ 7 วัน)"} position="bottom">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${storageTier === 'vip' ? 'text-purple-300 bg-purple-950/80 border-purple-500/40' : 'text-cyan-300 bg-cyan-950/80 border-cyan-500/30'}`}>
+                          <span>{storageTier === 'vip' ? '⭐ Cloud R2 (VIP ถาวร)' : '☁️ Cloud R2 (ฟรี 7 วัน)'}</span>
+                        </span>
+                      </Tooltip>
+                    </>
+                  ) : !videoUrl ? (
                     <>
                       <span>•</span>
                       <button
@@ -370,7 +407,7 @@ export default function EditorPage() {
                         <span>เลือกวิดีโอเพื่อพรีวิว</span>
                       </button>
                     </>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </div>

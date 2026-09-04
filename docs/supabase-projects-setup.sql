@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS public.user_projects (
   raw_words JSONB DEFAULT '[]'::jsonb,
   style JSONB DEFAULT '{}'::jsonb,
   aspect_ratio TEXT DEFAULT '9:16',
+  storage_tier TEXT DEFAULT 'free',
+  proxy_expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
@@ -23,6 +25,8 @@ CREATE TABLE IF NOT EXISTS public.user_projects (
 -- 2. Migration: Add columns if table already exists
 ALTER TABLE public.user_projects ADD COLUMN IF NOT EXISTS proxy_url TEXT;
 ALTER TABLE public.user_projects ADD COLUMN IF NOT EXISTS original_filename TEXT;
+ALTER TABLE public.user_projects ADD COLUMN IF NOT EXISTS storage_tier TEXT DEFAULT 'free';
+ALTER TABLE public.user_projects ADD COLUMN IF NOT EXISTS proxy_expires_at TIMESTAMPTZ;
 
 -- 3. Enable RLS on user_projects
 ALTER TABLE public.user_projects ENABLE ROW LEVEL SECURITY;

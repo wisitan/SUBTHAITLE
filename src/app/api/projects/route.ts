@@ -114,6 +114,8 @@ export async function POST(request: NextRequest) {
       rawWords,
       style,
       aspectRatio,
+      storageTier,
+      proxyExpiresAt,
     } = body;
 
     if (!userId) {
@@ -143,6 +145,19 @@ export async function POST(request: NextRequest) {
       if (proxyUrl !== undefined) updatePayload.proxy_url = proxyUrl;
       if (originalFilename !== undefined) updatePayload.original_filename = originalFilename;
 
+      if (storageTier !== undefined) {
+        updatePayload.storage_tier = storageTier;
+        if (storageTier === 'vip') {
+          updatePayload.proxy_expires_at = null;
+        }
+      }
+
+      if (proxyExpiresAt !== undefined) {
+        updatePayload.proxy_expires_at = proxyExpiresAt;
+      } else if (proxyUrl && storageTier !== 'vip' && updatePayload.proxy_expires_at === undefined) {
+        updatePayload.proxy_expires_at = new Date(Date.now() + 7 * 86400 * 1000).toISOString();
+      }
+
       const { data, error } = await supabase
         .from('user_projects')
         .update(updatePayload)
@@ -152,10 +167,18 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-        // Fallback: If error relates to missing proxy_url or original_filename column, retry without them
-        if (error.message?.includes('proxy_url') || error.message?.includes('original_filename') || error.code === '42703') {
+        // Fallback: If error relates to missing columns, retry without new columns
+        if (
+          error.message?.includes('proxy_url') ||
+          error.message?.includes('original_filename') ||
+          error.message?.includes('storage_tier') ||
+          error.message?.includes('proxy_expires_at') ||
+          error.code === '42703'
+        ) {
           delete updatePayload.proxy_url;
           delete updatePayload.original_filename;
+          delete updatePayload.storage_tier;
+          delete updatePayload.proxy_expires_at;
           const retry = await supabase
             .from('user_projects')
             .update(updatePayload)
@@ -182,6 +205,11 @@ export async function POST(request: NextRequest) {
         raw_words: rawWords || [],
         style: style || {},
         aspect_ratio: aspectRatio || '9:16',
+        storage_tier: storageTier || 'free',
+        proxy_expires_at:
+          storageTier === 'vip'
+            ? null
+            : proxyExpiresAt || (proxyUrl ? new Date(Date.now() + 7 * 86400 * 1000).toISOString() : null),
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -197,9 +225,17 @@ export async function POST(request: NextRequest) {
 
       if (error) {
         // Fallback: If error relates to missing column, retry without them
-        if (error.message?.includes('proxy_url') || error.message?.includes('original_filename') || error.code === '42703') {
+        if (
+          error.message?.includes('proxy_url') ||
+          error.message?.includes('original_filename') ||
+          error.message?.includes('storage_tier') ||
+          error.message?.includes('proxy_expires_at') ||
+          error.code === '42703'
+        ) {
           delete insertPayload.proxy_url;
           delete insertPayload.original_filename;
+          delete insertPayload.storage_tier;
+          delete insertPayload.proxy_expires_at;
           const retry = await supabase
             .from('user_projects')
             .insert(insertPayload)

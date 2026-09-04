@@ -71,6 +71,8 @@ export interface UserProject {
   aspect_ratio?: '9:16' | '16:9' | '1:1';
   created_at?: string;
   updated_at?: string;
+  storage_tier?: 'free' | 'vip' | null;
+  proxy_expires_at?: string | null;
 }
 
 export interface AppState {
@@ -78,6 +80,8 @@ export interface AppState {
   file: File | null;
   videoUrl: string | null;
   proxyUrl: string | null;
+  storageTier: 'free' | 'vip' | null;
+  proxyExpiresAt: string | null;
   originalFilename: string | null;
   audioBlob: Blob | null;
   mediaDuration: number;
@@ -134,6 +138,8 @@ export interface AppState {
   setFile: (file: File | null) => void;
   setVideoUrl: (url: string | null) => void;
   setProxyUrl: (proxyUrl: string | null) => void;
+  setStorageTier: (tier: 'free' | 'vip' | null) => void;
+  setProxyExpiresAt: (expiresAt: string | null) => void;
   setOriginalFilename: (filename: string | null) => void;
   setAudioBlob: (blob: Blob | null) => void;
   setMediaDuration: (duration: number) => void;

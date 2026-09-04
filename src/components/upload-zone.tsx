@@ -263,13 +263,14 @@ export function UploadZone() {
             setTranscribeProgressPercent(88);
 
             // Generate thumbnail and upload proxy in parallel
+            const storageTier = providerMode === 'credits' ? 'vip' : 'free';
             try {
               const thumbPromise = generateVideoThumbnail(file, 0.5).then(async ({ blob, dataUrl }) => {
                 const uploadedThumb = await uploadProxyToR2(blob, 'thumb_' + user.id, `${Date.now()}_thumb.jpg`);
                 return uploadedThumb || dataUrl;
               }).catch(() => null);
 
-              const proxyPromise = uploadProxyToR2(file, 'initial', file.name);
+              const proxyPromise = uploadProxyToR2(file, 'initial', file.name, storageTier);
 
               const [thumbResult, proxyResult] = await Promise.all([thumbPromise, proxyPromise]);
               thumbnailUrl = thumbResult;
@@ -283,6 +284,7 @@ export function UploadZone() {
           setTranscribeMessage('กำลังบันทึกโปรเจกต์ลงคลาวด์...');
           setTranscribeProgressPercent(96);
 
+          const currentStorageTier = providerMode === 'credits' ? 'vip' : 'free';
           const savedProject = await saveProjectToCloud({
             userId: user.id,
             title: projectName,
@@ -295,10 +297,15 @@ export function UploadZone() {
             originalFilename: file?.name,
             proxyUrl,
             file,
+            storageTier: currentStorageTier,
           });
 
           if (savedProject?.id) {
             useAppStore.getState().setCurrentProjectId(savedProject.id);
+            useAppStore.getState().setStorageTier(currentStorageTier);
+            if (savedProject.proxy_expires_at !== undefined) {
+              useAppStore.getState().setProxyExpiresAt(savedProject.proxy_expires_at || null);
+            }
             if (savedProject.proxy_url || proxyUrl) {
               useAppStore.getState().setProxyUrl(savedProject.proxy_url || proxyUrl);
             }

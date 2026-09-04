@@ -21,13 +21,21 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const projectId = formData.get('projectId') as string | null;
+    const storageTier = (formData.get('storageTier') as string | null) || 'free';
 
     if (!file) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 });
     }
 
     const sanitizedFilename = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const key = `proxies/${projectId || 'guest'}/${Date.now()}_${sanitizedFilename}`;
+    const isThumb = String(projectId).startsWith('thumb_') || sanitizedFilename.endsWith('_thumb.jpg');
+    const folderPrefix = isThumb
+      ? 'thumbnails'
+      : storageTier === 'vip'
+      ? 'proxies/vip_perm'
+      : 'proxies/free_7d';
+    const cleanProjectId = String(projectId || 'guest').replace(/^thumb_/, '');
+    const key = `${folderPrefix}/${cleanProjectId}/${Date.now()}_${sanitizedFilename}`;
 
     const buffer = Buffer.from(await file.arrayBuffer());
 

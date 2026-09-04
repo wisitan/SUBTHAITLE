@@ -83,6 +83,50 @@ export function getProjectDisplayTitle(project: UserProject): string {
   return 'SUBTHAITLE Project';
 }
 
+export function getStorageRetentionBadge(project: UserProject) {
+  if (project.storage_tier === 'vip') {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-950/90 backdrop-blur-md border border-purple-500/40 text-purple-300 text-[10px] font-semibold shadow">
+        <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+        <span>⭐ VIP Cloud ถาวร</span>
+      </span>
+    );
+  }
+
+  if (project.proxy_url) {
+    const expiryDate = project.proxy_expires_at
+      ? new Date(project.proxy_expires_at)
+      : new Date(new Date(project.created_at || project.updated_at || Date.now()).getTime() + 7 * 86400 * 1000);
+    const diffMs = expiryDate.getTime() - Date.now();
+    const daysLeft = Math.max(0, Math.ceil(diffMs / (86400 * 1000)));
+
+    if (daysLeft > 1) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/90 backdrop-blur-md border border-amber-500/40 text-amber-300 text-[10px] font-semibold shadow">
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+          <span>⏳ ข้ามเครื่องได้อีก {daysLeft} วัน</span>
+        </span>
+      );
+    }
+    if (daysLeft === 1) {
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-950/90 backdrop-blur-md border border-rose-500/40 text-rose-300 text-[10px] font-semibold shadow animate-pulse">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+          <span>⚠️ เหลือ 1 วัน (ใกล้หมดอายุ)</span>
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-950/90 backdrop-blur-md border border-zinc-700/80 text-zinc-400 text-[10px] font-medium shadow">
+        <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+        <span>⌛ วิดีโอบนคลาวด์หมดอายุ</span>
+      </span>
+    );
+  }
+
+  return null;
+}
+
 function ProjectThumbnailImage({
   project,
   className = 'w-full h-full object-cover',
@@ -180,6 +224,7 @@ export function RecentProjects() {
   const [projects, setProjects] = useState<UserProject[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [localCachedIds, setLocalCachedIds] = useState<Set<string>>(new Set());
 
   // View, Sort & Pagination state
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
@@ -213,6 +258,31 @@ export function RecentProjects() {
     fetchProjects();
   }, [fetchProjects]);
 
+  // Check which projects have local video stored in this device's browser IndexedDB
+  useEffect(() => {
+    if (projects.length === 0) {
+      setLocalCachedIds(new Set());
+      return;
+    }
+    let isMounted = true;
+    (async () => {
+      const available = new Set<string>();
+      for (const p of projects) {
+        try {
+          const cached =
+            (await getVideoFromCache(p.id)) ||
+            (await getVideoFromCache(p.title)) ||
+            (p.original_filename ? await getVideoFromCache(p.original_filename) : null);
+          if (cached) available.add(p.id);
+        } catch {}
+      }
+      if (isMounted) setLocalCachedIds(available);
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [projects]);
+
   // Reset to page 1 whenever filters, search or sort change
   useEffect(() => {
     setCurrentPage(1);
@@ -230,13 +300,25 @@ export function RecentProjects() {
         (await getVideoFromCache(project.id)) ||
         (await getVideoFromCache(resolvedTitle)) ||
         (project.original_filename ? await getVideoFromCache(project.original_filename) : null);
+
       if (cachedVideo) {
+        // Case 1: Same device, instant local playback (Full HD)
         const url = URL.createObjectURL(cachedVideo);
         useAppStore.getState().setVideoUrl(url);
         useAppStore.getState().setFile(cachedVideo as File);
+      } else if (project.proxy_url) {
+        // Case 2: Cross-device, stream from Cloudflare R2 proxy (720p)
+        useAppStore.getState().setVideoUrl(project.proxy_url);
+        useAppStore.getState().setProxyUrl(project.proxy_url);
+        useAppStore.getState().setFile(null);
       }
     } catch (err) {
       console.warn('[RecentProjects] Failed to load cached video:', err);
+      if (project.proxy_url) {
+        useAppStore.getState().setVideoUrl(project.proxy_url);
+        useAppStore.getState().setProxyUrl(project.proxy_url);
+        useAppStore.getState().setFile(null);
+      }
     }
 
     router.push('/editor');
@@ -378,7 +460,7 @@ export function RecentProjects() {
           </h3>
           <p className="text-xs text-zinc-400 flex items-center gap-1.5">
             <Cloud className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span>บันทึกบนคลาวด์อัตโนมัติ (เก็บงาน 7 วัน • เครื่องเดิมเปิดดูได้ตลอด • 0 เครดิต)</span>
+            <span>บันทึกบนคลาวด์อัตโนมัติ (เครื่องเดิมเปิดได้ตลอด • ฟรีข้ามเครื่อง 7 วัน • VIP เก็บถาวร)</span>
           </p>
         </div>
 
@@ -655,19 +737,29 @@ export function RecentProjects() {
                   iconSize="w-8 h-8"
                 />
 
-                {/* Status Badge (Top Left) */}
+                {/* Status & Source Badge (Top Left) */}
                 <div className="absolute top-2 left-2 pointer-events-none">
-                  {project.proxy_url ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 backdrop-blur-md border border-emerald-500/30 text-emerald-300 text-[10px] font-semibold shadow">
+                  {localCachedIds.has(project.id) ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/90 backdrop-blur-md border border-emerald-500/40 text-emerald-300 text-[10px] font-semibold shadow">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span>เสร็จแล้ว</span>
+                      <span>💾 ในเครื่องนี้</span>
+                    </span>
+                  ) : project.proxy_url ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/90 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-[10px] font-semibold shadow">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                      <span>☁️ Cloud R2</span>
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-950/80 backdrop-blur-md border border-zinc-700/80 text-zinc-300 text-[10px] font-medium shadow">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-950/90 backdrop-blur-md border border-zinc-700/80 text-zinc-300 text-[10px] font-medium shadow">
                       <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
-                      <span>ในเครื่อง</span>
+                      <span>📝 ซับไตเติล</span>
                     </span>
                   )}
+                </div>
+
+                {/* Retention / Expiry Badge (Bottom Left) */}
+                <div className="absolute bottom-2 left-2 pointer-events-none">
+                  {getStorageRetentionBadge(project)}
                 </div>
 
                 {/* Delete Button (Top Right) */}
@@ -705,9 +797,14 @@ export function RecentProjects() {
                 <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-400 transition-colors" title={getProjectDisplayTitle(project)}>
                   {getProjectDisplayTitle(project)}
                 </h4>
-                <p className="text-[11px] text-zinc-400 font-medium">
-                  {formatRelativeTime(project.updated_at || project.created_at)}
-                </p>
+                <div className="flex items-center justify-between gap-1 text-[11px] text-zinc-400 font-medium">
+                  <span>{formatRelativeTime(project.updated_at || project.created_at)}</span>
+                  {project.storage_tier === 'vip' ? (
+                    <span className="text-[10px] font-bold text-purple-400">VIP</span>
+                  ) : project.proxy_url ? (
+                    <span className="text-[10px] text-amber-400/90">7d Cloud</span>
+                  ) : null}
+                </div>
               </div>
             </div>
           ))}
@@ -741,13 +838,25 @@ export function RecentProjects() {
                 </div>
 
                 {/* Info */}
-                <div className="min-w-0 flex-1 space-y-0.5">
-                  <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-300 transition-colors" title={getProjectDisplayTitle(project)}>
-                    {getProjectDisplayTitle(project)}
-                  </h4>
-                  <p className="text-[11px] text-zinc-400 font-medium">
-                    {formatRelativeTime(project.updated_at || project.created_at)}
-                  </p>
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-300 transition-colors" title={getProjectDisplayTitle(project)}>
+                      {getProjectDisplayTitle(project)}
+                    </h4>
+                    {localCachedIds.has(project.id) ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-[9.5px] font-semibold">
+                        💾 ในเครื่องนี้
+                      </span>
+                    ) : project.proxy_url ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 text-[9.5px] font-semibold">
+                        ☁️ Cloud R2
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-medium flex-wrap">
+                    <span>{formatRelativeTime(project.updated_at || project.created_at)}</span>
+                    {getStorageRetentionBadge(project)}
+                  </div>
                 </div>
               </div>
 

@@ -14,6 +14,8 @@ export interface SaveProjectParams {
   style?: CaptionStyle | Record<string, unknown>;
   aspectRatio?: string;
   file?: File | null;
+  storageTier?: 'free' | 'vip' | null;
+  proxyExpiresAt?: string | null;
 }
 
 /**
@@ -22,7 +24,8 @@ export interface SaveProjectParams {
 export async function uploadProxyToR2(
   file: File | Blob,
   projectId: string,
-  filename: string
+  filename: string,
+  storageTier: 'free' | 'vip' = 'free'
 ): Promise<string | null> {
   // Strategy 1: Direct Presigned URL (Ultra-fast direct-to-R2)
   try {
@@ -32,6 +35,7 @@ export async function uploadProxyToR2(
       body: JSON.stringify({
         filename,
         projectId,
+        storageTier,
       }),
     });
 
@@ -62,6 +66,7 @@ export async function uploadProxyToR2(
     const formData = new FormData();
     formData.append('file', file, filename);
     formData.append('projectId', projectId);
+    formData.append('storageTier', storageTier);
 
     const fallbackRes = await fetch('/api/storage/direct-upload', {
       method: 'POST',
@@ -122,6 +127,8 @@ export async function saveProjectToCloud(
         rawWords,
         style,
         aspectRatio,
+        storageTier: params.storageTier,
+        proxyExpiresAt: params.proxyExpiresAt,
       }),
     });
 
@@ -130,7 +137,7 @@ export async function saveProjectToCloud(
       if (data.project) {
         // If file provided and proxyUrl not set yet, upload proxy in background
         if (params.file && !effectiveProxyUrl && data.project.id) {
-          uploadProxyToR2(params.file, data.project.id, params.file.name).then((url) => {
+          uploadProxyToR2(params.file, data.project.id, params.file.name, params.storageTier || 'free').then((url) => {
             if (url) {
               fetch('/api/projects', {
                 method: 'POST',
@@ -140,6 +147,7 @@ export async function saveProjectToCloud(
                   userId,
                   proxyUrl: url,
                   originalFilename: params.file?.name,
+                  storageTier: params.storageTier,
                 }),
               }).catch((e) => console.warn('[Background Proxy Update Error]:', e));
             }
@@ -171,6 +179,14 @@ export async function saveProjectToCloud(
 
     if (effectiveProxyUrl) payload.proxy_url = effectiveProxyUrl;
     if (effectiveOriginalFilename) payload.original_filename = effectiveOriginalFilename;
+    if (params.storageTier) payload.storage_tier = params.storageTier;
+    if (params.proxyExpiresAt !== undefined) {
+      payload.proxy_expires_at = params.proxyExpiresAt;
+    } else if (params.storageTier === 'vip') {
+      payload.proxy_expires_at = null;
+    } else if (effectiveProxyUrl) {
+      payload.proxy_expires_at = new Date(Date.now() + 7 * 86400 * 1000).toISOString();
+    }
 
     if (id) {
       payload.id = id;

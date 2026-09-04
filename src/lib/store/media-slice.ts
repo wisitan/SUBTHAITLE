@@ -5,6 +5,8 @@ export interface MediaSlice {
   file: File | null;
   videoUrl: string | null;
   proxyUrl: string | null;
+  storageTier: 'free' | 'vip' | null;
+  proxyExpiresAt: string | null;
   originalFilename: string | null;
   audioBlob: Blob | null;
   mediaDuration: number;
@@ -26,6 +28,8 @@ export interface MediaSlice {
   setFile: (file: File | null) => void;
   setVideoUrl: (url: string | null) => void;
   setProxyUrl: (proxyUrl: string | null) => void;
+  setStorageTier: (tier: 'free' | 'vip' | null) => void;
+  setProxyExpiresAt: (expiresAt: string | null) => void;
   setOriginalFilename: (filename: string | null) => void;
   setAudioBlob: (blob: Blob | null) => void;
   setMediaDuration: (duration: number) => void;
@@ -46,6 +50,8 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
   file: null,
   videoUrl: null,
   proxyUrl: null,
+  storageTier: 'free',
+  proxyExpiresAt: null,
   originalFilename: null,
   audioBlob: null,
   mediaDuration: 0,
@@ -67,6 +73,8 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
   setFile: (file) => set({ file, originalFilename: file ? file.name : null }),
   setVideoUrl: (videoUrl) => set({ videoUrl }),
   setProxyUrl: (proxyUrl) => set({ proxyUrl }),
+  setStorageTier: (storageTier) => set({ storageTier }),
+  setProxyExpiresAt: (proxyExpiresAt) => set({ proxyExpiresAt }),
   setOriginalFilename: (originalFilename) => set({ originalFilename }),
   setAudioBlob: (audioBlob) => set({ audioBlob }),
   setMediaDuration: (mediaDuration) => set({ mediaDuration }),
@@ -79,6 +87,8 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
       currentProjectId: project.id,
       projectTitle: project.title,
       proxyUrl: project.proxy_url || null,
+      storageTier: project.storage_tier || 'free',
+      proxyExpiresAt: project.proxy_expires_at || null,
       originalFilename: project.original_filename || project.title || null,
       mediaDuration: project.duration || 0,
       captions: project.captions || [],
@@ -115,6 +125,8 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
       file: null,
       videoUrl: null,
       proxyUrl: null,
+      storageTier: 'free',
+      proxyExpiresAt: null,
       originalFilename: null,
       audioBlob: null,
       mediaDuration: 0,
