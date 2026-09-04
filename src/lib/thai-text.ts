@@ -142,7 +142,7 @@ export function expandWordsToFineGrained<T extends { word: string; start: number
 
     if (compoundParts.length > 1) {
       subwords = compoundParts;
-    } else if (segmenter && /[\u0E00-\u0E7F]/.test(rawWord) && rawWord.length >= 6) {
+    } else if (segmenter && /[\u0E00-\u0E7F]/.test(rawWord) && rawWord.length >= 4) {
       // 2. If a single token contains multiple Thai words (e.g. Gemini multi-word phrase "สวัสดีครับ" -> ["สวัสดี", "ครับ"])
       const segs = Array.from(segmenter.segment(rawWord))
         .map((s) => s.segment.trim())

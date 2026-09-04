@@ -5,6 +5,7 @@ import {
   formatCaptionWordsText,
   isPunctuationOnly,
   thaiDigitsToArabic,
+  expandWordsToFineGrained,
 } from '../thai-text';
 
 describe('thai-text processing and segmentation', () => {
@@ -128,5 +129,24 @@ describe('thai-text processing and segmentation', () => {
     ];
     const formatted = formatCaptionWordsText(words);
     expect(formatted).toBe('สวัสดีครับทุกคน');
+  });
+
+  it('expandWordsToFineGrained expands 4-5 char compound tokens within their exact boundaries', () => {
+    const input = [
+      { word: 'สวัสดี', start: 0.1, end: 0.6 },
+      { word: 'วันนี้', start: 1.5, end: 2.1 }, // 6 chars compound (วัน + นี้)
+      { word: 'ตัวนี้', start: 2.5, end: 2.9 }, // 6 chars compound (ตัว + นี้)
+    ];
+    const expanded = expandWordsToFineGrained(input);
+    expect(expanded.length).toBe(5);
+    expect(expanded[0].word).toBe('สวัสดี');
+    expect(expanded[1].word).toBe('วัน');
+    expect(expanded[2].word).toBe('นี้');
+    expect(expanded[1].start).toBe(1.5);
+    expect(expanded[2].end).toBe(2.1);
+    expect(expanded[3].word).toBe('ตัว');
+    expect(expanded[4].word).toBe('นี้');
+    expect(expanded[3].start).toBe(2.5);
+    expect(expanded[4].end).toBe(2.9);
   });
 });

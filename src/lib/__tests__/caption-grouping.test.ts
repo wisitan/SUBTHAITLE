@@ -131,4 +131,17 @@ describe('caption-grouping logic', () => {
     expect(cues.length).toBe(1);
     expect(cues[0].text).toContain('เขาตื่นนอนแต่เช้าทุกวัน');
   });
+
+  it('trims abnormally stretched initial word in single/final cues (intro silence hallucination)', () => {
+    const stretchedWords: CaptionWord[] = [
+      { word: 'สวัสดี', start: 0.0, end: 2.0 }, // abnormally stretched 2.0s duration (> 1.5s)
+      { word: 'ครับ', start: 2.0, end: 2.4 },
+    ];
+
+    const cues = groupWordsIntoCaptions(stretchedWords, { mode: 'medium' });
+    expect(cues.length).toBe(1);
+    // Should trim start to at most 0.8s before end of first word (2.0 - 0.8 = 1.2s)
+    expect(cues[0].start).toBeCloseTo(1.2, 1);
+    expect(cues[0].words?.[0].start).toBeCloseTo(1.2, 1);
+  });
 });

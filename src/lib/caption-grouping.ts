@@ -42,6 +42,19 @@ export const PACING_PRESETS: Record<Exclude<PacingMode, 'custom'>, GroupingOptio
   },
 };
 
+function trimStretchedInitialWord(words: CaptionWord[], initialStart: number): number {
+  if (words.length > 0) {
+    const firstW = words[0];
+    const wordDur = firstW.end - firstW.start;
+    if (wordDur > 1.5) {
+      // Trim start to be at most 0.8s before the word ends (keeps a natural lead-in)
+      firstW.start = Math.max(firstW.start, firstW.end - 0.8);
+      return firstW.start;
+    }
+  }
+  return initialStart;
+}
+
 /**
  * Groups raw word tokens with timestamps into nicely-paced subtitle cues.
  * Guaranteed zero dropped words and synchronized timestamps.
@@ -121,20 +134,7 @@ export function groupWordsIntoCaptions(
       // Close current bucket
       const cueText = cleanThaiText(formatCaptionWordsText(currentWords));
       if (cueText) {
-        // --- Fix for Whisper Intro Hallucination (0-6s stretch) ---
-        // If the very first word in the cue is stretched abnormally long (e.g. > 1.5s) 
-        // due to preceding silence/music, we trim its start time to snap closer to its end time.
-        // This prevents the subtitle from appearing 6 seconds early and lingering on screen.
-        if (currentWords.length > 0) {
-          const firstW = currentWords[0];
-          const wordDur = firstW.end - firstW.start;
-          if (wordDur > 1.5) {
-            // Trim start to be at most 0.8s before the word ends (keeps a natural lead-in)
-            firstW.start = Math.max(firstW.start, firstW.end - 0.8);
-            currentStart = firstW.start;
-          }
-        }
-        
+        currentStart = trimStretchedInitialWord(currentWords, currentStart);
         const isLowConf = currentWords.some(
           (w) => w.confidence !== undefined && w.confidence < 0.6
         );
@@ -162,6 +162,7 @@ export function groupWordsIntoCaptions(
     const lastWord = currentWords[currentWords.length - 1];
     const cueText = cleanThaiText(formatCaptionWordsText(currentWords));
     if (cueText) {
+      currentStart = trimStretchedInitialWord(currentWords, currentStart);
       const isLowConf = currentWords.some(
         (w) => w.confidence !== undefined && w.confidence < 0.6
       );

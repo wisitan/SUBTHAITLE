@@ -33,17 +33,26 @@ export class GeminiSTTProvider implements STTProvider {
     const prompt = `Transcribe this Thai speech audio verbatim for synchronized video subtitles with precise word-level timestamps.
 Strict Rules:
 - Output language: Thai (preserve natural spoken Thai, technical terms, and English loanwords verbatim).
-- Word-Level Timestamps: Provide STRICT word-level granularity in the "words" array. Each item must represent a single spoken word (do NOT group multiple words into long phrase segments).
+- Word-Level Granularity: Provide STRICT single-word granularity in the "words" array. Each item must represent a single spoken word. NEVER combine multiple Thai words together (e.g. separate "ตัว" and "นี้", separate "ไร้" and "สาย", separate "ใช้" and "งาน", separate "มา" and "รีวิว").
+- Anti-Anticipation & Silence Tracking:
+  * Speakers naturally take pauses, breathe, or hesitate between sentences and clauses (e.g. 0.5s - 2.5s of silence).
+  * CRITICAL: NEVER anticipate or start a word during a pause or silence.
+  * The "start" timestamp of any word after a pause MUST strictly mark the exact second the speaker resumes vocalizing.
+  * If the audio is silent between 1.7s and 3.4s, the next word MUST start at 3.4s, NOT 2.5s or 2.9s.
 - Audio Alignment: "start" must be the exact second when the speaker begins uttering that specific word. "end" must be the exact second when the utterance of that word ends. Timestamps must strictly reflect acoustic timing.
 - DO NOT output any commas (,) or periods (.) in word text.
 - Return ONLY a valid JSON object matching this schema:
 {
-  "fullText": "ข้อความทั้งหมด",
-  "duration": 15.2,
+  "fullText": "สวัสดีครับ วันนี้เรามารีวิว",
+  "duration": 5.2,
   "words": [
-    { "word": "สวัสดี", "start": 0.05, "end": 0.45 },
-    { "word": "ครับ", "start": 0.46, "end": 0.75 },
-    { "word": "วันนี้", "start": 0.78, "end": 1.15 }
+    { "word": "สวัสดี", "start": 0.10, "end": 0.65 },
+    { "word": "ครับ", "start": 0.65, "end": 1.00 },
+    { "word": "วัน", "start": 2.80, "end": 3.05 },
+    { "word": "นี้", "start": 3.05, "end": 3.30 },
+    { "word": "เรา", "start": 3.30, "end": 3.55 },
+    { "word": "มา", "start": 3.55, "end": 3.80 },
+    { "word": "รีวิว", "start": 3.80, "end": 4.30 }
   ]
 }`;
 
@@ -81,7 +90,7 @@ Strict Rules:
               ],
               generationConfig: {
                 responseMimeType: 'application/json',
-                temperature: 0.1,
+                temperature: 0.0,
               },
             }),
           }
