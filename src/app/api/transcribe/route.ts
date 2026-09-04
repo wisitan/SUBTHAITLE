@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     const mode = (formData.get('mode') as string) || 'free';
     const clientDuration = parseFloat((formData.get('duration') as string) || '0');
     const customProvider = (formData.get('provider') as string) || undefined;
+    const attempt = parseInt((formData.get('attempt') as string) || '1', 10);
 
     if (!audioFile) {
       return NextResponse.json(
@@ -136,6 +137,7 @@ export async function POST(request: NextRequest) {
         language,
         mode,
         duration: clientDuration,
+        attempt,
       });
 
       // 3. Post-Transcription Deductions: ONLY deduct quota or credits after AI delivers the goods!
@@ -173,9 +175,11 @@ export async function POST(request: NextRequest) {
         duration: result.duration,
         language: result.language,
         words: result.words,
+        provider: result.provider || 'gemini',
+        model: result.model || 'gemini-3.8-flash',
+        providerFallback: result.providerFallback,
         usedQuotaCount,
         remainingQuota,
-        providerFallback: result.providerFallback,
       });
     } catch (sttError: unknown) {
       // NOTE: No credits or free quotas were pre-deducted, so NO refund needed!

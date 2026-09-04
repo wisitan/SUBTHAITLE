@@ -14,6 +14,7 @@ import {
   Upload,
   Undo2,
   Redo2,
+  X,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/context/auth-context';
@@ -27,6 +28,17 @@ import { PresetManager } from '@/components/preset-manager';
 import { ExportMenu } from '@/components/export-menu';
 import { UserProfileButton } from '@/components/user-profile-button';
 import { Tooltip } from '@/components/ui/tooltip';
+
+function getModelDisplayName(provider?: string, model?: string): string {
+  if (provider === 'groq' || model?.includes('whisper')) {
+    return 'Groq Whisper Large v3';
+  }
+  if (model?.includes('gemini-3.8')) return 'Google Gemini 3.8 Flash';
+  if (model?.includes('gemini-3.5')) return 'Google Gemini 3.5 Flash';
+  if (model?.includes('gemini-2.5')) return 'Google Gemini 2.5 Flash';
+  if (model?.includes('gemini')) return 'Google Gemini Flash';
+  return model || provider || 'AI Engine';
+}
 
 export default function EditorPage() {
   const { user } = useAuth();
@@ -45,10 +57,12 @@ export default function EditorPage() {
   const setCurrentProjectId = useAppStore((s) => s.setCurrentProjectId);
   const projectTitle = useAppStore((s) => s.projectTitle);
   const setProjectTitle = useAppStore((s) => s.setProjectTitle);
+  const transcriptionMeta = useAppStore((s) => s.transcriptionMeta);
 
   const [activeTab, setActiveTab] = useState<'captions' | 'style' | 'presets'>('captions');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'idle'>('saved');
+  const [dismissFallbackNotice, setDismissFallbackNotice] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -310,10 +324,28 @@ export default function EditorPage() {
                   )}
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-zinc-300">
+                <div className="flex items-center gap-2 text-xs text-zinc-300 flex-wrap">
                   <span>ความยาว: {mediaDuration ? `${Math.round(mediaDuration)}s` : '--'}</span>
                   <span>•</span>
                   <span className="text-emerald-400 font-semibold">{captions.length} ท่อนซับ</span>
+                  {transcriptionMeta && (
+                    <>
+                      <span>•</span>
+                      {transcriptionMeta.provider === 'groq' || transcriptionMeta.isFallback ? (
+                        <Tooltip content="Gemini คิวยาวชั่วคราว • สลับใช้ Groq Whisper สำรองอัตโนมัติ" position="bottom">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-300">
+                            <span>⚠️ {getModelDisplayName(transcriptionMeta.provider, transcriptionMeta.model)} (สายสำรอง)</span>
+                          </span>
+                        </Tooltip>
+                      ) : (
+                        <Tooltip content={`ถอดเสียงด้วย ${getModelDisplayName(transcriptionMeta.provider, transcriptionMeta.model)} คุณภาพสูง`} position="bottom">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/10 border border-emerald-500/25 text-emerald-400">
+                            <span>⚡ {getModelDisplayName(transcriptionMeta.provider, transcriptionMeta.model)}</span>
+                          </span>
+                        </Tooltip>
+                      )}
+                    </>
+                  )}
                   {!videoUrl && (
                     <>
                       <span>•</span>
@@ -476,7 +508,27 @@ export default function EditorPage() {
           {/* Tab Content Panels (Scrolls independently inside this box on Desktop) */}
           <div className="flex-1 min-h-0 bg-[#0c0c14] rounded-3xl border border-zinc-700/90 lg:overflow-hidden shadow-2xl flex flex-col">
             {activeTab === 'captions' ? (
-              <CaptionTable />
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                {!dismissFallbackNotice && (transcriptionMeta?.provider === 'groq' || transcriptionMeta?.isFallback) && (
+                  <div className="mx-3 mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs flex items-center justify-between gap-2.5 shrink-0 shadow-md">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-base shrink-0">⚠️</span>
+                      <p className="leading-relaxed">
+                        <strong className="text-amber-300">ถอดเสียงด้วย Groq Whisper (สายสำรอง):</strong> เนื่องจากสัญญาณ Google Gemini ไม่ว่างชั่วคราว ระบบจึงสลับมาใช้ Groq Whisper สำรองให้อัตโนมัติ หากมีคำหรือวรรณยุกต์ที่คลาดเคลื่อน สามารถคลิกแก้ไขในตารางด้านล่าง หรือกลับไปหน้าแรกเพื่อลองถอดเสียงใหม่ด้วย Gemini ได้ค่ะ
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setDismissFallbackNotice(true)}
+                      className="p-1 rounded-lg hover:bg-amber-500/20 text-amber-300 hover:text-amber-100 transition-colors shrink-0 cursor-pointer"
+                      title="ปิดการแจ้งเตือน"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+                <CaptionTable />
+              </div>
             ) : activeTab === 'style' ? (
               <StyleEditor />
             ) : (

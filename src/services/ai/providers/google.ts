@@ -84,6 +84,8 @@ export class GoogleSTTProvider implements STTProvider {
       duration,
       words,
       language: lang,
+      provider: 'google',
+      model: 'cloud-speech-v1',
     };
   }
 }

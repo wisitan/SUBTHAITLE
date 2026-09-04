@@ -10,6 +10,8 @@ export interface STTResult {
   duration: number;
   words: STTWord[];
   language: string;
+  provider?: string;
+  model?: string;
   providerFallback?: string;
 }
 
@@ -21,6 +23,7 @@ export interface STTOptions {
   mode?: 'free' | 'credits' | string;
   provider?: string;
   duration?: number;
+  attempt?: number;
 }
 
 export interface STTProvider {

@@ -16,6 +16,7 @@ export interface MediaSlice {
   progress: number;
   statusMessage: string;
   errorMessage: string | null;
+  transcriptionMeta: AppState['transcriptionMeta'];
 
   aspectRatio: '9:16' | '16:9' | '1:1';
   showTikTokSafeZone: boolean;
@@ -33,6 +34,7 @@ export interface MediaSlice {
   loadProject: (project: UserProject) => void;
   setStatus: (status: AppState['status'], progress?: number, message?: string) => void;
   setErrorMessage: (msg: string | null) => void;
+  setTranscriptionMeta: (meta: AppState['transcriptionMeta']) => void;
   setAspectRatio: (ratio: '9:16' | '16:9' | '1:1') => void;
   setShowTikTokSafeZone: (show: boolean) => void;
   requestSeek: (time: number, autoPlay?: boolean) => void;
@@ -55,6 +57,7 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
   progress: 0,
   statusMessage: '',
   errorMessage: null,
+  transcriptionMeta: null,
 
   aspectRatio: '9:16',
   showTikTokSafeZone: false,
@@ -85,6 +88,7 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
       status: 'ready',
       currentTime: 0,
       activeCaptionIndex: null,
+      transcriptionMeta: null,
     }));
   },
 
@@ -102,6 +106,8 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
   setErrorMessage: (errorMessage) =>
     set({ errorMessage, status: errorMessage ? 'error' : 'idle' }),
 
+  setTranscriptionMeta: (transcriptionMeta) => set({ transcriptionMeta }),
+
   setCurrentTime: (currentTime) => set({ currentTime }),
 
   reset: () =>
@@ -118,6 +124,7 @@ export const createMediaSlice: StateCreator<AppState, [], [], MediaSlice> = (set
       progress: 0,
       statusMessage: '',
       errorMessage: null,
+      transcriptionMeta: null,
       rawWords: [],
       captions: [],
       activeCaptionIndex: null,

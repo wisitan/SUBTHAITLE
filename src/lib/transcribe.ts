@@ -12,6 +12,9 @@ export interface TranscribeResponse {
   success: boolean;
   text: string;
   duration?: number;
+  provider?: string;
+  model?: string;
+  providerFallback?: string;
   segments?: Array<{
     id?: number | string;
     start: number;
@@ -87,6 +90,7 @@ export async function transcribeAudio(
     formData.append('language', 'th');
     formData.append('mode', isFreeMode ? 'free' : 'credits');
     formData.append('duration', mediaDuration.toString());
+    formData.append('attempt', attempt.toString());
     if (authInfo?.userId) {
       formData.append('userId', authInfo.userId);
     }
@@ -104,6 +108,9 @@ export async function transcribeAudio(
       isRateLimit?: boolean;
       retryAfter?: number;
       message?: string;
+      provider?: string;
+      model?: string;
+      providerFallback?: string;
     }
     let parsedJson: BackendResponse | null = null;
     try {
@@ -142,13 +149,26 @@ export async function transcribeAudio(
       );
     }
 
-    data = parsedJson as TranscribeResponse & { usedQuotaCount?: number; remainingQuota?: number };
+    data = parsedJson as TranscribeResponse & {
+      usedQuotaCount?: number;
+      remainingQuota?: number;
+      provider?: string;
+      model?: string;
+      providerFallback?: string;
+    };
     break; // Success!
   }
 
   if (!data) {
     throw new Error('เกิดข้อผิดพลาดในการรับข้อมูลการถอดเสียงจากเซิร์ฟเวอร์');
   }
+
+  // Save transcription provider & model info for UI badge transparency
+  store.setTranscriptionMeta({
+    provider: data.provider || 'gemini',
+    model: data.model || 'gemini-3.8-flash',
+    isFallback: Boolean(data.providerFallback),
+  });
 
   // Update Quota / Credits on successful transcription
   if (providerMode === 'credits' && requiredCredits > 0) {

@@ -12,6 +12,12 @@ export interface CaptionWord {
   confidence?: number;
 }
 
+export interface TranscriptionMeta {
+  provider: string;
+  model: string;
+  isFallback?: boolean;
+}
+
 export interface CaptionItem {
   id: string;
   start: number; // in seconds
@@ -85,6 +91,7 @@ export interface AppState {
   progress: number; // 0 to 100
   statusMessage: string;
   errorMessage: string | null;
+  transcriptionMeta: TranscriptionMeta | null;
   
   // Settings, Quotas & Credits Model
   providerMode: ProviderMode;
@@ -135,6 +142,7 @@ export interface AppState {
   loadProject: (project: UserProject) => void;
   setStatus: (status: AppState['status'], progress?: number, message?: string) => void;
   setErrorMessage: (msg: string | null) => void;
+  setTranscriptionMeta: (meta: TranscriptionMeta | null) => void;
   setProviderMode: (mode: ProviderMode) => void;
   setProvider: (provider: TranscriptionProvider) => void;
   setTier: (tier: UserTier) => void;

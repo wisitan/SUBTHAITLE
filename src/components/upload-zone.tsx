@@ -130,6 +130,9 @@ export function UploadZone() {
         URL.revokeObjectURL(videoUrl);
       }
 
+      // Reset previous transcription metadata
+      useAppStore.getState().setTranscriptionMeta(null);
+
       // Save file and create preview URL
       setFile(selectedFile);
       const objUrl = URL.createObjectURL(selectedFile);
@@ -197,6 +200,7 @@ export function UploadZone() {
     setCaptions([]);
     setStatus('idle', 0, '');
     setErrorMessage(null);
+    useAppStore.getState().setTranscriptionMeta(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -311,8 +315,16 @@ export function UploadZone() {
         saveVideoToCache(projectName, file);
       }
 
-      setStatus('ready', 100, 'เสร็จสมบูรณ์! กำลังเปิดหน้าตัดต่อ...');
-      setTranscribeMessage('เสร็จสมบูรณ์! กำลังเปิดหน้าโปรแกรมตัดต่อ...');
+      const meta = useAppStore.getState().transcriptionMeta;
+      const modelDisplayName =
+        meta?.provider === 'groq' || meta?.isFallback
+          ? 'Groq Whisper (สายสำรอง)'
+          : meta?.model === 'gemini-3.8-flash'
+            ? 'Google Gemini 3.8 Flash'
+            : meta?.model || 'Google Gemini';
+
+      setStatus('ready', 100, `ถอดเสียงสำเร็จด้วย ${modelDisplayName}! กำลังเปิดหน้าตัดต่อ...`);
+      setTranscribeMessage(`ถอดเสียงสำเร็จด้วย ${modelDisplayName}! กำลังเปิดหน้าโปรแกรมตัดต่อ...`);
       setTranscribeProgressPercent(100);
 
       setTimeout(() => {

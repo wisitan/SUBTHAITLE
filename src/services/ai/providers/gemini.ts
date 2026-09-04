@@ -192,6 +192,8 @@ ${durationRule ? durationRule + '\n' : ''}- Output language: Thai (preserve natu
           duration,
           words,
           language: 'th',
+          provider: 'gemini',
+          model,
         };
       } catch (err) {
         lastError = err instanceof Error ? err : new Error(String(err));

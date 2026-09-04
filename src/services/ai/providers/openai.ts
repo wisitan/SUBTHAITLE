@@ -67,6 +67,8 @@ export class OpenAISTTProvider implements STTProvider {
       duration,
       words,
       language: data.language || lang,
+      provider: 'openai',
+      model: 'whisper-1',
     };
   }
 }

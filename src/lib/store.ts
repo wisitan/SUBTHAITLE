@@ -35,6 +35,7 @@ export const useAppStore = create<AppState>()(
         style: state.style,
         activePresetId: state.activePresetId,
         customPresets: state.customPresets,
+        transcriptionMeta: state.transcriptionMeta,
       }),
     }
   )

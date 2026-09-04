@@ -67,6 +67,8 @@ export class GroqSTTProvider implements STTProvider {
       duration,
       words,
       language: data.language || lang,
+      provider: 'groq',
+      model: 'whisper-large-v3',
     };
   }
 }

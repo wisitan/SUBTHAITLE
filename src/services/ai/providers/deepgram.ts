@@ -61,6 +61,8 @@ export class DeepgramSTTProvider implements STTProvider {
       duration,
       words,
       language: lang,
+      provider: 'deepgram',
+      model: 'nova-2',
     };
   }
 }
