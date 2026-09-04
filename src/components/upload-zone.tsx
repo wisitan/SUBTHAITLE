@@ -317,7 +317,9 @@ export function UploadZone() {
 
       const meta = useAppStore.getState().transcriptionMeta;
       const modelDisplayName =
-        meta?.provider === 'groq' || meta?.isFallback
+        meta?.provider === 'hybrid' || meta?.model?.includes('Hybrid')
+          ? 'Gemini + Whisper Hybrid (จังหวะเสียงเป๊ะ)'
+          : meta?.provider === 'groq' || meta?.isFallback
           ? 'Groq Whisper (สายสำรอง)'
           : meta?.model?.includes('3.8')
             ? 'Google Gemini 3.8 Flash'

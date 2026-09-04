@@ -4,6 +4,7 @@ import { GroqSTTProvider } from './providers/groq';
 import { OpenAISTTProvider } from './providers/openai';
 import { DeepgramSTTProvider } from './providers/deepgram';
 import { GoogleSTTProvider } from './providers/google';
+import { alignLinguisticWithAcoustic } from '@/lib/audio-alignment';
 
 export * from './types';
 
@@ -34,10 +35,9 @@ export function getSTTProvider(providerName?: string): STTProvider {
 
 /**
  * Main transcribe entrypoint.
- * Transcribes audio buffer in a single step with native word-level timestamps.
+ * Transcribes audio buffer with Dual-Engine Parallel Fusion:
+ * Combining Gemini's 100% Thai linguistic accuracy with Groq Whisper's frame-level acoustic timestamps.
  */
-
-
 export async function transcribeAudioBuffer(
   audioBuffer: Buffer,
   options?: {
@@ -54,52 +54,104 @@ export async function transcribeAudioBuffer(
 
   console.log(`[STT Service] Transcribing audio with provider: ${provider.name} (Tier: ${isPaidUser ? 'Paid' : 'Free'})`);
 
-  // --- Dual-Tier Gemini Engine Routing ---
+  // --- Dual-Tier & Dual-Engine Fusion Routing ---
   if (provider.name === 'gemini') {
     const freeKey = process.env.GEMINI_FREE_API_KEY || process.env.GEMINI_API_KEY;
     const paidKey = process.env.GEMINI_PAID_API_KEY;
+    const groqKey = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
 
     if (isPaidUser) {
-      // 1. Paid User: Try Free tier first to optimize cost, with fastFail (7s max)
-      try {
-        console.log('[STT Service] [Paid User] Trying Gemini Free Tier first to save credits...');
-        const res = await provider.transcribe(audioBuffer, {
-          ...options,
-          apiKey: freeKey,
-          fastFail: true,
-          timeoutMs: 7000,
-        });
+      // 1. Paid User: Gemini primary engine (probe free first or escalate to paidKey) + Groq Whisper acoustic sync
+      const geminiTask = (async (): Promise<STTResult> => {
+        try {
+          console.log('[STT Service] [Paid User] Trying Gemini Free Tier first to save credits...');
+          return await provider.transcribe(audioBuffer, {
+            ...options,
+            apiKey: freeKey,
+            fastFail: true,
+            timeoutMs: 7000,
+          });
+        } catch (err: unknown) {
+          console.warn('[STT Service] [Paid User] Gemini Free tier failed or congested. Escalating to Gemini Paid Tier...', err);
+          if (paidKey) {
+            return await provider.transcribe(audioBuffer, {
+              ...options,
+              apiKey: paidKey,
+              fastFail: true,
+              timeoutMs: 40000,
+            });
+          }
+          throw err;
+        }
+      })();
+
+      const isShortClip = !options?.duration || options.duration <= 130;
+      if (groqKey && isShortClip) {
+        const [geminiSettled, groqSettled] = await Promise.allSettled([
+          geminiTask,
+          providers.groq.transcribe(audioBuffer, { ...options, apiKey: groqKey }),
+        ]);
+
+        if (geminiSettled.status === 'fulfilled' && groqSettled.status === 'fulfilled') {
+          console.log('[STT Service] [Paid User] Dual-Engine Fusion succeeded!');
+          return alignLinguisticWithAcoustic(geminiSettled.value, groqSettled.value);
+        }
+
+        if (geminiSettled.status === 'fulfilled') {
+          return {
+            ...geminiSettled.value,
+            provider: geminiSettled.value.provider || 'gemini',
+            model: geminiSettled.value.model || 'gemini-3.8-flash',
+          };
+        }
+
+        throw geminiSettled.reason || new Error('Paid transcription failed.');
+      } else {
+        // Long clip (> 2 minutes) or no Groq key: use Gemini directly for stability and quota preservation
+        const res = await geminiTask;
         return {
           ...res,
           provider: res.provider || 'gemini',
           model: res.model || 'gemini-3.8-flash',
         };
-      } catch (err: unknown) {
-        // If Free Tier fails for ANY reason (429 rate limit, 503 high demand, timeout, or server error),
-        // immediately escalate to Gemini Paid Tier to guarantee 100% uptime for paid users!
-        console.warn('[STT Service] [Paid User] Gemini Free tier failed or congested. Escalating to Gemini Paid Tier...', err);
-        if (paidKey) {
-          try {
-            const paidRes = await provider.transcribe(audioBuffer, {
-              ...options,
-              apiKey: paidKey,
-              fastFail: true, // Focus directly on primary gemini-3.8-flash without looping 4 models
-              timeoutMs: 40000, // Maximum 40s (7s probe + 40s = 47s, safely under Vercel's 60s limit)
-            });
-            return {
-              ...paidRes,
-              provider: paidRes.provider || 'gemini',
-              model: paidRes.model || 'gemini-3.8-flash',
-            };
-          } catch (paidErr: unknown) {
-            console.error('[STT Service] [Paid User] Gemini Paid tier also failed:', paidErr);
-            throw paidErr;
-          }
-        }
-        throw err;
       }
     } else {
-      // 2. Free User: Use Free Tier key first
+      // 2. Free User: Dual-Engine Parallel Fusion (Gemini + Groq Whisper)
+      if (freeKey && groqKey) {
+        console.log('[STT Service] [Free User] Running Dual-Engine Parallel Fusion (Gemini + Groq Whisper)...');
+        const [geminiSettled, groqSettled] = await Promise.allSettled([
+          provider.transcribe(audioBuffer, { ...options, apiKey: freeKey }),
+          providers.groq.transcribe(audioBuffer, { ...options, apiKey: groqKey }),
+        ]);
+
+        if (geminiSettled.status === 'fulfilled' && groqSettled.status === 'fulfilled') {
+          console.log('[STT Service] [Free User] Dual-Engine Fusion succeeded! Fusing linguistic & acoustic outputs...');
+          return alignLinguisticWithAcoustic(geminiSettled.value, groqSettled.value);
+        }
+
+        if (geminiSettled.status === 'fulfilled') {
+          console.warn('[STT Service] [Free User] Groq Whisper failed or timed out. Falling back to Gemini alone:', groqSettled.status === 'rejected' ? groqSettled.reason : null);
+          return {
+            ...geminiSettled.value,
+            provider: geminiSettled.value.provider || 'gemini',
+            model: geminiSettled.value.model || 'gemini-3.8-flash',
+          };
+        }
+
+        if (groqSettled.status === 'fulfilled') {
+          console.warn('[STT Service] [Free User] Gemini Free tier failed/congested. Seamlessly falling back to Groq Whisper:', geminiSettled.status === 'rejected' ? geminiSettled.reason : null);
+          return {
+            ...groqSettled.value,
+            provider: 'groq',
+            model: groqSettled.value.model || 'whisper-large-v3',
+            providerFallback: 'groq',
+          };
+        }
+
+        throw geminiSettled.reason || groqSettled.reason || new Error('Both Gemini and Groq transcription failed.');
+      }
+
+      // Standalone Gemini Free flow if groqKey not present
       try {
         const res = await provider.transcribe(audioBuffer, { ...options, apiKey: freeKey });
         return {
@@ -111,10 +163,7 @@ export async function transcribeAudioBuffer(
         const msg = err instanceof Error ? err.message : String(err);
         console.warn('[STT Service] [Free User] Gemini Free tier error/limit:', msg);
 
-        // Smart Auto-Fallback:
-        // Only trigger Groq fallback if attempt >= 3 (after exhausting Gemini's 4-model cascade across multiple queue attempts)
         const currentAttempt = options?.attempt ?? 1;
-        const groqKey = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
         if (currentAttempt >= 3 && groqKey) {
           console.log(`[STT Service] [Free User] Gemini models all congested (attempt ${currentAttempt}). Seamlessly falling back to Groq Whisper...`);
           try {

@@ -35,6 +35,7 @@ export class GroqSTTProvider implements STTProvider {
       headers: {
         Authorization: `Bearer ${apiKey}`,
       },
+      signal: AbortSignal.timeout(15000),
       body: formData,
     });
 

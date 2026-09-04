@@ -30,6 +30,9 @@ import { UserProfileButton } from '@/components/user-profile-button';
 import { Tooltip } from '@/components/ui/tooltip';
 
 function getModelDisplayName(provider?: string, model?: string): string {
+  if (provider === 'hybrid' || model?.includes('Hybrid')) {
+    return 'Gemini + Whisper Hybrid';
+  }
   if (provider === 'groq' || model?.includes('whisper')) {
     return 'Groq Whisper Large v3';
   }
@@ -334,7 +337,13 @@ export default function EditorPage() {
                   {transcriptionMeta && (
                     <>
                       <span>•</span>
-                      {transcriptionMeta.provider === 'groq' || transcriptionMeta.isFallback ? (
+                      {transcriptionMeta.provider === 'hybrid' ? (
+                        <Tooltip content="✨ ระบบ Hybrid: ถอดคำภาษาไทยถูกต้อง 100% ด้วย Gemini + จังหวะคลื่นเสียงเป๊ะด้วย Groq Whisper" position="bottom">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-cyan-500/15 border border-emerald-500/30 text-emerald-300 shadow-sm">
+                            <span>✨ {getModelDisplayName(transcriptionMeta.provider, transcriptionMeta.model)}</span>
+                          </span>
+                        </Tooltip>
+                      ) : transcriptionMeta.provider === 'groq' || transcriptionMeta.isFallback ? (
                         <Tooltip content="Gemini คิวยาวชั่วคราว • สลับใช้ Groq Whisper สำรองอัตโนมัติ" position="bottom">
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-300">
                             <span>⚠️ {getModelDisplayName(transcriptionMeta.provider, transcriptionMeta.model)} (สายสำรอง)</span>
