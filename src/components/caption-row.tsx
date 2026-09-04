@@ -105,10 +105,12 @@ export const CaptionRow = memo(function CaptionRow({
       onClick={() => {
         if (onSelectCue) onSelectCue(caption.start, actualIndex);
       }}
-      className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 relative group/card max-w-full overflow-visible hover:z-20 cursor-pointer ${
-        isActive
+      className={`p-3.5 sm:p-4 rounded-2xl border transition-all duration-150 relative group/card max-w-full overflow-visible cursor-pointer ${
+        popoverOpen
+          ? 'z-50 bg-[#24202e] border-orange-500 shadow-2xl shadow-orange-500/20 ring-2 ring-orange-500'
+          : isActive
           ? 'z-10 bg-[#24202e] border-orange-500 shadow-xl shadow-orange-500/10 ring-2 ring-orange-500/50'
-          : 'bg-[#181824] border border-zinc-700/90 hover:border-orange-500/60 hover:bg-[#20202e] focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30 shadow-md'
+          : 'bg-[#181824] border border-zinc-700/90 hover:border-orange-500/60 hover:bg-[#20202e] hover:z-20 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30 shadow-md'
       }`}
     >
       {/* Header Row: Index, Timings, Play Button, and Card Actions */}
@@ -261,34 +263,48 @@ export const CaptionRow = memo(function CaptionRow({
               </button>
             </Tooltip>
 
-            {/* Floating Mini Popover */}
+            {/* Floating Mini Popover & Backdrop */}
             {popoverOpen && (
-              <div
-                ref={popoverRef}
-                onClick={(e) => e.stopPropagation()}
-                className="absolute right-0 top-full mt-2 z-50 w-72 sm:w-80 bg-[#12121c]/98 border border-zinc-700/90 rounded-2xl p-3.5 shadow-2xl space-y-3 text-zinc-100 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100"
-              >
-                {/* Popover Header */}
-                <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-white flex items-center gap-1">
-                      <span>🎯</span>
-                      <span>ปรับเฉพาะท่อนที่ #{actualIndex + 1}</span>
-                    </span>
-                    {hasOverride && (
-                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                        Custom
+              <>
+                {/* Full-screen backdrop to capture clicks anywhere outside and block hover to lower cards */}
+                <div
+                  className="fixed inset-0 z-40 bg-black/35 backdrop-blur-[0.5px] cursor-default"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setPopoverOpen(false);
+                  }}
+                />
+
+                <div
+                  ref={popoverRef}
+                  onClick={(e) => e.stopPropagation()}
+                  className={`absolute right-0 ${isLast ? 'bottom-full mb-2' : 'top-full mt-2'} z-50 w-72 sm:w-80 bg-[#12121c] border border-zinc-700/90 rounded-2xl p-3.5 shadow-2xl space-y-3 text-zinc-100 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-100`}
+                >
+                  {/* Popover Header */}
+                  <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-white flex items-center gap-1">
+                        <span>🎯</span>
+                        <span>ปรับเฉพาะท่อนที่ #{actualIndex + 1}</span>
                       </span>
-                    )}
+                      {hasOverride && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          Custom
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setPopoverOpen(false);
+                      }}
+                      className="p-1 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                      title="ปิดหน้าต่างปรับแต่ง"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => setPopoverOpen(false)}
-                    className="p-1 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </div>
 
                 {/* Slider 1: Position Y */}
                 <div className="space-y-1.5">
@@ -433,8 +449,9 @@ export const CaptionRow = memo(function CaptionRow({
                   </button>
                 </div>
               </div>
-            )}
-          </div>
+            </>
+          )}
+        </div>
 
           {/* Split */}
           <Tooltip content="ตัดแบ่งซับท่อนนี้ออกเป็น 2 ท่อน (Split)">
