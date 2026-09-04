@@ -25,6 +25,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
+import { Tooltip } from '@/components/ui/tooltip';
 
 type TimeFilterType = 'all' | 'today' | '7days' | '30days' | 'custom';
 type ViewMode = 'grid' | 'list';
@@ -83,13 +84,60 @@ export function getProjectDisplayTitle(project: UserProject): string {
   return 'SUBTHAITLE Project';
 }
 
-export function getStorageRetentionBadge(project: UserProject) {
+export function StorageSourceBadge({ isLocal, hasProxy }: { isLocal: boolean; hasProxy: boolean }) {
+  if (isLocal) {
+    return (
+      <Tooltip
+        content="💾 วิดีโอต้นฉบับอยู่ในเครื่องนี้: เปิดดูความคมชัดสูงเต็มรูปแบบได้ทันที ไม่เสียดาต้าอินเทอร์เน็ต"
+        position="top"
+      >
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/90 backdrop-blur-md border border-emerald-500/40 text-emerald-300 text-[10px] font-semibold shadow cursor-help hover:bg-emerald-900/90 transition-colors pointer-events-auto">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          <span>💾 ในเครื่องนี้</span>
+        </span>
+      </Tooltip>
+    );
+  }
+
+  if (hasProxy) {
+    return (
+      <Tooltip
+        content="☁️ Cloudflare R2: กำลังสตรีมวิดีโอ 720p Proxy จากคลาวด์ เปิดดูและแก้ไขข้ามอุปกรณ์ได้ทันที"
+        position="top"
+      >
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/90 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-[10px] font-semibold shadow cursor-help hover:bg-cyan-900/90 transition-colors pointer-events-auto">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+          <span>☁️ Cloud R2</span>
+        </span>
+      </Tooltip>
+    );
+  }
+
+  return (
+    <Tooltip
+      content="📝 ซับไตเติล: บันทึกเฉพาะข้อมูลซับไตเติล (หากต้องการดูวิดีโอ ให้เปิดจากเครื่องเดิมหรืออัปโหลดวิดีโอใหม่)"
+      position="top"
+    >
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-950/90 backdrop-blur-md border border-zinc-700/80 text-zinc-300 text-[10px] font-medium shadow cursor-help hover:bg-zinc-900 transition-colors pointer-events-auto">
+        <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+        <span>📝 ซับไตเติล</span>
+      </span>
+    </Tooltip>
+  );
+}
+
+export function StorageRetentionTag({ project }: { project: UserProject }) {
   if (project.storage_tier === 'vip') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-950/90 backdrop-blur-md border border-purple-500/40 text-purple-300 text-[10px] font-semibold shadow">
-        <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-        <span>⭐ VIP Cloud ถาวร</span>
-      </span>
+      <Tooltip
+        content="⭐ สิทธิพิเศษ VIP: วิดีโอ 720p Proxy จัดเก็บบน Cloudflare R2 ถาวร ไม่มีวันหมดอายุ เปิดดูและตัดต่อข้ามเครื่องได้ตลอดไป"
+        position="top"
+      >
+        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-950/70 border border-purple-500/40 text-purple-300 text-[10px] font-bold shadow-sm cursor-help hover:bg-purple-900/80 transition-colors pointer-events-auto">
+          <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
+          VIP
+        </span>
+      </Tooltip>
     );
   }
 
@@ -100,31 +148,34 @@ export function getStorageRetentionBadge(project: UserProject) {
     const diffMs = expiryDate.getTime() - Date.now();
     const daysLeft = Math.max(0, Math.ceil(diffMs / (86400 * 1000)));
 
-    if (daysLeft > 1) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/90 backdrop-blur-md border border-amber-500/40 text-amber-300 text-[10px] font-semibold shadow">
-          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-          <span>⏳ ข้ามเครื่องได้อีก {daysLeft} วัน</span>
-        </span>
-      );
-    }
-    if (daysLeft === 1) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-rose-950/90 backdrop-blur-md border border-rose-500/40 text-rose-300 text-[10px] font-semibold shadow animate-pulse">
-          <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
-          <span>⚠️ เหลือ 1 วัน (ใกล้หมดอายุ)</span>
-        </span>
-      );
-    }
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-950/90 backdrop-blur-md border border-zinc-700/80 text-zinc-400 text-[10px] font-medium shadow">
-        <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
-        <span>⌛ วิดีโอบนคลาวด์หมดอายุ</span>
-      </span>
+      <Tooltip
+        content={
+          daysLeft > 0
+            ? `⏳ โควต้าฟรี: ซิงค์วิดีโอ 720p Proxy ดูข้ามเครื่องได้อีก ${daysLeft} วัน (ครบ 7 วันระบบจะลบเฉพาะไฟล์บนคลาวด์เพื่อประหยัดพื้นที่ แต่วิดีโอในเครื่องเดิมยังเปิดได้ตลอดไป)`
+            : '⌛ วิดีโอบน Cloud R2 หมดอายุแล้ว (ลบออกจากคลาวด์แล้ว) แต่ยังเปิดดูและแก้ไขจากเครื่องเดิมที่มีไฟล์ต้นฉบับได้ตามปกติ'
+        }
+        position="top"
+      >
+        <span
+          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded border text-[10px] font-medium shadow-sm cursor-help transition-colors pointer-events-auto ${
+            daysLeft <= 1
+              ? 'bg-rose-950/70 border-rose-500/40 text-rose-300 hover:bg-rose-900/80'
+              : 'bg-amber-950/70 border-amber-500/30 text-amber-300 hover:bg-amber-900/80'
+          }`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${daysLeft <= 1 ? 'bg-rose-400 animate-pulse' : 'bg-amber-400'}`} />
+          {daysLeft > 0 ? `${daysLeft}d Cloud` : 'หมดอายุบนคลาวด์'}
+        </span>
+      </Tooltip>
     );
   }
 
   return null;
+}
+
+export function getStorageRetentionBadge(project: UserProject) {
+  return <StorageRetentionTag project={project} />;
 }
 
 function ProjectThumbnailImage({
@@ -738,28 +789,11 @@ export function RecentProjects() {
                 />
 
                 {/* Status & Source Badge (Top Left) */}
-                <div className="absolute top-2 left-2 pointer-events-none">
-                  {localCachedIds.has(project.id) ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/90 backdrop-blur-md border border-emerald-500/40 text-emerald-300 text-[10px] font-semibold shadow">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span>💾 ในเครื่องนี้</span>
-                    </span>
-                  ) : project.proxy_url ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-950/90 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-[10px] font-semibold shadow">
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
-                      <span>☁️ Cloud R2</span>
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-zinc-950/90 backdrop-blur-md border border-zinc-700/80 text-zinc-300 text-[10px] font-medium shadow">
-                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
-                      <span>📝 ซับไตเติล</span>
-                    </span>
-                  )}
-                </div>
-
-                {/* Retention / Expiry Badge (Bottom Left) */}
-                <div className="absolute bottom-2 left-2 pointer-events-none">
-                  {getStorageRetentionBadge(project)}
+                <div className="absolute top-2 left-2 z-10">
+                  <StorageSourceBadge
+                    isLocal={localCachedIds.has(project.id)}
+                    hasProxy={Boolean(project.proxy_url)}
+                  />
                 </div>
 
                 {/* Delete Button (Top Right) */}
@@ -792,18 +826,14 @@ export function RecentProjects() {
                 )}
               </div>
 
-              {/* Bottom Text Area: Project Title + Date Only */}
+              {/* Bottom Text Area: Project Title + Date + Retention Tag */}
               <div className="p-3 space-y-1">
                 <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-400 transition-colors" title={getProjectDisplayTitle(project)}>
                   {getProjectDisplayTitle(project)}
                 </h4>
                 <div className="flex items-center justify-between gap-1 text-[11px] text-zinc-400 font-medium">
                   <span>{formatRelativeTime(project.updated_at || project.created_at)}</span>
-                  {project.storage_tier === 'vip' ? (
-                    <span className="text-[10px] font-bold text-purple-400">VIP</span>
-                  ) : project.proxy_url ? (
-                    <span className="text-[10px] text-amber-400/90">7d Cloud</span>
-                  ) : null}
+                  <StorageRetentionTag project={project} />
                 </div>
               </div>
             </div>
@@ -843,19 +873,14 @@ export function RecentProjects() {
                     <h4 className="text-xs sm:text-sm font-bold text-zinc-100 truncate group-hover:text-orange-300 transition-colors" title={getProjectDisplayTitle(project)}>
                       {getProjectDisplayTitle(project)}
                     </h4>
-                    {localCachedIds.has(project.id) ? (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-emerald-950/80 border border-emerald-500/30 text-emerald-300 text-[9.5px] font-semibold">
-                        💾 ในเครื่องนี้
-                      </span>
-                    ) : project.proxy_url ? (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 text-[9.5px] font-semibold">
-                        ☁️ Cloud R2
-                      </span>
-                    ) : null}
+                    <StorageSourceBadge
+                      isLocal={localCachedIds.has(project.id)}
+                      hasProxy={Boolean(project.proxy_url)}
+                    />
                   </div>
                   <div className="flex items-center gap-2 text-[11px] text-zinc-400 font-medium flex-wrap">
                     <span>{formatRelativeTime(project.updated_at || project.created_at)}</span>
-                    {getStorageRetentionBadge(project)}
+                    <StorageRetentionTag project={project} />
                   </div>
                 </div>
               </div>

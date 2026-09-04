@@ -353,28 +353,14 @@ export default function EditorPage() {
                   <span>ความยาว: {mediaDuration ? `${Math.round(mediaDuration)}s` : '--'}</span>
                   <span>•</span>
                   <span className="text-emerald-400 font-semibold">{captions.length} ท่อนซับ</span>
-                  {transcriptionMeta && (
+                  {transcriptionMeta && (transcriptionMeta.provider === 'groq' || transcriptionMeta.isFallback) && (
                     <>
                       <span>•</span>
-                      {transcriptionMeta.provider === 'hybrid' ? (
-                        <Tooltip content="✨ ระบบ Hybrid: ถอดคำภาษาไทยถูกต้อง 100% ด้วย Gemini + จังหวะคลื่นเสียงเป๊ะด้วย Groq Whisper" position="bottom">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gradient-to-r from-emerald-500/15 via-teal-500/15 to-cyan-500/15 border border-emerald-500/30 text-emerald-300 shadow-sm">
-                            <span>✨ {getModelDisplayName(transcriptionMeta.provider, transcriptionMeta.model)}</span>
-                          </span>
-                        </Tooltip>
-                      ) : transcriptionMeta.provider === 'groq' || transcriptionMeta.isFallback ? (
-                        <Tooltip content="Gemini คิวยาวชั่วคราว • สลับใช้ Groq Whisper สำรองอัตโนมัติ" position="bottom">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-300">
-                            <span>⚠️ {getModelDisplayName(transcriptionMeta.provider, transcriptionMeta.model)} (สายสำรอง)</span>
-                          </span>
-                        </Tooltip>
-                      ) : (
-                        <Tooltip content={`ถอดเสียงด้วย ${getModelDisplayName(transcriptionMeta.provider, transcriptionMeta.model)} คุณภาพสูง`} position="bottom">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-500/10 border border-emerald-500/25 text-emerald-400">
-                            <span>⚡ {getModelDisplayName(transcriptionMeta.provider, transcriptionMeta.model)}</span>
-                          </span>
-                        </Tooltip>
-                      )}
+                      <Tooltip content="Gemini คิวยาวชั่วคราว • สลับใช้ Groq Whisper สำรองอัตโนมัติ" position="bottom">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-amber-500/15 border border-amber-500/30 text-amber-300">
+                          <span>⚠️ {getModelDisplayName(transcriptionMeta.provider, transcriptionMeta.model)} (สายสำรอง)</span>
+                        </span>
+                      </Tooltip>
                     </>
                   )}
                   {file ? (

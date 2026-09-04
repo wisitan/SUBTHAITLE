@@ -35,13 +35,13 @@ export function Tooltip({
   };
 
   return (
-    <div className={`relative group group/tooltip inline-flex items-center justify-center ${className}`}>
+    <div className={`relative group/tooltip inline-flex items-center justify-center ${className}`}>
       {children}
       <div
         role="tooltip"
-        className={`absolute ${getPositionClass()} z-50 pointer-events-none transition-all duration-150 ease-out opacity-0 invisible scale-95 group-hover:opacity-100 group-hover:visible group-hover:scale-100 group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:scale-100`}
+        className={`absolute ${getPositionClass()} z-50 pointer-events-none transition-all duration-150 ease-out opacity-0 invisible scale-95 group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-hover/tooltip:scale-100`}
       >
-        <div className="px-2.5 py-1 text-[11px] font-semibold text-zinc-100 bg-[#0f0f18] border border-orange-500/70 rounded-lg shadow-2xl shadow-black/80 whitespace-nowrap flex items-center gap-1.5 backdrop-blur-md ring-1 ring-orange-500/30">
+        <div className="px-2.5 py-1.5 text-[11px] font-medium text-zinc-100 bg-[#0f0f18]/95 border border-orange-500/70 rounded-lg shadow-2xl shadow-black/80 max-w-xs sm:max-w-sm whitespace-normal leading-snug text-left backdrop-blur-md ring-1 ring-orange-500/30">
           <span>{content}</span>
         </div>
       </div>
