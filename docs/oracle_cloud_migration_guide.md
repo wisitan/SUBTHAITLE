@@ -22,7 +22,7 @@
 ```mermaid
 flowchart TD
     subgraph Client ["💻 Client Browser"]
-        A["ผู้ใช้งานอัปโหลดวิดีโอ / เสียง (15-30 นาที)"]
+        A["ผู้ใช้งานอัปโหลดวิดีโอ / เสียง (สูงสุด 20 นาที / 1.5 GB)"]
     end
 
     subgraph OracleCloud ["☁️ Oracle Cloud Always Free (Singapore Region)"]
@@ -174,7 +174,7 @@ flowchart TD
 1. **ปลดล็อก Request Body Limit ใน Next.js:**
    ใน `src/app/api/transcribe/route.ts` ไม่ถูกจำกัดขนาด 4.5 MB ของ Vercel อีกต่อไป สามารถรับไฟล์ขนาด 20–50 MB ได้ทันที
 2. **ไม่ต้องกังวลเรื่อง Execution Timeout:**
-   ฟังก์ชันใน Node.js สามารถรันยาวต่อเนื่อง 2–5 นาทีได้โดยไม่ถูกตัดสาย ทำให้ AI ถอดเสียงคลิป 15–30 นาทีและส่งผลลัพธ์กลับมาครบถ้วน
+   ฟังก์ชันใน Node.js สามารถรันยาวต่อเนื่อง 2–5 นาทีได้โดยไม่ถูกตัดสาย ทำให้ AI ถอดเสียงคลิปสูงสุด 20 นาทีและส่งผลลัพธ์กลับมาครบถ้วน
 
 ---
 

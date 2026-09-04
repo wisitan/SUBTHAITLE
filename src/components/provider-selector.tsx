@@ -117,7 +117,7 @@ export function ProviderSelector() {
                   คงเหลือ {creditsMinutes} นาที
                 </span>
                 <span className="text-[10px] text-zinc-300 hidden sm:inline">
-                  • คลิปยาว 30 นาที / 1.5GB
+                  • คลิปยาว 20 นาที / 1.5GB
                 </span>
               </div>
             </div>

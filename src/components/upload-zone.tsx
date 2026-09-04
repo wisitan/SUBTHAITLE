@@ -224,9 +224,9 @@ export function UploadZone() {
       );
       return;
     }
-    if (providerMode === 'credits' && mediaDuration > 1830) {
+    if (providerMode === 'credits' && mediaDuration > 1230) {
       setErrorMessage(
-        '⚠️ คลิปวิดีโอยาวเกิน 30 นาทีซึ่งเป็นขีดจำกัดสูงสุดต่อคลิปของระบบ เพื่อความเสถียรในการประมวลผล กรุณาตัดแบ่งคลิปเป็นช่วงไม่เกิน 30 นาทีนะคะ'
+        '⚠️ คลิปวิดีโอยาวเกิน 20 นาทีซึ่งเป็นขีดจำกัดสูงสุดต่อคลิปของระบบ เพื่อความเสถียรและความแม่นยำสูงสุด กรุณาตัดแบ่งคลิปเป็นช่วงไม่เกิน 20 นาทีนะคะ'
       );
       return;
     }
@@ -415,7 +415,7 @@ export function UploadZone() {
               ) : (
                 <span className="px-2.5 py-1 text-[11px] rounded-lg bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 font-semibold flex items-center gap-1 shadow-sm">
                   <Zap className="w-3 h-3" />
-                  โหมดเครดิต: สูงสุด 1.5 GB • ยาว 30 นาที
+                  โหมดเครดิต: สูงสุด 1.5 GB • ยาว 20 นาที
                 </span>
               )}
             </div>
@@ -546,7 +546,7 @@ export function UploadZone() {
           {videoUrl && (() => {
             const isFreeMode = providerMode === 'free' || providerMode === 'google_free' || providerMode === 'groq_free';
             const isOverFreeLimit = isFreeMode && mediaDuration > 125;
-            const isOverCreditLimit = providerMode === 'credits' && mediaDuration > 1830;
+            const isOverCreditLimit = providerMode === 'credits' && mediaDuration > 1230;
             const requiredCredits = calculateCreditUsage(mediaDuration);
             const isNotEnoughCredits = providerMode === 'credits' && !isOverCreditLimit && creditsMinutes < requiredCredits;
 
@@ -614,14 +614,14 @@ export function UploadZone() {
                   </div>
                 )}
 
-                {/* Warning: Over Credit Limit (> 30 Mins) */}
+                {/* Warning: Over Credit Limit (> 20 Mins) */}
                 {isOverCreditLimit && (
                   <div className="p-4 rounded-2xl bg-rose-950/60 border border-rose-500/50 text-rose-200 text-xs sm:text-sm flex items-start gap-3 animate-in fade-in duration-200 shadow-md">
                     <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
                     <div className="flex-1 space-y-1">
-                      <span className="font-bold block text-white">⚠️ คลิปวิดีโอยาวเกิน 30 นาที</span>
+                      <span className="font-bold block text-white">⚠️ คลิปวิดีโอยาวเกิน 20 นาที</span>
                       <p>
-                        คลิปนี้ยาว {formatSecs(mediaDuration)} ซึ่งเกินกำหนดสูงสุด 30 นาทีต่อคลิปของระบบ เพื่อป้องกันปัญหาเบราว์เซอร์ค้างหรือส่งข้อมูลไม่สำเร็จ กรุณาตัดแบ่งคลิปเป็นช่วงไม่เกิน 30 นาทีนะคะ
+                        คลิปนี้ยาว {formatSecs(mediaDuration)} ซึ่งเกินกำหนดสูงสุด 20 นาทีต่อคลิปของระบบ เพื่อความเสถียรและความแม่นยำสูงสุด กรุณาตัดแบ่งคลิปเป็นช่วงไม่เกิน 20 นาทีนะคะ
                       </p>
                     </div>
                   </div>
@@ -671,7 +671,7 @@ export function UploadZone() {
                   isExtracting ||
                   isTranscribing ||
                   ((providerMode === 'free' || providerMode === 'google_free' || providerMode === 'groq_free') && mediaDuration > 125) ||
-                  (providerMode === 'credits' && mediaDuration > 1830) ||
+                  (providerMode === 'credits' && mediaDuration > 1230) ||
                   (providerMode === 'credits' && creditsMinutes < calculateCreditUsage(mediaDuration))
                 }
                 onClick={handleStartTranscribe}
