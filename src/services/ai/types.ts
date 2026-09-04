@@ -10,6 +10,7 @@ export interface STTResult {
   duration: number;
   words: STTWord[];
   language: string;
+  providerFallback?: string;
 }
 
 export interface STTOptions {

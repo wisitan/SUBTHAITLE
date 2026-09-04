@@ -29,27 +29,11 @@ export async function POST(request: NextRequest) {
 
     // 1. Quota & Credit Validation (Supabase integration)
     const supabase = getSupabaseAdmin();
-    let creditsPreDeducted = 0;
-
-    const refundCreditsIfFailed = async () => {
-      if (creditsPreDeducted > 0 && supabase && userId) {
-        try {
-          await supabase.rpc('add_user_credits', {
-            p_user_id: userId,
-            p_minutes: creditsPreDeducted,
-            p_description: 'คืนเครดิตเนื่องจากการถอดเสียงล้มเหลว (Auto-Refund)',
-          });
-          console.log(`[Transcribe Route] Auto-refunded ${creditsPreDeducted} credits to user ${userId}`);
-        } catch (err) {
-          console.error('[Transcribe Route] Error auto-refunding credits:', err);
-        }
-      }
-    };
-
     let usedQuotaCount: number | undefined = undefined;
     let remainingQuota: number | undefined = undefined;
+    let neededCredits = 0;
 
-    // Mode validation
+    // Mode validation & Pre-checks (READ-ONLY: DO NOT DEDUCT BEFORE TRANSCRIPTION SUCCEEDS)
     if (mode === 'free' || mode === 'groq_free' || mode === 'google_free') {
       // 1. Check Global System-Wide Daily Limit (500 clips / day)
       const systemUsage = getDailySystemUsage();
@@ -74,21 +58,41 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // 3. User Daily Quota Pre-check (Verify limit without consuming)
       if (supabase && userId) {
-        const { data: quotaRes } = await supabase.rpc('consume_groq_free_quota', { p_user_id: userId });
-        const firstRow = Array.isArray(quotaRes) ? quotaRes[0] : quotaRes;
-        if (firstRow && firstRow.allowed === false) {
-          return NextResponse.json({ error: firstRow.message }, { status: 429 });
-        }
-        if (firstRow && typeof firstRow.count === 'number') {
-          usedQuotaCount = firstRow.count;
-          remainingQuota = Math.max(0, 5 - firstRow.count);
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('groq_free_day, groq_free_count')
+            .eq('id', userId)
+            .maybeSingle();
+
+          if (profile) {
+            const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' });
+            const userDay = profile.groq_free_day;
+            const currentCount = userDay === today ? (profile.groq_free_count || 0) : 0;
+            if (currentCount >= 5) {
+              return NextResponse.json(
+                {
+                  error:
+                    'โควต้าใช้งานฟรีประจำวันของคุณครบ 5 คลิปแล้วค่ะ (รีเซ็ตใหม่ทุกเที่ยงคืน) กรุณาเลือกโหมด "โควต้าผู้สนับสนุน" เพื่อถอดเสียงต่อค่ะ',
+                },
+                { status: 429 }
+              );
+            }
+          }
+        } catch (checkErr) {
+          console.warn('[Transcribe Route] Quota pre-check warning:', checkErr);
         }
       }
-
-      // Track global free usage
-      incrementDailySystemUsage();
     } else if (mode === 'credits') {
+      if (!userId) {
+        return NextResponse.json(
+          { error: 'กรุณาเข้าสู่ระบบเพื่อใช้งานโหมดโควต้าผู้สนับสนุนค่ะ' },
+          { status: 401 }
+        );
+      }
+
       // 1. Credits mode duration limit: max 30 minutes (1830s)
       if (clientDuration > 1830) {
         return NextResponse.json(
@@ -100,23 +104,26 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const neededCredits = calculateCreditUsage(clientDuration);
-      if (supabase && userId) {
-        const { error: deductErr } = await supabase.rpc('deduct_user_credits', {
-          p_user_id: userId,
-          p_minutes: neededCredits,
-          p_description: `ถอดเสียงคลิปวิดีโอ (${neededCredits} นาที)`,
-        });
+      neededCredits = calculateCreditUsage(clientDuration);
+      if (supabase) {
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('credits_minutes')
+            .eq('id', userId)
+            .maybeSingle();
 
-        if (deductErr) {
-          return NextResponse.json(
-            {
-              error: `เครดิตคงเหลือไม่เพียงพอสำหรับการถอดเสียง (${neededCredits} นาที) กรุณาเติมเครดิตเพื่อใช้งานต่อค่ะ`,
-            },
-            { status: 402 }
-          );
+          if (!profile || (profile.credits_minutes ?? 0) < neededCredits) {
+            return NextResponse.json(
+              {
+                error: `เครดิตคงเหลือไม่เพียงพอสำหรับการถอดเสียง (${neededCredits} นาที) กรุณาเติมเครดิตเพื่อใช้งานต่อค่ะ`,
+              },
+              { status: 402 }
+            );
+          }
+        } catch (creditCheckErr) {
+          console.warn('[Transcribe Route] Credit pre-check warning:', creditCheckErr);
         }
-        creditsPreDeducted = neededCredits;
       }
     }
 
@@ -131,6 +138,35 @@ export async function POST(request: NextRequest) {
         duration: clientDuration,
       });
 
+      // 3. Post-Transcription Deductions: ONLY deduct quota or credits after AI delivers the goods!
+      if (mode === 'free' || mode === 'groq_free' || mode === 'google_free') {
+        if (supabase && userId) {
+          try {
+            const { data: quotaRes } = await supabase.rpc('consume_groq_free_quota', { p_user_id: userId });
+            const firstRow = Array.isArray(quotaRes) ? quotaRes[0] : quotaRes;
+            if (firstRow && typeof firstRow.count === 'number') {
+              usedQuotaCount = firstRow.count;
+              remainingQuota = Math.max(0, 5 - firstRow.count);
+            }
+          } catch (quotaDeductErr) {
+            console.error('[Transcribe Route] Error consuming free quota on success:', quotaDeductErr);
+          }
+        }
+        incrementDailySystemUsage();
+      } else if (mode === 'credits' && neededCredits > 0) {
+        if (supabase && userId) {
+          try {
+            await supabase.rpc('deduct_user_credits', {
+              p_user_id: userId,
+              p_minutes: neededCredits,
+              p_description: `ถอดเสียงคลิปวิดีโอ (${neededCredits} นาที)`,
+            });
+          } catch (creditDeductErr) {
+            console.error('[Transcribe Route] Error deducting user credits on success:', creditDeductErr);
+          }
+        }
+      }
+
       return NextResponse.json({
         success: true,
         text: result.text,
@@ -139,9 +175,11 @@ export async function POST(request: NextRequest) {
         words: result.words,
         usedQuotaCount,
         remainingQuota,
+        providerFallback: result.providerFallback,
       });
     } catch (sttError: unknown) {
-      await refundCreditsIfFailed();
+      // NOTE: No credits or free quotas were pre-deducted, so NO refund needed!
+      // The user NEVER loses quota or credit on failed attempts or retries.
       console.error('[Transcribe Route STT Error]:', sttError);
 
       const errObj = sttError && typeof sttError === 'object' ? (sttError as Record<string, unknown>) : null;

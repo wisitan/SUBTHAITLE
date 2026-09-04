@@ -19,6 +19,7 @@ export function ProviderSelector() {
     creditsMinutes,
     groqDailyUsageCount,
     maxGroqDailyQuota,
+    isAdmin,
   } = useAppStore();
 
   const { user, refreshProfile } = useAuth();
@@ -32,6 +33,30 @@ export function ProviderSelector() {
   const remainingDaily = Math.max(0, maxGroqDailyQuota - groqDailyUsageCount);
   const isFreeSelected = providerMode === 'free' || providerMode === 'groq_free' || providerMode === 'google_free';
   const isCreditsSelected = providerMode === 'credits';
+
+  const isDevOrUat =
+    typeof window !== 'undefined' &&
+    (window.location.hostname === 'localhost' ||
+      window.location.hostname.includes('uat') ||
+      window.location.hostname.includes('vercel.app'));
+
+  const handleResetQuota = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('ต้องการรีเซ็ตโควต้าฟรีประจำวันเป็น 5 คลิปเพื่อทดสอบต่อใช่ไหมคะ?')) return;
+    try {
+      if (user?.id) {
+        await fetch('/api/user/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'reset_quota', userId: user.id }),
+        });
+        await refreshProfile();
+      }
+      useAppStore.getState().resetQuotas(user?.id);
+    } catch (err) {
+      console.error('Reset quota error:', err);
+    }
+  };
 
   return (
     <div className="w-full max-w-full">
@@ -69,9 +94,27 @@ export function ProviderSelector() {
                   <CheckCircle2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 )}
               </div>
-              <span className={`text-[11px] font-semibold ${remainingDaily > 0 ? 'text-amber-400' : 'text-rose-400'}`}>
-                เหลือ {remainingDaily}/{maxGroqDailyQuota} คลิป
-              </span>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className={`text-[11px] font-semibold ${remainingDaily > 0 ? 'text-amber-400' : 'text-rose-400'}`}>
+                  เหลือ {remainingDaily}/{maxGroqDailyQuota} คลิป
+                </span>
+                {remainingDaily === 0 && (isDevOrUat || isAdmin) && (
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={handleResetQuota}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        handleResetQuota(e as unknown as React.MouseEvent);
+                      }
+                    }}
+                    className="text-[10.5px] text-amber-300 underline hover:text-amber-200 cursor-pointer font-normal"
+                    title="คลิกเพื่อรีเซ็ตโควต้าฟรีประจำวันเป็น 5 คลิปสำหรับการทดสอบ"
+                  >
+                    (คลิกเพื่อรีเซ็ต)
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

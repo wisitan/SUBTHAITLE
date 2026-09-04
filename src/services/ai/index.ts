@@ -88,12 +88,28 @@ export async function transcribeAudioBuffer(
         throw err;
       }
     } else {
-      // 2. Free User: Use Free Tier key only
+      // 2. Free User: Use Free Tier key first
       try {
         return await provider.transcribe(audioBuffer, { ...options, apiKey: freeKey });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
         console.warn('[STT Service] [Free User] Gemini Free tier error/limit:', msg);
+
+        // Smart Auto-Fallback: If Gemini Free is rate-limited/congested, immediately fall back to Groq Whisper
+        const groqKey = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
+        if (groqKey) {
+          console.log('[STT Service] [Free User] Gemini Free is congested. Seamlessly falling back to Groq Whisper...');
+          try {
+            const fallbackResult = await providers.groq.transcribe(audioBuffer, { ...options, apiKey: groqKey });
+            return {
+              ...fallbackResult,
+              providerFallback: 'groq',
+            };
+          } catch (groqErr) {
+            console.error('[STT Service] [Free User] Groq fallback also failed:', groqErr);
+          }
+        }
+
         throw err;
       }
     }
