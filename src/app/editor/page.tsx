@@ -34,7 +34,10 @@ function getModelDisplayName(provider?: string, model?: string): string {
     return 'Groq Whisper Large v3';
   }
   if (model?.includes('gemini-3.8')) return 'Google Gemini 3.8 Flash';
+  if (model?.includes('gemini-3.7')) return 'Google Gemini 3.7 Flash';
+  if (model?.includes('gemini-3.5-flash-lite')) return 'Google Gemini 3.5 Flash Lite';
   if (model?.includes('gemini-3.5')) return 'Google Gemini 3.5 Flash';
+  if (model?.includes('gemini-3.1-flash-lite')) return 'Google Gemini 3.1 Flash Lite';
   if (model?.includes('gemini-2.5')) return 'Google Gemini 2.5 Flash';
   if (model?.includes('gemini')) return 'Google Gemini Flash';
   return model || provider || 'AI Engine';

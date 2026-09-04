@@ -319,9 +319,15 @@ export function UploadZone() {
       const modelDisplayName =
         meta?.provider === 'groq' || meta?.isFallback
           ? 'Groq Whisper (สายสำรอง)'
-          : meta?.model === 'gemini-3.8-flash'
+          : meta?.model?.includes('3.8')
             ? 'Google Gemini 3.8 Flash'
-            : meta?.model || 'Google Gemini';
+            : meta?.model?.includes('3.7')
+              ? 'Google Gemini 3.7 Flash'
+              : meta?.model?.includes('3.5-flash-lite')
+                ? 'Google Gemini 3.5 Flash Lite'
+                : meta?.model?.includes('3.1-flash-lite')
+                  ? 'Google Gemini 3.1 Flash Lite'
+                  : meta?.model || 'Google Gemini';
 
       setStatus('ready', 100, `ถอดเสียงสำเร็จด้วย ${modelDisplayName}! กำลังเปิดหน้าตัดต่อ...`);
       setTranscribeMessage(`ถอดเสียงสำเร็จด้วย ${modelDisplayName}! กำลังเปิดหน้าโปรแกรมตัดต่อ...`);

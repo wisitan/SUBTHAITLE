@@ -112,12 +112,11 @@ export async function transcribeAudioBuffer(
         console.warn('[STT Service] [Free User] Gemini Free tier error/limit:', msg);
 
         // Smart Auto-Fallback:
-        // Only trigger Groq fallback if attempt >= 2 (so Gemini gets a chance to retry from the queue first,
-        // ensuring top Thai accuracy unless Gemini is consistently congested)
+        // Only trigger Groq fallback if attempt >= 3 (after exhausting Gemini's 4-model cascade across multiple queue attempts)
         const currentAttempt = options?.attempt ?? 1;
         const groqKey = process.env.GROQ_API_KEY || process.env.NEXT_PUBLIC_GROQ_API_KEY;
-        if (currentAttempt >= 2 && groqKey) {
-          console.log(`[STT Service] [Free User] Gemini Free is congested (attempt ${currentAttempt}). Seamlessly falling back to Groq Whisper...`);
+        if (currentAttempt >= 3 && groqKey) {
+          console.log(`[STT Service] [Free User] Gemini models all congested (attempt ${currentAttempt}). Seamlessly falling back to Groq Whisper...`);
           try {
             const fallbackResult = await providers.groq.transcribe(audioBuffer, { ...options, apiKey: groqKey });
             return {

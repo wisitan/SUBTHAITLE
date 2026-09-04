@@ -65,14 +65,14 @@ ${durationRule ? durationRule + '\n' : ''}- Output language: Thai (preserve natu
 }`;
 
     // Available models supporting multimodal audio (prioritize highest accuracy flash models)
-    // If fastFail is enabled (e.g. probing free tier for paid users), test only the primary model
+    // If fastFail is enabled (e.g. probing free tier for paid users), test primary then secondary
     const modelsToTry = options?.fastFail
-      ? ['gemini-3.8-flash']
+      ? ['gemini-3.8-flash', 'gemini-3.7-flash']
       : [
           'gemini-3.8-flash',
-          'gemini-3.6-flash',
-          'gemini-3.5-flash',
-          'gemini-flash-latest',
+          'gemini-3.7-flash',
+          'gemini-3.5-flash-lite',
+          'gemini-3.1-flash-lite',
         ];
     const perRequestTimeout = options?.timeoutMs || (options?.fastFail ? 7000 : 25000);
     let lastError: Error | null = null;
@@ -111,7 +111,7 @@ ${durationRule ? durationRule + '\n' : ''}- Output language: Thai (preserve natu
 
         if (!res.ok) {
           const errBody = await res.text();
-          console.warn(`[Gemini STT] Model ${model} returned status ${res.status}: ${errBody.slice(0, 150)}`);
+          console.warn(`[Gemini STT] Model ${model} returned status ${res.status}: ${errBody.slice(0, 150)}. Cascading to next model...`);
 
           const is429 =
             res.status === 429 ||
@@ -135,15 +135,8 @@ ${durationRule ? durationRule + '\n' : ''}- Output language: Thai (preserve natu
           );
           lastError = err;
 
-          // If quota exhausted (429), stop trying other models under the same key
-          if (is429) {
-            break;
-          }
-
-          // If 503 (high demand on this model), brief pause and try the next model in modelsToTry
-          if (is503) {
-            await new Promise((r) => setTimeout(r, 600));
-          }
+          // Do NOT break on 429: each Gemini model has distinct quotas and server capacity!
+          // Continue cascading to next available model in modelsToTry
           continue;
         }
 
