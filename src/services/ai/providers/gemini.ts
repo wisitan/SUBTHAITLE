@@ -17,7 +17,7 @@ export class GeminiSTTProvider implements STTProvider {
 
   async transcribe(
     audioBuffer: Buffer,
-    options?: { language?: string; apiKey?: string }
+    options?: { language?: string; apiKey?: string; fastFail?: boolean; timeoutMs?: number }
   ): Promise<STTResult> {
     const apiKey =
       options?.apiKey ||
@@ -57,12 +57,16 @@ Strict Rules:
 }`;
 
     // Available models supporting multimodal audio (prioritize highest accuracy flash models)
-    const modelsToTry = [
-      'gemini-3.8-flash',
-      'gemini-3.6-flash',
-      'gemini-3.5-flash',
-      'gemini-flash-latest',
-    ];
+    // If fastFail is enabled (e.g. probing free tier for paid users), test only the primary model
+    const modelsToTry = options?.fastFail
+      ? ['gemini-3.8-flash']
+      : [
+          'gemini-3.8-flash',
+          'gemini-3.6-flash',
+          'gemini-3.5-flash',
+          'gemini-flash-latest',
+        ];
+    const perRequestTimeout = options?.timeoutMs || (options?.fastFail ? 7000 : 25000);
     let lastError: Error | null = null;
 
     for (const model of modelsToTry) {
@@ -72,6 +76,7 @@ Strict Rules:
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(perRequestTimeout),
             body: JSON.stringify({
               contents: [
                 {

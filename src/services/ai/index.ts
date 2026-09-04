@@ -58,17 +58,27 @@ export async function transcribeAudioBuffer(
     const paidKey = process.env.GEMINI_PAID_API_KEY;
 
     if (isPaidUser) {
-      // 1. Paid User: Try Free tier first to optimize cost
+      // 1. Paid User: Try Free tier first to optimize cost, with fastFail (7s max)
       try {
         console.log('[STT Service] [Paid User] Trying Gemini Free Tier first to save credits...');
-        return await provider.transcribe(audioBuffer, { ...options, apiKey: freeKey });
+        return await provider.transcribe(audioBuffer, {
+          ...options,
+          apiKey: freeKey,
+          fastFail: true,
+          timeoutMs: 7000,
+        });
       } catch (err: unknown) {
-        // If Free Tier fails for ANY reason (429 rate limit, 503 high demand, or server error),
+        // If Free Tier fails for ANY reason (429 rate limit, 503 high demand, timeout, or server error),
         // immediately escalate to Gemini Paid Tier to guarantee 100% uptime for paid users!
         console.warn('[STT Service] [Paid User] Gemini Free tier failed or congested. Escalating to Gemini Paid Tier...', err);
         if (paidKey) {
           try {
-            return await provider.transcribe(audioBuffer, { ...options, apiKey: paidKey });
+            return await provider.transcribe(audioBuffer, {
+              ...options,
+              apiKey: paidKey,
+              fastFail: true, // Focus directly on primary gemini-3.8-flash without looping 4 models
+              timeoutMs: 40000, // Maximum 40s (7s probe + 40s = 47s, safely under Vercel's 60s limit)
+            });
           } catch (paidErr: unknown) {
             console.error('[STT Service] [Paid User] Gemini Paid tier also failed:', paidErr);
             throw paidErr;

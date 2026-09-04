@@ -12,7 +12,16 @@ export interface STTResult {
   language: string;
 }
 
+export interface STTOptions {
+  language?: string;
+  apiKey?: string;
+  fastFail?: boolean;
+  timeoutMs?: number;
+  mode?: 'free' | 'credits' | string;
+  provider?: string;
+}
+
 export interface STTProvider {
   name: string;
-  transcribe(audioBuffer: Buffer, options?: { language?: string; apiKey?: string }): Promise<STTResult>;
+  transcribe(audioBuffer: Buffer, options?: STTOptions): Promise<STTResult>;
 }
