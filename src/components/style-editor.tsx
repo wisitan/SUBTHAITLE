@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Type,
   MoveVertical,
@@ -49,7 +49,10 @@ const HIGHLIGHT_PALETTE = [
   { name: 'Gold', hex: '#FFD700' },
 ];
 
+export type StyleCategory = 'typography' | 'colors' | 'effects' | 'layout' | 'all';
+
 export function StyleEditor() {
+  const [activeCategory, setActiveCategory] = useState<StyleCategory>('typography');
   const style = useAppStore((s) => s.style);
   const setStyle = useAppStore((s) => s.setStyle);
   const setActivePresetId = useAppStore((s) => s.setActivePresetId);
@@ -64,7 +67,7 @@ export function StyleEditor() {
   };
 
   return (
-    <div className="flex-1 min-h-0 h-full overflow-y-auto p-4 sm:p-5 text-zinc-100 space-y-5 scrollbar-thin scrollbar-thumb-zinc-800">
+    <div className="flex-1 min-h-0 h-full overflow-y-auto p-4 sm:p-5 text-zinc-100 space-y-4 scrollbar-thin scrollbar-thumb-zinc-800">
       {/* Header with Reset Default Button */}
       <div className="flex items-center justify-between pb-2 border-b border-zinc-800/80">
         <div>
@@ -88,11 +91,43 @@ export function StyleEditor() {
         </button>
       </div>
 
-      {/* 🔤 Tool Card 1: Font Picker Component */}
-      <FontPicker
-        selectedFont={style.fontFamily}
-        onSelectFont={(fontFamily) => setStyle({ fontFamily })}
-      />
+      {/* 🧭 Sticky Category Sub-Tabs (Pill Navigation - Eliminates Long Scrolling) */}
+      <div className="sticky top-0 z-20 -mx-4 sm:-mx-5 px-4 sm:px-5 py-2.5 bg-[#0e0e16]/95 backdrop-blur-md border-b border-zinc-800/80 flex items-center gap-1.5 overflow-x-auto scrollbar-none shadow-md">
+        {[
+          { id: 'typography', label: 'ตัวอักษร', icon: Type, count: 'ฟอนต์, ขนาด' },
+          { id: 'colors', label: 'สี & กล่อง', icon: Palette, count: 'สี, พื้นหลัง' },
+          { id: 'effects', label: 'ขอบ & เงา', icon: Sun, count: 'ขอบ, เงา' },
+          { id: 'layout', label: 'ตำแหน่ง & ระยะ', icon: MoveVertical, count: 'ขึ้น-ลง, กว้าง' },
+          { id: 'all', label: 'ทั้งหมด', icon: Sliders, count: 'ดูทั้งหมด' },
+        ].map((tab) => {
+          const isActive = activeCategory === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveCategory(tab.id as StyleCategory)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border ${
+                isActive
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 border-transparent shadow-md shadow-orange-500/20 ring-1 ring-orange-400 font-bold'
+                  : 'bg-[#151522] border-zinc-700/80 text-zinc-300 hover:text-white hover:bg-[#202030] hover:border-zinc-600'
+              }`}
+            >
+              <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-zinc-950 stroke-[2.5]' : 'text-orange-400'}`} />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 🔤 Category 1: Typography (Font + Size + Weight) */}
+      {(activeCategory === 'typography' || activeCategory === 'all') && (
+        <>
+          {/* 🔤 Tool Card 1: Font Picker Component */}
+          <FontPicker
+            selectedFont={style.fontFamily}
+            onSelectFont={(fontFamily) => setStyle({ fontFamily })}
+          />
 
       {/* 📏 Tool Card 2: Typography, Size & Weight */}
       <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
@@ -222,12 +257,15 @@ export function StyleEditor() {
           </div>
         </div>
       </div>
+        </>
+      )}
 
-      {/* 🎨 Tool Card 3: Text Color & Highlight */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
-          <div className="w-6 h-6 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-yellow-500 group-focus-within/card:text-zinc-950 transition-all">
-            <Palette className="w-3.5 h-3.5" />
+      {/* 🎨 Category 2: Text Color & Word Highlight (Card 3) */}
+      {(activeCategory === 'colors' || activeCategory === 'all') && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
+          <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
+            <div className="w-6 h-6 rounded-lg bg-yellow-500/20 border border-yellow-500/40 text-yellow-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-yellow-500 group-focus-within/card:text-zinc-950 transition-all">
+              <Palette className="w-3.5 h-3.5" />
           </div>
           <h4 className="text-sm font-bold text-white">
             สีข้อความและ Word Highlight (Colors & Highlight):
@@ -450,11 +488,15 @@ export function StyleEditor() {
           )}
         </div>
       </div>
+      )}
 
-      {/* 📐 Tool Card 4: Letter & Line Spacing */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
-          <div className="w-6 h-6 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-orange-500 group-focus-within/card:text-zinc-950 transition-all">
+      {/* 🧭 Category 4: Placement, Layout & Spacing (Cards 4 & 5) */}
+      {(activeCategory === 'layout' || activeCategory === 'all') && (
+        <>
+          {/* 📐 Tool Card 4: Letter & Line Spacing */}
+          <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
+            <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
+              <div className="w-6 h-6 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-orange-500 group-focus-within/card:text-zinc-950 transition-all">
             <Space className="w-3.5 h-3.5" />
           </div>
           <h4 className="text-sm font-bold text-white">
@@ -666,85 +708,6 @@ export function StyleEditor() {
           </div>
         </div>
 
-        {/* Subtitle Max Width & Side Margins */}
-        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-200 font-medium flex items-center gap-1.5">
-              <Maximize2 className="w-4 h-4 text-orange-400" />
-              <span>ความกว้างสูงสุด / ระยะขอบข้าง (Width & Margins):</span>
-            </span>
-            <span className="font-mono font-bold text-orange-300 bg-orange-500/15 px-2.5 py-0.5 rounded-lg border border-orange-500/40 text-sm shadow-sm">
-              {style.maxWidth ?? 92}%
-            </span>
-          </div>
-
-          <input
-            type="range"
-            min={60}
-            max={98}
-            step={1}
-            value={style.maxWidth ?? 92}
-            aria-label="ความกว้างสูงสุดของแถบซับไตเติล"
-            onChange={(e) => setStyle({ maxWidth: parseInt(e.target.value, 10) })}
-            className="w-full accent-orange-500 cursor-pointer"
-          />
-
-          {/* Quick Width Presets (Uniform 2-Line Layout) */}
-          <div className="grid grid-cols-4 gap-1.5 pt-1">
-            <button
-              type="button"
-              onClick={() => setStyle({ maxWidth: 78 })}
-              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
-                (style.maxWidth ?? 78) === 78
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
-                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
-              }`}
-            >
-              <span className="block text-xs font-semibold leading-tight">Safe Zone</span>
-              <span className="block text-[11px] opacity-85 font-mono leading-tight">(78%)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setStyle({ maxWidth: 85 })}
-              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
-                (style.maxWidth ?? 78) === 85
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
-                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
-              }`}
-            >
-              <span className="block text-xs font-semibold leading-tight">มาตรฐาน</span>
-              <span className="block text-[11px] opacity-85 font-mono leading-tight">(85%)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setStyle({ maxWidth: 92 })}
-              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
-                (style.maxWidth ?? 78) === 92
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
-                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
-              }`}
-            >
-              <span className="block text-xs font-semibold leading-tight">กว้าง</span>
-              <span className="block text-[11px] opacity-85 font-mono leading-tight">(92%)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setStyle({ maxWidth: 98 })}
-              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
-                (style.maxWidth ?? 78) === 98
-                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
-                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
-              }`}
-            >
-              <span className="block text-xs font-semibold leading-tight">เต็มจอ</span>
-              <span className="block text-[11px] opacity-85 font-mono leading-tight">(98%)</span>
-            </button>
-          </div>
-          <p className="text-xs text-zinc-300 pt-0.5">
-            💡 ปรับ 78% (Safe Zone) เพื่อให้เว้นระยะปลอดภัยจากปุ่มแชร์และหัวใจฝั่งขวา
-          </p>
-        </div>
-
         {/* Position Y (Up-Down) */}
         <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between text-sm">
@@ -891,16 +854,98 @@ export function StyleEditor() {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* 🔲 Tool Card 6: Shadow & Outline */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
-          <div className="w-6 h-6 rounded-lg bg-teal-500/20 border border-teal-500/40 text-teal-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-teal-500 group-focus-within/card:text-zinc-950 transition-all">
-            <Sun className="w-3.5 h-3.5" />
+        {/* Subtitle Max Width & Side Margins */}
+        <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-zinc-200 font-medium flex items-center gap-1.5">
+              <Maximize2 className="w-4 h-4 text-orange-400" />
+              <span>ความกว้างสูงสุด / ระยะขอบข้าง (Width & Margins):</span>
+            </span>
+            <span className="font-mono font-bold text-orange-300 bg-orange-500/15 px-2.5 py-0.5 rounded-lg border border-orange-500/40 text-sm shadow-sm">
+              {style.maxWidth ?? 92}%
+            </span>
           </div>
-          <h4 className="text-sm font-bold text-white">
-            เงาและเส้นขอบตัวอักษร (Shadow & Stroke Outline):
+
+          <input
+            type="range"
+            min={60}
+            max={98}
+            step={1}
+            value={style.maxWidth ?? 92}
+            aria-label="ความกว้างสูงสุดของแถบซับไตเติล"
+            onChange={(e) => setStyle({ maxWidth: parseInt(e.target.value, 10) })}
+            className="w-full accent-orange-500 cursor-pointer"
+          />
+
+          {/* Quick Width Presets (Uniform 2-Line Layout) */}
+          <div className="grid grid-cols-4 gap-1.5 pt-1">
+            <button
+              type="button"
+              onClick={() => setStyle({ maxWidth: 78 })}
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.maxWidth ?? 78) === 78
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
+              }`}
+            >
+              <span className="block text-xs font-semibold leading-tight">Safe Zone</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(78%)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ maxWidth: 85 })}
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.maxWidth ?? 78) === 85
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
+              }`}
+            >
+              <span className="block text-xs font-semibold leading-tight">มาตรฐาน</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(85%)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ maxWidth: 92 })}
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.maxWidth ?? 78) === 92
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
+              }`}
+            >
+              <span className="block text-xs font-semibold leading-tight">กว้าง</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(92%)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setStyle({ maxWidth: 98 })}
+              className={`p-1.5 rounded-xl border text-center flex flex-col items-center justify-center min-h-[46px] transition-colors cursor-pointer ${
+                (style.maxWidth ?? 78) === 98
+                  ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/40'
+                  : 'bg-[#242434] border-zinc-700 hover:bg-[#2e2e42] hover:border-orange-400 text-zinc-100 shadow-sm'
+              }`}
+            >
+              <span className="block text-xs font-semibold leading-tight">เต็มจอ</span>
+              <span className="block text-[11px] opacity-85 font-mono leading-tight">(98%)</span>
+            </button>
+          </div>
+          <p className="text-xs text-zinc-300 pt-0.5">
+            💡 ปรับ 78% (Safe Zone) เพื่อให้เว้นระยะปลอดภัยจากปุ่มแชร์และหัวใจฝั่งขวา
+          </p>
+        </div>
+      </div>
+        </>
+      )}
+
+      {/* ✨ Category 3: Shadow & Outline Effects (Card 6) */}
+      {(activeCategory === 'effects' || activeCategory === 'all') && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
+          <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
+            <div className="w-6 h-6 rounded-lg bg-teal-500/20 border border-teal-500/40 text-teal-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-teal-500 group-focus-within/card:text-zinc-950 transition-all">
+              <Sun className="w-3.5 h-3.5" />
+            </div>
+            <h4 className="text-sm font-bold text-white">
+              เงาและเส้นขอบตัวอักษร (Shadow & Stroke Outline):
           </h4>
         </div>
 
@@ -996,17 +1041,19 @@ export function StyleEditor() {
           )}
         </div>
       </div>
+      )}
 
-      {/* 📦 Tool Card 7: Background Box & Opacity */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
-        <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
-          <div className="w-6 h-6 rounded-lg bg-sky-500/20 border border-sky-500/40 text-sky-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-sky-500 group-focus-within/card:text-zinc-950 transition-all">
-            <Layers className="w-3.5 h-3.5" />
+      {/* 📦 Category 2 (Part 2): Background Box & Opacity (Card 7) */}
+      {(activeCategory === 'colors' || activeCategory === 'all') && (
+        <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-4 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
+          <div className="flex items-center gap-2 pb-2.5 border-b border-zinc-700/70">
+            <div className="w-6 h-6 rounded-lg bg-sky-500/20 border border-sky-500/40 text-sky-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-sky-500 group-focus-within/card:text-zinc-950 transition-all">
+              <Layers className="w-3.5 h-3.5" />
+            </div>
+            <h4 className="text-sm font-bold text-white">
+              กล่องพื้นหลังซับไตเติล (Background Box & Opacity):
+            </h4>
           </div>
-          <h4 className="text-sm font-bold text-white">
-            กล่องพื้นหลังซับไตเติล (Background Box & Opacity):
-          </h4>
-        </div>
 
         <div className="p-3.5 sm:p-4 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 space-y-3 hover:border-zinc-500/80 focus-within:border-orange-500/60 transition-all">
           <div className="flex items-center justify-between">
@@ -1149,6 +1196,7 @@ export function StyleEditor() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
