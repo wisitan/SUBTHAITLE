@@ -22,7 +22,16 @@ interface Props {
 }
 
 const MAX_CUSTOM_FONTS = 4;
-const TOP_POPULAR_FONTS = ['Kanit', 'Prompt', 'Sarabun', 'Bai Jamjuree', 'Chakra Petch'];
+const TOP_POPULAR_FONTS = [
+  'Kanit',
+  'Prompt',
+  'Sarabun',
+  'Bai Jamjuree',
+  'Chakra Petch',
+  'Mali',
+  'IBM Plex Sans Thai',
+  'Itim',
+];
 
 export function FontPicker({ selectedFont, onSelectFont }: Props) {
   const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +45,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
     loadGoogleFont(selectedFont);
   }, [selectedFont]);
 
-  // Preload top fonts for preview
+  // Preload top popular fonts for preview
   useEffect(() => {
     TOP_POPULAR_FONTS.forEach((f) => {
       loadGoogleFont(f);
@@ -117,7 +126,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
 
   return (
     <div className="p-4 sm:p-5 rounded-3xl bg-[#181824] border border-zinc-700/90 shadow-xl space-y-3.5 transition-all duration-200 group/card hover:bg-[#20202e] hover:border-orange-500/60 focus-within:bg-[#20202e] focus-within:border-orange-500 focus-within:ring-2 focus-within:ring-orange-500/30">
-      {/* 1. Header Bar: Title + Change Font Toggle + Upload Button */}
+      {/* 1. Header Bar: Title + Upload Button */}
       <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-zinc-700/70">
         <label className="text-sm font-bold text-white flex items-center gap-2">
           <div className="w-6 h-6 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-400 flex items-center justify-center shrink-0 group-hover/card:scale-110 group-focus-within/card:scale-110 group-focus-within/card:bg-orange-500 group-focus-within/card:text-zinc-950 transition-all">
@@ -131,7 +140,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading || isCustomFull}
-            className="px-2.5 py-1 rounded-xl bg-[#0e0e16] hover:bg-[#252536] border border-zinc-700 text-orange-400 hover:text-orange-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 rounded-xl bg-[#0e0e16] hover:bg-[#252536] border border-zinc-700 text-orange-400 hover:text-orange-300 text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
             title={isCustomFull ? 'อัปโหลดครบ 4 ฟอนต์แล้ว' : 'อัปโหลดไฟล์ฟอนต์ภาษาไทย .ttf / .otf (สูงสุด 4 ฟอนต์)'}
           >
             {isUploading ? (
@@ -139,25 +148,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
             ) : (
               <Upload className="w-3.5 h-3.5" />
             )}
-            <span className="hidden sm:inline">{isCustomFull ? 'ฟอนต์ครบ' : '+ อัปโหลดฟอนต์'}</span>
-            <span className="sm:hidden">+ ฟอนต์</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsOpen(!isOpen)}
-            className={`px-3 py-1 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm ${
-              isOpen
-                ? 'bg-orange-500 text-zinc-950 font-bold border-transparent shadow-md'
-                : 'bg-[#0e0e16] hover:bg-[#222232] border-zinc-700 text-zinc-200 hover:border-orange-500/50'
-            }`}
-          >
-            <span>{isOpen ? 'ย่อเก็บ' : `ดูทั้งหมด (${THAI_SYSTEM_FONTS.length})`}</span>
-            {isOpen ? (
-              <ChevronUp className="w-3.5 h-3.5 stroke-[2.5]" />
-            ) : (
-              <ChevronDown className="w-3.5 h-3.5 text-orange-400" />
-            )}
+            <span>{isCustomFull ? 'ฟอนต์ครบ (4/4)' : '+ อัปโหลดฟอนต์'}</span>
           </button>
         </div>
 
@@ -174,7 +165,7 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
         <p className="text-xs text-rose-400 font-medium">{uploadError}</p>
       )}
 
-      {/* 2. Compact Active Font Capsule (Always Visible - No Scroll Trap!) */}
+      {/* 2. Compact Active Font Capsule (Always Visible) */}
       <div className="flex items-center justify-between p-3 rounded-2xl bg-[#0f0f18] border border-zinc-700/80 hover:border-orange-500/40 transition-all gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <div className="w-8 h-8 rounded-xl bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center font-bold text-sm shrink-0">
@@ -206,15 +197,17 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
         </div>
       </div>
 
-      {/* 3. Quick Popular Font Chips (1-Click Fast Switch for Creators) */}
-      <div className="space-y-1.5 pt-0.5">
+      {/* 3. Quick Popular Font Grid (2 Rows of Equal-Sized Boxes with Typographic Names) */}
+      <div className="space-y-2 pt-1">
         <div className="flex items-center justify-between text-xs text-zinc-400">
-          <span className="font-medium flex items-center gap-1">
-            <Sparkles className="w-3 h-3 text-orange-400" />
-            <span>ฟอนต์ฮิต TikTok/Reels (คลิกเปลี่ยนทันที):</span>
+          <span className="font-semibold flex items-center gap-1.5 text-zinc-300">
+            <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+            <span>ฟอนต์ฮิต 2 แถว (คลิกเลือกใช้งานได้ทันที):</span>
           </span>
+          <span className="text-[11px] text-zinc-500">ขนาดเท่ากัน 8 ฟอนต์ยอดนิยม</span>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {TOP_POPULAR_FONTS.map((fontName) => {
             const isSelected = selectedFont === fontName;
             return (
@@ -225,17 +218,49 @@ export function FontPicker({ selectedFont, onSelectFont }: Props) {
                   loadGoogleFont(fontName);
                   onSelectFont(fontName);
                 }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5 shadow-sm ${
+                className={`h-11 sm:h-12 px-3 rounded-2xl border transition-all cursor-pointer flex items-center justify-between shadow-sm overflow-hidden ${
                   isSelected
-                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/50 scale-[1.02]'
-                    : 'bg-[#0f0f18] text-zinc-200 border-zinc-700/80 hover:border-orange-400/60 hover:text-white hover:bg-[#222232]'
+                    ? 'bg-gradient-to-r from-orange-500 to-amber-500 text-zinc-950 font-bold border-transparent shadow-md ring-1 ring-orange-400/50 scale-[1.01]'
+                    : 'bg-[#0f0f18] text-zinc-200 border-zinc-700/80 hover:border-orange-400/60 hover:text-white hover:bg-[#202030]'
                 }`}
+                title={`เลือกฟอนต์ ${fontName}`}
               >
-                <span style={{ fontFamily: `"${fontName}", sans-serif` }}>{fontName}</span>
-                {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
+                <span
+                  style={{ fontFamily: `"${fontName}", sans-serif` }}
+                  className="text-sm font-semibold truncate leading-none"
+                >
+                  {fontName}
+                </span>
+                {isSelected && (
+                  <Check className="w-4 h-4 stroke-[3] shrink-0 text-zinc-950 ml-1" />
+                )}
               </button>
             );
           })}
+        </div>
+
+        {/* Toggle Full Catalog Button (Placed Below Quick Select) */}
+        <div className="pt-1">
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            className={`w-full py-2 px-3 rounded-2xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm ${
+              isOpen
+                ? 'bg-orange-500/15 border-orange-500/50 text-orange-300 ring-1 ring-orange-500/30'
+                : 'bg-[#0e0e16] hover:bg-[#20202e] border-zinc-700/80 text-zinc-300 hover:text-white hover:border-orange-500/40'
+            }`}
+          >
+            <span>
+              {isOpen
+                ? '▲ ซ่อนรายชื่อฟอนต์ (ย่อเก็บ)'
+                : `▼ ค้นหา & ดูฟอนต์ทั้งหมด (${THAI_SYSTEM_FONTS.length} แบบ)`}
+            </span>
+            {isOpen ? (
+              <ChevronUp className="w-3.5 h-3.5 text-orange-400 stroke-[2.5]" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5 text-orange-400" />
+            )}
+          </button>
         </div>
       </div>
 

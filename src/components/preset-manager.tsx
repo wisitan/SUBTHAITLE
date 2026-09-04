@@ -138,9 +138,10 @@ export function PresetManager() {
             backgroundColor: cardStyle.hasBackground
               ? cardStyle.backgroundColor || '#000000'
               : 'transparent',
-            textShadow: cardStyle.hasShadow
-              ? `0 4px ${cardStyle.shadowBlur || 8}px ${cardStyle.shadowColor || '#000000'}`
-              : 'none',
+            textShadow: [
+              cardStyle.hasShadow ? `0 4px ${cardStyle.shadowBlur || 8}px ${cardStyle.shadowColor || '#000000'}` : '',
+              cardStyle.hasGlow ? `0 0 ${cardStyle.glowBlur || 12}px ${cardStyle.glowColor || '#FF6B00'}` : '',
+            ].filter(Boolean).join(', ') || 'none',
           }}
         >
           <span>สวัสดีครับ </span>

@@ -363,6 +363,21 @@ export async function renderSubtitleCanvas(
       });
     }
 
+    // A.2 Inactive Glow
+    if (style.hasGlow) {
+      inactiveWords.forEach((pw) => {
+        ctx.font = `${pw.weight} ${fontSize}px "${fontName}", sans-serif`;
+        ctx.save();
+        ctx.shadowColor = style.glowColor || '#FF6B00';
+        ctx.shadowBlur = (style.glowBlur || 12) * scale;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.fillStyle = pw.color;
+        ctx.fillText(pw.text, pw.x, startY);
+        ctx.restore();
+      });
+    }
+
     // B. Inactive Outlines
     if (style.hasOutline && style.outlineWidth > 0) {
       inactiveWords.forEach((pw) => {
@@ -452,6 +467,20 @@ export async function renderSubtitleCanvas(
           ctx.shadowBlur = (style.shadowBlur || 8) * scale;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 4 * scale;
+          ctx.fillStyle = pw.color;
+          ctx.fillText(textToDraw, pw.x, startY);
+          ctx.restore();
+          restoreScaleTransform();
+        }
+
+        // 1.2 Active Word Glow
+        if (style.hasGlow) {
+          applyScaleTransform();
+          ctx.save();
+          ctx.shadowColor = style.glowColor || '#FF6B00';
+          ctx.shadowBlur = (style.glowBlur || 12) * scale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 0;
           ctx.fillStyle = pw.color;
           ctx.fillText(textToDraw, pw.x, startY);
           ctx.restore();

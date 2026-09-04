@@ -77,6 +77,14 @@ export function SubtitleOverlay({
       shadows.push(`0 ${4 * scale}px ${scaledShadowBlur}px rgba(${r},${g},${b},${opacity})`);
     }
 
+    // Glow effect (Neon aura around text)
+    if (style.hasGlow) {
+      const gColor = style.glowColor || '#FF6B00';
+      const gBlur = (style.glowBlur || 12) * scale;
+      shadows.push(`0 0 ${gBlur.toFixed(1)}px ${gColor}`);
+      shadows.push(`0 0 ${(gBlur * 1.8).toFixed(1)}px ${gColor}`);
+    }
+
     // Outline using multi-angle radial text-shadow
     if (style.hasOutline && scaledOutline > 0) {
       const oColor = style.outlineColor || '#000000';

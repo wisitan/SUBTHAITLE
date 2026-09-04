@@ -28,6 +28,9 @@ export const defaultCaptionStyle: CaptionStyle = {
   hasBackground: false,
   backgroundColor: '#000000',
   backgroundOpacity: 60,
+  hasGlow: false,
+  glowColor: '#FF6B00',
+  glowBlur: 12,
 };
 
 interface HistorySnapshot {

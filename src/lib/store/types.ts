@@ -55,6 +55,9 @@ export interface CaptionStyle {
   hasBackground?: boolean;
   backgroundColor?: string;     // Hex color e.g. "#000000"
   backgroundOpacity?: number;   // 0 to 100 (percentage)
+  hasGlow?: boolean;
+  glowColor?: string;
+  glowBlur?: number;
 }
 
 export interface UserProject {
